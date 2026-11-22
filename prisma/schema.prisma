@@ -1,0 +1,572 @@
+// GREENTEC 2.0 – data model mirroring the UPME admin (field names follow the admin forms)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Catalog ----------
+model Product {
+  id              Int       @id @default(autoincrement())
+  name            String
+  urlPath         String    @unique // exact legacy path, e.g. /מוזיקה-יהודית/חיים-בנט-ממעמקים
+  content         String    @default("") // תיאור (HTML)
+  shortContent    String    @default("") // תיאור מקוצר
+  sku             String    @default("")
+  mpn             String    @default("")
+  sort            Int       @default(0)
+  quantity        Int?      // כמות (מלאי)
+  status          Int       @default(1) // 1 מפורסם, 0 לא מפורסם, -1 בסל המחזור
+  // מחיר
+  price           Decimal?  @db.Decimal(10, 2)
+  newPrice        Decimal?  @db.Decimal(10, 2) // מחיר חדש (מבצע)
+  groupPrice      Decimal?  @db.Decimal(10, 2) // מחיר לקבוצת "משתמשים שרכשו"
+  relatedPrice    Decimal?  @db.Decimal(10, 2) // מחיר כמוצר נלווה
+  shippingPrice   Decimal?  @db.Decimal(10, 2)
+  profit          String    @default("")
+  cost            Decimal?  @db.Decimal(10, 2)
+  // 3 מחירים קבועים (שיפור שסוכם)
+  digitalPrice    Decimal?  @db.Decimal(10, 2) // הורדה דיגיטלית
+  physicalPrice   Decimal?  @db.Decimal(10, 2) // עותק פיזי בלבד
+  bothPrice       Decimal?  @db.Decimal(10, 2) // פיזי + הורדה
+  purchaseModes   String    @default("none") // legacy: none | 0 | 1 | 0;1
+  // מאפייני מוצר
+  weight          Decimal?  @db.Decimal(10, 3)
+  checkoutProduct Boolean   @default(false) // מוצר קופה
+  vendorUserId    Int?      // משתמש ספק
+  showHome        Boolean   @default(false)
+  releaseYear     Int?
+  depth           String    @default("")
+  // קבצים דיגיטליים
+  digitalFile     String    @default("")
+  sampleFile      String    @default("")
+  previewName     String    @default("")
+  oneButton       Boolean   @default(false)
+  oneButtonTitle  String    @default("")
+  onlyDigital     Boolean   @default(false)
+  isSet           Boolean   @default(false) // ניהול סט מוצרים
+  // תמונות / עיצוב / שונות
+  mainImage       String    @default("")
+  topImage        String    @default("")
+  header          String    @default("")
+  searchText      String    @default("")
+  // SEO
+  robots          String    @default("all")
+  metaTitle       String    @default("")
+  metaKeywords    String    @default("")
+  metaDescription String    @default("")
+  ogTitle         String    @default("")
+  ogDescription   String    @default("")
+  ogImage         String    @default("")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  images      ProductImage[]
+  categories  ProductCategory[]
+  suppliers   ProductSupplier[]
+  labels      ProductLabel[]
+  related     ProductRelated[] @relation("from")
+  relatedTo   ProductRelated[] @relation("to")
+  bundleItems BundleItem[]     @relation("bundle")
+  inBundles   BundleItem[]     @relation("item")
+  variations  ProductVariation[]
+  tasks       ScheduledTask[]
+  orderItems  OrderItem[]
+  grants      DownloadGrant[]
+  wishes      Wishlist[]
+  discounts   DiscountProduct[]
+}
+
+model ProductImage {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  url       String
+  label     String  @default("")
+  sort      Int     @default(0)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id            Int       @id
+  name          String
+  parentId      Int?
+  content       String    @default("")
+  shortContent  String    @default("")
+  productsOrder String    @default("")
+  showInMenu    Boolean   @default(false)
+  hideChildCats Boolean   @default(false)
+  closed        Boolean   @default(false)
+  url           String    @default("")
+  profit        String    @default("")
+  oldId         String    @default("")
+  image         String    @default("")
+  topImage      String    @default("")
+  header        String    @default("")
+  filterPrice   Boolean   @default(true)
+  filterSupplier Boolean  @default(true)
+  sort          Int       @default(0)
+  bundlesFirst  Boolean   @default(true) // מארזים לפני מוצרים בודדים (שיפור שסוכם)
+  robots          String  @default("all")
+  metaTitle       String  @default("")
+  metaKeywords    String  @default("")
+  metaDescription String  @default("")
+  ogTitle         String  @default("")
+  ogDescription   String  @default("")
+  ogImage         String  @default("")
+  products      ProductCategory[]
+}
+
+model ProductCategory {
+  productId  Int
+  categoryId Int
+  primary    Boolean @default(false)
+  sort       Int     @default(0)
+  pinned     Boolean @default(false) // נעיצה בקטגוריה
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  @@id([productId, categoryId])
+}
+
+model Supplier {
+  id      Int    @id @default(autoincrement())
+  name    String
+  logo    String @default("")
+  content String @default("")
+  url     String @default("")
+  robots          String @default("all")
+  metaTitle       String @default("")
+  metaKeywords    String @default("")
+  metaDescription String @default("")
+  ogTitle         String @default("")
+  ogDescription   String @default("")
+  ogImage         String @default("")
+  products ProductSupplier[]
+}
+
+model ProductSupplier {
+  productId  Int
+  supplierId Int
+  pinned     Boolean @default(false) // נעיצה ביצרן
+  sort       Int     @default(0)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplier   Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  @@id([productId, supplierId])
+}
+
+model ProductRelated {
+  productId Int
+  relatedId Int
+  sort      Int @default(0)
+  product   Product @relation("from", fields: [productId], references: [id], onDelete: Cascade)
+  related   Product @relation("to", fields: [relatedId], references: [id], onDelete: Cascade)
+  @@id([productId, relatedId])
+}
+
+model BundleItem { // סטים + שימוש בקבצים של מוצרים אחרים (ref_product)
+  bundleId  Int
+  productId Int
+  sort      Int    @default(0)
+  source    String @default("set") // set | ref_product
+  bundle    Product @relation("bundle", fields: [bundleId], references: [id], onDelete: Cascade)
+  product   Product @relation("item", fields: [productId], references: [id], onDelete: Cascade)
+  @@id([bundleId, productId])
+}
+
+model Label {
+  id      Int     @id @default(autoincrement())
+  title   String
+  url     String  @default("")
+  content String  @default("")
+  status  Boolean @default(true)
+  image   String  @default("")
+  products ProductLabel[]
+}
+
+model ProductLabel {
+  productId Int
+  labelId   Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label     Label   @relation(fields: [labelId], references: [id], onDelete: Cascade)
+  @@id([productId, labelId])
+}
+
+model ProductVariation {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  group     String
+  kind      String  @default("content") // content | color | image
+  value     String
+  price     Decimal? @db.Decimal(10, 2)
+  quantity  Int?
+  image     String  @default("")
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model PropertyList { // תכונות מוצר (ציציות, תכלת, הטבעה...)
+  id     Int    @id @default(autoincrement())
+  name   String
+  groups PropertyGroup[]
+}
+
+model PropertyGroup {
+  id          Int     @id @default(autoincrement())
+  listId      Int
+  name        String
+  alias       String  @default("")
+  kind        String  @default("select") // text | select | multi
+  description String  @default("")
+  required    Boolean @default(false)
+  list        PropertyList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  items       PropertyItem[]
+}
+
+model PropertyItem {
+  id        Int     @id @default(autoincrement())
+  groupId   Int
+  name      String
+  price     Decimal @default(0) @db.Decimal(10, 2)
+  isDefault Boolean @default(false)
+  group     PropertyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+}
+
+model ScheduledTask {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  runAt     DateTime
+  field     String   // price | status
+  value     String
+  done      Boolean  @default(false)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+// ---------- Users ----------
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  name         String   @default("")
+  phone        String   @default("")
+  passwordHash String   @default("")
+  type         Int      @default(0) // 0 רגיל · 50 פרימיום · 69 מנהל זוטר · 70 מנהל אתר · 80 ספק · 99 SuperAdmin
+  active       Boolean  @default(true)
+  groups       String   @default("") // e.g. "1" = משתמשים שרכשו
+  birthday     String   @default("")
+  note         String   @default("")
+  lastSeen     DateTime?
+  createdAt    DateTime @default(now())
+  orders       Order[]
+  grants       DownloadGrant[]
+  credits      Credit[]
+  wishes       Wishlist[]
+}
+
+model Credit {
+  id      Int     @id @default(autoincrement())
+  userId  Int
+  orderId Int?
+  amount  Decimal @db.Decimal(10, 2)
+  note    String  @default("")
+  createdAt DateTime @default(now())
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Wishlist {
+  userId    Int
+  productId Int
+  createdAt DateTime @default(now())
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@id([userId, productId])
+}
+
+// ---------- Orders ----------
+model Order {
+  id              Int      @id @default(autoincrement())
+  userId          Int?
+  paymentMethod   Int      @default(5) // 1 טלפון · 2 PayPal · 3 העברה בנקאית · 5 כרטיס אשראי
+  paymentStatus   String   @default("pending") // pending|failed|processing|on-hold|cancelled|completed|refunded
+  userStatusId    Int?     // סטטוס הזמנה ללקוח
+  reference       String   @default("") // אסמכתא
+  paidAt          DateTime?
+  shippingMethodId Int?
+  shippingPrice   Decimal  @default(0) @db.Decimal(10, 2)
+  couponCode      String   @default("")
+  discount        Decimal  @default(0) @db.Decimal(10, 2)
+  total           Decimal  @default(0) @db.Decimal(10, 2)
+  firstName       String   @default("")
+  lastName        String   @default("")
+  email           String   @default("")
+  phone           String   @default("")
+  address         String   @default("")
+  city            String   @default("")
+  zip             String   @default("")
+  country         String   @default("ישראל")
+  notes           String   @default("")
+  landingPage     String   @default("")
+  referrer        String   @default("")
+  ip              String   @default("")
+  userAgent       String   @default("")
+  isTest          Boolean  @default(false)
+  deleted         Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  user            User?    @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+  memos           OrderMemo[]
+  grants          DownloadGrant[]
+}
+
+model OrderItem {
+  id          Int      @id @default(autoincrement())
+  orderId     Int
+  productId   Int?
+  name        String
+  sku         String   @default("")
+  mode        String   @default("") // digital | physical | both
+  quantity    Int      @default(1)
+  origPrice   Decimal  @default(0) @db.Decimal(10, 2)
+  price       Decimal  @default(0) @db.Decimal(10, 2)
+  exists      Boolean  @default(true)
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product? @relation(fields: [productId], references: [id])
+}
+
+model OrderMemo {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  text      String
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model DownloadGrant { // link ≠ file: right to download a product's files
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  orderId   Int?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order     Order?   @relation(fields: [orderId], references: [id])
+  @@unique([userId, productId])
+}
+
+model OrderStatus {
+  id          Int     @id
+  title       String
+  sendMessage Boolean @default(false)
+  mailTitle   String  @default("")
+  message     String  @default("")
+  smsContent  String  @default("")
+}
+
+model MemoTemplate {
+  id       Int    @id @default(autoincrement())
+  name     String
+  template String @default("")
+}
+
+model OrderField {
+  id    Int    @id @default(autoincrement())
+  name  String
+  kind  String @default("text")
+}
+
+model AbandonedCart {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  email     String   @default("")
+  items     String   @default("[]")
+  updatedAt DateTime @updatedAt
+}
+
+// ---------- Shipping ----------
+model ShippingMethod {
+  id         Int      @id @default(autoincrement())
+  name       String
+  price      Decimal  @default(0) @db.Decimal(10, 2)
+  freeFrom   Decimal? @db.Decimal(10, 2)
+  content    String   @default("")
+  groupPrice Decimal? @db.Decimal(10, 2)
+  weights    String   @default("[]") // [{upTo, price}]
+  countries  String   @default("ישראל")
+  active     Boolean  @default(true)
+  sort       Int      @default(0)
+}
+
+model Country {
+  id     Int     @id @default(autoincrement())
+  name   String
+  active Boolean @default(false)
+}
+
+// ---------- Marketing ----------
+model Coupon { // קופונים פשוטים (שיפור שסוכם) – מתחילים מאפס
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  kind      String   @default("percent") // percent | amount | free_shipping
+  amount    Decimal  @default(0) @db.Decimal(10, 2)
+  minTotal  Decimal? @db.Decimal(10, 2)
+  maxUses   Int?
+  used      Int      @default(0)
+  expiresAt DateTime?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Discount {
+  id        Int     @id @default(autoincrement())
+  name      String
+  kind      String  @default("percent") // 1+1 | x_for_y | second_pct | amount | percent | free_shipping
+  value     String  @default("")
+  image     String  @default("")
+  active    Boolean @default(true)
+  products  DiscountProduct[]
+}
+
+model DiscountProduct {
+  discountId Int
+  productId  Int
+  discount   Discount @relation(fields: [discountId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@id([discountId, productId])
+}
+
+model Campaign {
+  id    Int    @id @default(autoincrement())
+  name  String
+  code  String @default("")
+  link  String @default("")
+}
+
+// ---------- Content ----------
+model Page {
+  id       Int     @id @default(autoincrement())
+  title    String
+  content  String  @default("")
+  active   Boolean @default(true)
+  url      String  @default("")
+  header   String  @default("")
+  cssClass String  @default("")
+  topImage String  @default("")
+  robots          String @default("all")
+  metaTitle       String @default("")
+  metaKeywords    String @default("")
+  metaDescription String @default("")
+  ogTitle         String @default("")
+  ogDescription   String @default("")
+  ogImage         String @default("")
+}
+
+model Article {
+  id           Int      @id @default(autoincrement())
+  title        String
+  shortContent String   @default("")
+  content      String   @default("")
+  status       Boolean  @default(true)
+  url          String   @default("")
+  image        String   @default("")
+  categoryId   Int?
+  createdAt    DateTime @default(now())
+  robots          String @default("all")
+  metaTitle       String @default("")
+  metaKeywords    String @default("")
+  metaDescription String @default("")
+  ogTitle         String @default("")
+  ogDescription   String @default("")
+  ogImage         String @default("")
+}
+
+model ArticleCategory {
+  id   Int    @id @default(autoincrement())
+  name String
+  url  String @default("")
+}
+
+model Menu {
+  id    Int        @id
+  title String
+  items MenuItem[]
+}
+
+model MenuItem {
+  id        Int     @id @default(autoincrement())
+  menuId    Int
+  parentId  Int?
+  type      String  @default("link") // page | link | article | product | category | supplier
+  contentId Int?
+  title     String
+  link      String  @default("")
+  image     String  @default("")
+  sort      Int     @default(0)
+  menu      Menu    @relation(fields: [menuId], references: [id], onDelete: Cascade)
+}
+
+model Album { // גלריות (סליידר וכו')
+  id          Int     @id
+  title       String
+  imageWidth  Int     @default(1900)
+  imageHeight Int     @default(893)
+  thumbPrec   Int     @default(5)
+  images      AlbumImage[]
+}
+
+model AlbumImage {
+  id          Int     @id @default(autoincrement())
+  albumId     Int
+  image       String
+  mobileImage String  @default("")
+  label       String  @default("")
+  description String  @default("")
+  link        String  @default("")
+  sort        Int     @default(0)
+  active      Boolean @default(true)
+  album       Album   @relation(fields: [albumId], references: [id], onDelete: Cascade)
+}
+
+model Block { // קוביות תוכן
+  id          Int    @id
+  description String
+  content     String @default("")
+}
+
+model Faq {
+  id       Int    @id @default(autoincrement())
+  question String
+  answer   String @default("")
+  sort     Int    @default(0)
+}
+
+// ---------- System / SEO / Reports ----------
+model Setting {
+  key   String @id
+  value String @default("")
+}
+
+model Redirect {
+  id   Int    @id @default(autoincrement())
+  from String @unique
+  to   String
+}
+
+model SearchLog {
+  id        Int      @id @default(autoincrement())
+  term      String
+  createdAt DateTime @default(now())
+}
+
+model ProductStat {
+  productId Int    @id
+  views     Int    @default(0)
+  carts     Int    @default(0)
+  wishes    Int    @default(0)
+}
+
+model DownloadLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  ip        String   @default("")
+  createdAt DateTime @default(now())
+}

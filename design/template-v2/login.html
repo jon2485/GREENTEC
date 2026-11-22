@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Heebo:wght@100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+        rel="stylesheet">
+    <!-- CSS -->
+    <link rel="stylesheet" href="vendor/flickity.min.css">
+    <!-- JavaScript -->
+    <script src="vendor/flickity.pkgd.min.js"></script>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap">
+    <link rel="stylesheet" href="vendor/bootstrap.rtl.min.css"
+         >
+    <link rel="stylesheet" href="./assets/css/greenshow-topbar.css">
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <title>גרינטק</title>
+</head>
+
+<body>
+    <div class="d-flex flex-column min-vh-100 loginSignUp">
+        <!-- Header Start -->
+        <header class="main-header">
+            <div class="gt-utility greenshow-utility-anchor">
+                <div class="container gt-utility-in">
+                    <nav class="gt-utility-links" aria-label="אזור אישי">
+                        <a href="./shopping_cart.html">סל קניות</a>
+                        <a href="./personal_profile.html">רשימת משאלות</a>
+                        <a href="./personal_profile.html">ההזמנות שלי</a>
+                        <a href="./personal_profile.html">ההורדות שלי</a>
+                        <a href="./login.html">התחברות</a>
+                    </nav>
+                    <div class="gs-topbar-promo" dir="ltr" role="group" aria-label="GreenShow — יש למה לצפות">
+                        <img class="gs-topbar-art" src="./assets/greenshow/greenshow_topbar_compact.png" alt="GreenShow — יש למה לצפות. הצצה ראשונה" width="1700" height="183" decoding="async">
+                        <span class="gs-topbar-green-light" aria-hidden="true"></span>
+                        <a class="gs-topbar-cta" href="#greenshow" aria-label="הצצה ראשונה ל-GreenShow" title="הצצה ראשונה ל-GreenShow"></a>
+                    </div>
+                    <a class="gs-topbar-mobile-link" href="#greenshow" aria-label="הצצה ראשונה ל-GreenShow" dir="ltr"><span>Green<span class="gs-topbar-lime">Show</span></span><span class="gs-topbar-mobile-label" dir="rtl">הצצה ראשונה ‹</span></a>
+                </div>
+            </div>
+
+
+            <!-- Bg-left -->
+            <svg class="bg-left" viewBox="0 0 736 467" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g filter="url(#filter0_f_218_1951)">
+                    <rect x="-111" y="73.8225" width="560" height="123" transform="rotate(-14.5644 -111 73.8225)"
+                        fill="#CADB2D" />
+                </g>
+                <defs>
+                    <filter id="filter0_f_218_1951" x="-384.2" y="-340.2" width="1119.34" height="806.27"
+                        filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                        <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                        <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+                        <feGaussianBlur stdDeviation="136.6" result="effect1_foregroundBlur_218_1951" />
+                    </filter>
+                </defs>
+            </svg>
+
+
+            <!-- bg-right -->
+            <svg class="bg-right" viewBox="0 0 956 415" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g filter="url(#filter0_f_767_941)">
+                    <rect x="273.2" y="21.8225" width="560" height="123" transform="rotate(-14.5644 273.2 21.8225)"
+                        fill="#CADB2D" />
+                </g>
+                <defs>
+                    <filter id="filter0_f_767_941" x="0.000183105" y="-392.2" width="1119.34" height="806.27"
+                        filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                        <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                        <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+                        <feGaussianBlur stdDeviation="136.6" result="effect1_foregroundBlur_767_941" />
+                    </filter>
+                </defs>
+            </svg>
+
+
+
+
+            <div class="container d-flex justify-content-between align-items-center">
+
+                <!-- Toggle -->
+                <button class="d-lg-none btn-toogle-nav text-white" id="toggle-nav">
+                    <svg class="bar-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke-width="1.5" stroke="currentColor" width="28" height="28">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
+
+                    <svg class="close-icon d-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke-width="1.5" stroke="currentColor" width="28" height="28">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+
+                </button>
+
+
+                <!-- Right Side -->
+                <div class="d-flex right-side nav-open" id="nav">
+                    <!-- menu-bg-left -->
+                    <svg class="menu-bg-left" width="325" height="951" viewBox="0 0 325 951" fill="none"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <g filter="url(#filter0_f_535_60)">
+                            <rect width="149.298" height="792.463"
+                                transform="matrix(0.1099 -0.993943 0.00746383 0.999972 28.5923 163.394)"
+                                fill="#CADB2D" />
+                        </g>
+                        <defs>
+                            <filter id="filter0_f_535_60" x="-244.608" y="-258.2" width="568.723" height="1487.23"
+                                filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                                <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                                <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+                                <feGaussianBlur stdDeviation="136.6" result="effect1_foregroundBlur_535_60" />
+                            </filter>
+                        </defs>
+                    </svg>
+
+                    <!-- Menu bg-right -->
+                    <svg class="menu-bg-right" width="369" height="623" viewBox="0 0 369 623" fill="none"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <g filter="url(#filter0_f_535_61)">
+                            <rect width="389.929" height="1223.06"
+                                transform="matrix(-0.1099 0.993943 0.00746383 0.999972 316.053 -1261.6)"
+                                fill="#CADB2D" />
+                        </g>
+                        <defs>
+                            <filter id="filter0_f_535_61" x="-6.10352e-05" y="-1534.8" width="598.382" height="2157"
+                                filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                                <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                                <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+                                <feGaussianBlur stdDeviation="136.6" result="effect1_foregroundBlur_535_61" />
+                            </filter>
+                        </defs>
+                    </svg>
+
+
+
+                    <!-- Logo Desktop -->
+                    <a class="d-none d-lg-block logo-desk" href="#">
+                        <img src="./assets/images/logo.png" alt="" class="logo-img">
+                    </a>
+
+                    <ul class="navbar-nav">
+                        <li class="nav-item group">
+                            <a class="nav-link active" href="#">דף הבית</a>
+
+                        </li>
+                        <li class="nav-item group dropdown ">
+                            <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown"
+                                aria-expanded="false" href="#">מוזיקה</a>
+                            <div class="dropdown-menu submenu">
+                                <div class="submenu-box position-relative">
+                                    <div class="container submenu-container">
+                                        <div class="d-lg-flex flex-lg-row gap-x-80px">
+                                            <div class="mb-24px">
+                                                <ul class="gap-36px d-flex flex-column list-none">
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-1.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>חסידית</span>
+                                                        </a>
+                                                    </li>
+
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-2.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>חב”ד</span>
+                                                        </a>
+                                                    </li>
+
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-1.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>אידיש</span>
+                                                        </a>
+                                                    </li>
+
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-3.svg" alt=""
+                                                                class="submenu-icon">
+
+                                                            <span>עברית</span>
+                                                        </a>
+                                                    </li>
+
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-4.svg" alt=""
+                                                                class="submenu-icon">
+
+                                                            <span>אנגלית</span>
+                                                        </a>
+                                                    </li>
+
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-5.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>חזנות</span>
+                                                        </a>
+                                                    </li>
+
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-6.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>פיוטים ובקשות</span>
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="mb-24px">
+                                                <ul class="gap-36px d-flex flex-column list-none">
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-7.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>פסח</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-8.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>שבועות</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-9.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>סוכות</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-10.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>חנוכה</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-11.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>ימים נוראים</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-12.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>פורים</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-13.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>שבת</span>
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="mb-24px">
+                                                <ul class="gap-36px d-flex flex-column list-none">
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-6.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>הופעות חיות</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-14.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>מקהלות</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-14.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>חוברות תוים</span>
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="nav-item group dropdown">
+                            <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown"
+                                aria-expanded="false" href="#">תקליטורי שמע</a>
+
+                            <div class="dropdown-menu submenu">
+                                <div class="submenu-box position-relative">
+                                    <div class="container submenu-container">
+                                        <div class="d-lg-flex flex-lg-row gap-x-80px">
+                                            <div class="mb-24px">
+                                                <ul class="gap-36px d-flex flex-column list-none">
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-6.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>הופעות חיות</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-14.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>מקהלות</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-14.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>חוברות תוים</span>
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="mb-24px">
+                                                <ul class="gap-36px d-flex flex-column list-none">
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-7.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>פסח</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-8.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>שבועות</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-9.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>סוכות</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-10.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>חנוכה</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-11.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>ימים נוראים</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-12.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>פורים</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-13.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>שבת</span>
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="mb-24px">
+                                                <ul class="gap-36px d-flex flex-column list-none">
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-1.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>חסידית</span>
+                                                        </a>
+                                                    </li>
+
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-2.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>חב”ד</span>
+                                                        </a>
+                                                    </li>
+
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-1.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>אידיש</span>
+                                                        </a>
+                                                    </li>
+
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-3.svg" alt=""
+                                                                class="submenu-icon">
+
+                                                            <span>עברית</span>
+                                                        </a>
+                                                    </li>
+
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-4.svg" alt=""
+                                                                class="submenu-icon">
+
+                                                            <span>אנגלית</span>
+                                                        </a>
+                                                    </li>
+
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-5.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>חזנות</span>
+                                                        </a>
+                                                    </li>
+
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-6.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>פיוטים ובקשות</span>
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="mb-24px">
+                                                <ul class="gap-36px d-flex flex-column list-none">
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-6.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>הופעות חיות</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-14.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>מקהלות</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="d-flex align-items-center gap-20px fs-18px font-heebo fw-light text-white submenu-link">
+                                                            <img src="./assets/images/icon-14.svg" alt=""
+                                                                class="submenu-icon">
+                                                            <span>חוברות תוים</span>
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="nav-item group">
+                            <a class="nav-link" href="#">סרטים לילדים</a>
+                        </li>
+                        <li class="nav-item group">
+                            <a class="nav-link" href="#">אביזרים</a>
+                        </li>
+                        <li class="nav-item group">
+                            <a class="nav-link" href="#">שונות</a>
+                        </li>
+                        <li class="nav-item group">
+                            <a class="nav-link" href="#">תוכן יהודי</a>
+                        </li>
+                    </ul>
+                </div>
+
+
+                <!-- Middele Logo -->
+                <a href="#" class="middle-logo d-lg-none">
+                    <img src="./assets/images/logo-v.png" alt="" class="logo-img">
+                </a>
+
+
+                <!-- Left Menu -->
+                <div class="d-flex left-menu">
+                    <!-- Search icon -->
+                    <a href="#" class="d-inline-block">
+                        <svg class="search-icon" viewBox="0 0 31 31" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M25.1887 12.5919C25.1887 15.3706 24.2865 17.9374 22.7667 20.0199L30.4323 27.6901C31.1892 28.4468 31.1892 29.6757 30.4323 30.4325C29.6755 31.1892 28.4463 31.1892 27.6894 30.4325L20.0238 22.7623C17.9409 24.2878 15.3736 25.1838 12.5944 25.1838C5.63719 25.1838 0 19.5477 0 12.5919C0 5.63609 5.63719 0 12.5944 0C19.5515 0 25.1887 5.63609 25.1887 12.5919ZM12.5944 21.3094C13.7394 21.3094 14.8732 21.0839 15.931 20.6458C16.9889 20.2077 17.9501 19.5656 18.7598 18.7561C19.5694 17.9466 20.2117 16.9856 20.6498 15.9279C21.088 14.8703 21.3135 13.7367 21.3135 12.5919C21.3135 11.4471 21.088 10.3135 20.6498 9.25587C20.2117 8.19822 19.5694 7.23721 18.7598 6.42772C17.9501 5.61823 16.9889 4.9761 15.931 4.53801C14.8732 4.09992 13.7394 3.87443 12.5944 3.87443C11.4493 3.87443 10.3155 4.09992 9.25768 4.53801C8.19982 4.9761 7.23863 5.61823 6.42898 6.42772C5.61933 7.23721 4.97708 8.19822 4.5389 9.25587C4.10072 10.3135 3.87519 11.4471 3.87519 12.5919C3.87519 13.7367 4.10072 14.8703 4.5389 15.9279C4.97708 16.9856 5.61933 17.9466 6.42898 18.7561C7.23863 19.5656 8.19982 20.2077 9.25768 20.6458C10.3155 21.0839 11.4493 21.3094 12.5944 21.3094Z"
+                                fill="white" />
+                        </svg>
+                    </a>
+
+                    <!-- Cart -->
+                    <div class="position-relative">
+                        <button type="button" class="position-relative cart-button">
+                            <svg class="cart-icon" viewBox="0 0 35 31" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M0 1.45312C0 0.647852 0.655734 0 1.47081 0H4.25921C5.60745 0 6.80248 0.775 7.36016 1.9375H32.5477C34.1595 1.9375 35.3361 3.45117 34.9133 4.98906L32.4006 14.2104C31.8797 16.1115 30.1331 17.4375 28.1414 17.4375H10.4611L10.792 19.1631C10.9269 19.8473 11.5336 20.3438 12.2383 20.3438H29.9064C30.7215 20.3438 31.3772 20.9916 31.3772 21.7969C31.3772 22.6021 30.7215 23.25 29.9064 23.25H12.2383C10.1179 23.25 8.2978 21.7605 7.90558 19.708L4.74335 3.2998C4.70045 3.06973 4.49821 2.90625 4.25921 2.90625H1.47081C0.655734 2.90625 0 2.2584 0 1.45312ZM7.8443 28.0938C7.8443 27.7121 7.92038 27.3342 8.06821 26.9816C8.21604 26.629 8.43272 26.3086 8.70588 26.0387C8.97903 25.7689 9.30331 25.5548 9.6602 25.4087C10.0171 25.2627 10.3996 25.1875 10.7859 25.1875C11.1722 25.1875 11.5547 25.2627 11.9116 25.4087C12.2685 25.5548 12.5928 25.7689 12.8659 26.0387C13.1391 26.3086 13.3558 26.629 13.5036 26.9816C13.6514 27.3342 13.7275 27.7121 13.7275 28.0938C13.7275 28.4754 13.6514 28.8533 13.5036 29.2059C13.3558 29.5585 13.1391 29.8789 12.8659 30.1488C12.5928 30.4186 12.2685 30.6327 11.9116 30.7788C11.5547 30.9248 11.1722 31 10.7859 31C10.3996 31 10.0171 30.9248 9.6602 30.7788C9.30331 30.6327 8.97903 30.4186 8.70588 30.1488C8.43272 29.8789 8.21604 29.5585 8.06821 29.2059C7.92038 28.8533 7.8443 28.4754 7.8443 28.0938ZM28.4356 25.1875C29.2157 25.1875 29.964 25.4937 30.5156 26.0387C31.0673 26.5837 31.3772 27.323 31.3772 28.0938C31.3772 28.8645 31.0673 29.6038 30.5156 30.1488C29.964 30.6938 29.2157 31 28.4356 31C27.6554 31 26.9072 30.6938 26.3555 30.1488C25.8039 29.6038 25.494 28.8645 25.494 28.0938C25.494 27.323 25.8039 26.5837 26.3555 26.0387C26.9072 25.4937 27.6554 25.1875 28.4356 25.1875Z"
+                                    fill="white" />
+                            </svg>
+                            <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill">
+                                3
+                                <span class="visually-hidden">unread messages</span>
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Profile -->
+                    <a href="#" class="d-inline-block">
+                        <svg class="profile-icon" viewBox="0 0 31 31" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M24.6123 24.1945C23.4559 21.367 20.6768 19.375 17.4375 19.375H13.5625C10.3232 19.375 7.54414 21.367 6.3877 24.1945C4.23223 21.9301 2.90625 18.8725 2.90625 15.5C2.90625 8.54316 8.54316 2.90625 15.5 2.90625C22.4568 2.90625 28.0938 8.54316 28.0938 15.5C28.0938 18.8725 26.7678 21.9301 24.6123 24.1945ZM22.1844 26.1744C20.2469 27.3914 17.9582 28.0938 15.5 28.0938C13.0418 28.0938 10.7531 27.3914 8.80957 26.1744C9.25156 23.9523 11.2133 22.2812 13.5625 22.2812H17.4375C19.7867 22.2812 21.7484 23.9523 22.1904 26.1744H22.1844ZM15.5 31C19.6109 31 23.5533 29.367 26.4602 26.4602C29.367 23.5533 31 19.6109 31 15.5C31 11.3891 29.367 7.44666 26.4602 4.53984C23.5533 1.63303 19.6109 0 15.5 0C11.3891 0 7.44666 1.63303 4.53984 4.53984C1.63303 7.44666 0 11.3891 0 15.5C0 19.6109 1.63303 23.5533 4.53984 26.4602C7.44666 29.367 11.3891 31 15.5 31ZM15.5 14.5312C14.8577 14.5312 14.2417 14.2761 13.7875 13.8219C13.3333 13.3677 13.0781 12.7517 13.0781 12.1094C13.0781 11.4671 13.3333 10.851 13.7875 10.3969C14.2417 9.94266 14.8577 9.6875 15.5 9.6875C16.1423 9.6875 16.7583 9.94266 17.2125 10.3969C17.6667 10.851 17.9219 11.4671 17.9219 12.1094C17.9219 12.7517 17.6667 13.3677 17.2125 13.8219C16.7583 14.2761 16.1423 14.5312 15.5 14.5312ZM10.1719 12.1094C10.1719 13.5225 10.7332 14.8777 11.7324 15.8769C12.7317 16.8761 14.0869 17.4375 15.5 17.4375C16.9131 17.4375 18.2683 16.8761 19.2676 15.8769C20.2668 14.8777 20.8281 13.5225 20.8281 12.1094C20.8281 10.6963 20.2668 9.34104 19.2676 8.34182C18.2683 7.3426 16.9131 6.78125 15.5 6.78125C14.0869 6.78125 12.7317 7.3426 11.7324 8.34182C10.7332 9.34104 10.1719 10.6963 10.1719 12.1094Z"
+                                fill="white" />
+                        </svg>
+                    </a>
+                </div>
+
+            </div>
+
+
+
+        </header>
+        <!-- Header End -->
+
+        <!-- Content Section Start -->
+        <section class="content-section">
+            <div class="container">
+                <h1 class="header-text">התחברות</h1>
+                <div class="link-accounts d-flex justify-content-center">
+                    <a href="#" class="btn btn-secondary">
+                        <svg class="d-none d-md-block" width="13" height="28" viewBox="0 0 13 28" fill="none"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <g clip-path="url(#clip0_868_3445)">
+                                <path
+                                    d="M10.9043 14.75L11.4598 11.1305H7.98672V8.78164C7.98672 7.79141 8.47188 6.82617 10.0273 6.82617H11.6062V3.74453C11.6062 3.74453 10.1734 3.5 8.80352 3.5C5.94336 3.5 4.07383 5.23359 4.07383 8.37188V11.1305H0.894531V14.75H4.07383V23.5H7.98672V14.75H10.9043Z"
+                                    fill="#CADB2D" />
+                            </g>
+                            <defs>
+                                <clipPath id="clip0_868_3445">
+                                    <path d="M0 3.5H12.5V23.5H0V3.5Z" fill="white" />
+                                </clipPath>
+                            </defs>
+                        </svg>
+
+                        <span>התחברות דרך פייסבוק</span>
+                    </a>
+
+                    <a href="#" class="btn btn-secondary-outline">
+                        <svg class="d-none d-md-block" width="20" height="28" viewBox="0 0 20 28" fill="none"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <g clip-path="url(#clip0_868_3451)">
+                                <path
+                                    d="M19.0625 13.7266C19.0625 19.2539 15.2773 23.1875 9.6875 23.1875C4.32813 23.1875 0 18.8594 0 13.5C0 8.14063 4.32813 3.8125 9.6875 3.8125C12.2969 3.8125 14.4922 4.76953 16.1836 6.34766L13.5469 8.88281C10.0977 5.55469 3.68359 8.05469 3.68359 13.5C3.68359 16.8789 6.38281 19.6172 9.6875 19.6172C13.5234 19.6172 14.9609 16.8672 15.1875 15.4414H9.6875V12.1094H18.9102C19 12.6055 19.0625 13.082 19.0625 13.7266Z"
+                                    fill="#CADB2D" />
+                            </g>
+                            <defs>
+                                <clipPath id="clip0_868_3451">
+                                    <path d="M0 3.5H19.0625V23.5H0V3.5Z" fill="white" />
+                                </clipPath>
+                            </defs>
+                        </svg>
+                        <span>התחברות דרך גוגל</span>
+                    </a>
+                </div>
+
+
+                <div class="card custom-card">
+                    <div class="card-body">
+                        <h5 class="card-title">התחברות</h5>
+                        <form action="">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="floatingInput" placeholder="הזן שם משתמש">
+                                <label for="floatingInput">הזן שם משתמש</label>
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <input type="password" class="form-control" id="floatingInput" placeholder="ססמה">
+                                <label for="floatingInput">ססמה</label>
+                            </div>
+
+                            <div class="form-check justify-content-start d-flex flex-row-reverse">
+                                <input class="form-check-input float-start" type="checkbox" value="" id="checkDefault">
+                                <label class="form-check-label" for="checkDefault">
+                                    אני מסכים ל
+                                    <a href="#" class="">תנאי השימוש</a>
+                                </label>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">התחברות</button>
+
+                        </form>
+                    </div>
+                </div>
+
+                <div class="text-center card-bottom-text">
+                    <p class="mb-1">אין לך חשבון?</p>
+                    <a href="#" class="">הרשם כאן</a>
+                </div>
+
+
+
+            </div>
+        </section>
+        <!-- Content Section End -->
+
+        <!-- Footer Start -->
+        <footer class="main-footer mt-auto">
+            <!-- Top Footer -->
+            <div class="top-footer position-relative">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-12 col-md-6 order-2 order-md-1">
+                            <div class="d-flex flex-column-reverse flex-xl-row justify-content-around gap-5">
+                                <!-- Logo -->
+                                <div class="">
+                                    <div class="footer-logo mx-md-0 mx-auto">
+                                        <img src="./assets/images/logo.png" alt="" />
+                                    </div>
+                                    <div class="social-links">
+                                        <a href="#" class="inline-block social-link">
+                                            <svg width="16" height="26" viewBox="0 0 16 26" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path
+                                                    d="M14.825 14.625L15.6477 9.91961H10.5039V6.86613C10.5039 5.57883 11.2225 4.32402 13.5262 4.32402H15.8647V0.317891C15.8647 0.317891 13.7426 0 11.7136 0C7.4776 0 4.70872 2.25367 4.70872 6.33344V9.91961H0V14.625H4.70872V26H10.5039V14.625H14.825Z"
+                                                    fill="#CADB2D" />
+                                            </svg>
+                                        </a>
+                                        <a href="#" class="inline-block social-link">
+                                            <svg width="29" height="19" viewBox="0 0 29 19" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path
+                                                    d="M27.9597 2.97286C27.6312 1.80267 26.6636 0.881076 25.435 0.568318C23.208 0 14.2782 0 14.2782 0C14.2782 0 5.3484 0 3.1214 0.568318C1.89278 0.881125 0.925135 1.80267 0.596713 2.97286C0 5.09388 0 9.5192 0 9.5192C0 9.5192 0 13.9445 0.596713 16.0655C0.925135 17.2357 1.89278 18.1189 3.1214 18.4317C5.3484 19 14.2782 19 14.2782 19C14.2782 19 23.208 19 25.435 18.4317C26.6636 18.1189 27.6312 17.2357 27.9597 16.0655C28.5564 13.9445 28.5564 9.5192 28.5564 9.5192C28.5564 9.5192 28.5564 5.09388 27.9597 2.97286ZM11.3576 13.5371V5.50134L18.8212 9.5193L11.3576 13.5371Z"
+                                                    fill="#CADB2D" />
+                                            </svg>
+                                        </a>
+                                        <a href="#" class="inline-block social-link">
+                                            <svg width="27" height="20" viewBox="0 0 27 20" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path
+                                                    d="M23.7232 4.98436C23.74 5.2031 23.74 5.42188 23.74 5.64062C23.74 12.3125 18.2874 20 8.32159 20C5.25131 20 2.39918 19.1718 0 17.7344C0.436228 17.7812 0.85562 17.7969 1.30863 17.7969C3.84198 17.7969 6.17407 17 8.03637 15.6406C5.65397 15.5938 3.65746 14.1406 2.96957 12.1406C3.30515 12.1875 3.64067 12.2187 3.99303 12.2187C4.47956 12.2187 4.96614 12.1562 5.4191 12.0469C2.93606 11.5781 1.07371 9.54687 1.07371 7.09374V7.03126C1.79511 7.40627 2.63405 7.64064 3.52319 7.67185C2.06355 6.76558 1.10728 5.21873 1.10728 3.46871C1.10728 2.53123 1.37567 1.67186 1.84546 0.921852C4.51308 3.98435 8.52289 5.98432 13.0192 6.2031C12.9353 5.8281 12.885 5.43752 12.885 5.04688C12.885 2.2656 15.3009 0 18.3041 0C19.8644 0 21.2736 0.609373 22.2635 1.59375C23.4882 1.37501 24.6627 0.953114 25.7029 0.375003C25.3002 1.5469 24.4446 2.53128 23.3205 3.15624C24.4111 3.04691 25.468 2.7656 26.4411 2.37502C25.703 3.37498 24.7802 4.26557 23.7232 4.98436Z"
+                                                    fill="#CADB2D" />
+                                            </svg>
+                                        </a>
+                                        <a href="#" class="inline-block social-link">
+                                            <svg width="25" height="23" viewBox="0 0 25 23" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path
+                                                    d="M20.6824 3.34219C18.4072 1.18594 15.3774 0 12.1575 0C5.51131 0 0.103167 5.11339 0.103167 11.3973C0.103167 13.4047 0.657014 15.3658 1.71041 17.096L0 23L6.39095 21.4136C8.15023 22.3223 10.1321 22.7998 12.152 22.7998H12.1575C18.7982 22.7998 24.3258 17.6864 24.3258 11.4025C24.3258 8.35804 22.9575 5.49844 20.6824 3.34219ZM12.1575 20.8797C10.3548 20.8797 8.59005 20.4228 7.0534 19.5603L6.6896 19.3549L2.89955 20.2944L3.9095 16.7982L3.67059 16.4388C2.66606 14.9295 2.13937 13.1891 2.13937 11.3973C2.13937 6.17612 6.6353 1.92522 12.1629 1.92522C14.8398 1.92522 17.3539 2.91094 19.2434 4.70268C21.133 6.49442 22.295 8.87143 22.2896 11.4025C22.2896 16.6288 17.6796 20.8797 12.1575 20.8797ZM17.6525 13.7846C17.3539 13.6408 15.8715 12.9529 15.5946 12.8605C15.3177 12.7629 15.1167 12.7167 14.9158 13.0042C14.7149 13.2917 14.1394 13.9283 13.9602 14.1234C13.7864 14.3134 13.6072 14.3391 13.3086 14.1953C11.5385 13.3585 10.3765 12.7013 9.20905 10.8069C8.89955 10.3038 9.51856 10.3397 10.0941 9.25134C10.1919 9.06138 10.143 8.8971 10.067 8.75335C9.99095 8.6096 9.38824 7.20804 9.13847 6.63817C8.89412 6.08371 8.64435 6.16071 8.45973 6.15045C8.28598 6.14018 8.08507 6.14018 7.88417 6.14018C7.68326 6.14018 7.35747 6.21205 7.08055 6.49442C6.80362 6.78192 6.02715 7.46987 6.02715 8.87143C6.02715 10.273 7.1077 11.6283 7.2543 11.8183C7.40634 12.0083 9.37738 14.8833 12.4018 16.1205C14.3131 16.9009 15.0624 16.9676 16.0181 16.8342C16.5991 16.752 17.7991 16.1462 18.0489 15.4788C18.2987 14.8114 18.2987 14.2415 18.2226 14.1234C18.152 13.9951 17.9511 13.9232 17.6525 13.7846Z"
+                                                    fill="#CADB2D" />
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Contacts -->
+                                <div class="mx-xl-auto">
+                                    <h5 class="title">לשירות לקוחות והזמנות:</h5>
+                                    <div class="contact-info">
+                                        <a href="#" class="contact-item">
+                                            <svg width="17" height="16" viewBox="0 0 17 16" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path
+                                                    d="M15.3358 8C15.3358 9.72391 14.6115 11.3772 13.3223 12.5962C12.033 13.8152 10.2844 14.5 8.46115 14.5C6.63787 14.5 4.88927 13.8152 3.60001 12.5962C2.31076 11.3772 1.58647 9.72391 1.58647 8C1.58647 6.27609 2.31076 4.62279 3.60001 3.40381C4.88927 2.18482 6.63787 1.5 8.46115 1.5C10.2844 1.5 12.033 2.18482 13.3223 3.40381C14.6115 4.62279 15.3358 6.27609 15.3358 8ZM0 8C0 10.1217 0.89144 12.1566 2.47821 13.6569C4.06499 15.1571 6.21711 16 8.46115 16C10.7052 16 12.8573 15.1571 14.4441 13.6569C16.0309 12.1566 16.9223 10.1217 16.9223 8C16.9223 5.87827 16.0309 3.84344 14.4441 2.34315C12.8573 0.842855 10.7052 0 8.46115 0C6.21711 0 4.06499 0.842855 2.47821 2.34315C0.89144 3.84344 0 5.87827 0 8ZM7.66792 3.75V8C7.66792 8.25 7.80012 8.48438 8.02157 8.625L11.1945 10.625C11.5581 10.8562 12.0505 10.7625 12.2951 10.4156C12.5397 10.0687 12.4405 9.60625 12.0737 9.375L9.25438 7.6V3.75C9.25438 3.33437 8.90073 3 8.46115 3C8.02157 3 7.66792 3.33437 7.66792 3.75Z"
+                                                    fill="#CADB2D" />
+                                            </svg>
+                                            <span class="contact-value">בימים א-ה בין השעות 10:00-16:00</span>
+                                        </a>
+                                        <a href="#" class="contact-item">
+                                            <svg width="17" height="12" viewBox="0 0 17 12" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path
+                                                    d="M2.11529 1.5C1.82444 1.5 1.58647 1.725 1.58647 2V2.69063L7.28783 7.11563C7.97199 7.64688 8.95361 7.64688 9.63778 7.11563L15.3358 2.69063V2C15.3358 1.725 15.0979 1.5 14.807 1.5H2.11529ZM1.58647 4.63125V10C1.58647 10.275 1.82444 10.5 2.11529 10.5H14.807C15.0979 10.5 15.3358 10.275 15.3358 10V4.63125L10.6425 8.275C9.37337 9.25937 7.54563 9.25937 6.27976 8.275L1.58647 4.63125ZM0 2C0 0.896875 0.948574 0 2.11529 0H14.807C15.9737 0 16.9223 0.896875 16.9223 2V10C16.9223 11.1031 15.9737 12 14.807 12H2.11529C0.948574 12 0 11.1031 0 10V2Z"
+                                                    fill="#CADB2D" />
+                                            </svg>
+                                            <span class="contact-value">greentec.service@gmail.com</span>
+                                        </a>
+                                        <a href="#" class="contact-item">
+                                            <svg width="17" height="16" viewBox="0 0 17 16" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path
+                                                    d="M5.45017 0.769455C5.19567 0.188205 4.52473 -0.12117 3.88353 0.0444546L0.975015 0.794455C0.399921 0.944455 0 1.4382 0 2.0007C0 9.73195 6.6301 16.0007 14.807 16.0007C15.4019 16.0007 15.9241 15.6226 16.0828 15.0788L16.876 12.3288C17.0512 11.7226 16.724 11.0882 16.1092 10.8476L12.9363 9.59758C12.3976 9.38508 11.7729 9.53195 11.406 9.96008L10.0708 11.5007C7.74393 10.4601 5.86001 8.67883 4.7594 6.47883L6.38883 5.21945C6.84163 4.86945 6.99697 4.28195 6.77222 3.77258L5.45017 0.77258V0.769455Z"
+                                                    fill="#CADB2D" />
+                                            </svg>
+                                            <span class="contact-value">050-8-666-800</span>
+                                        </a>
+
+                                        <a href="#" class="contact-item">
+                                            <svg width="32" height="24" viewBox="0 0 32 24" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path
+                                                    d="M5.55263 0C4.23884 0 3.17293 1.00781 3.17293 2.25V4.5H0.793233C0.356955 4.5 0 4.8375 0 5.25C0 5.6625 0.356955 6 0.793233 6H3.17293H13.485C13.9212 6 14.2782 6.3375 14.2782 6.75C14.2782 7.1625 13.9212 7.5 13.485 7.5H3.17293H2.3797C1.94342 7.5 1.58647 7.8375 1.58647 8.25C1.58647 8.6625 1.94342 9 2.3797 9H3.17293H11.8985C12.3348 9 12.6917 9.3375 12.6917 9.75C12.6917 10.1625 12.3348 10.5 11.8985 10.5H3.17293H0.793233C0.356955 10.5 0 10.8375 0 11.25C0 11.6625 0.356955 12 0.793233 12H3.17293H10.312C10.7483 12 11.1053 12.3375 11.1053 12.75C11.1053 13.1625 10.7483 13.5 10.312 13.5H3.17293V19.5C3.17293 21.9844 5.30474 24 7.93233 24C10.5599 24 12.6917 21.9844 12.6917 19.5H19.0376C19.0376 21.9844 21.1694 24 23.797 24C26.4246 24 28.5564 21.9844 28.5564 19.5H30.1428C31.0204 19.5 31.7293 18.8297 31.7293 18C31.7293 17.1703 31.0204 16.5 30.1428 16.5V13.5V12V11.1234C30.1428 10.3266 29.8107 9.5625 29.2157 9L25.3834 5.37656C24.7885 4.81406 23.9804 4.5 23.1376 4.5H20.624V2.25C20.624 1.00781 19.5581 0 18.2444 0H5.55263ZM26.9699 11.1234V12H20.624V7.5H23.1376L26.9699 11.1234ZM7.93233 17.25C8.56346 17.25 9.16875 17.4871 9.61503 17.909C10.0613 18.331 10.312 18.9033 10.312 19.5C10.312 20.0967 10.0613 20.669 9.61503 21.091C9.16875 21.5129 8.56346 21.75 7.93233 21.75C7.30119 21.75 6.69591 21.5129 6.24963 21.091C5.80335 20.669 5.55263 20.0967 5.55263 19.5C5.55263 18.9033 5.80335 18.331 6.24963 17.909C6.69591 17.4871 7.30119 17.25 7.93233 17.25ZM21.4173 19.5C21.4173 18.9033 21.668 18.331 22.1143 17.909C22.5606 17.4871 23.1658 17.25 23.797 17.25C24.4281 17.25 25.0334 17.4871 25.4797 17.909C25.926 18.331 26.1767 18.9033 26.1767 19.5C26.1767 20.0967 25.926 20.669 25.4797 21.091C25.0334 21.5129 24.4281 21.75 23.797 21.75C23.1658 21.75 22.5606 21.5129 22.1143 21.091C21.668 20.669 21.4173 20.0967 21.4173 19.5Z"
+                                                    fill="#CADB2D" />
+                                            </svg>
+                                            <span class="contact-value text-green">משלוח חינם מעל ₪150</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 order-1 order-md-2">
+                            <div
+                                class="d-flex flex-row justify-content-between justify-xl-content-around gap-3 gap-lg-5">
+                                <div class="flex-1">
+                                    <h5 class="title">מפת האתר</h5>
+                                    <div class="contact-info">
+                                        <a href="#" class="contact-item">
+                                            <span class="contact-value">תקנון</span>
+                                        </a>
+                                        <a href="#" class="contact-item">
+                                            <span class="contact-value">מדריך הורדות דיגיטליות</span>
+                                        </a>
+                                        <a href="#" class="contact-item">
+                                            <span class="contact-value">אודות</span>
+                                        </a>
+                                        <a href="#" class="contact-item">
+                                            <span class="contact-value">צור קשר</span>
+                                        </a>
+                                        <a href="#" class="contact-item">
+                                            <span class="contact-value">שיטות משלוח</span>
+                                        </a>
+                                        <a href="#" class="contact-item">
+                                            <span class="contact-value">מדיניות פרטיות</span>
+                                        </a>
+                                        <a href="#" class="contact-item">
+                                            <span class="contact-value">מדיניות החזרות</span>
+                                        </a>
+                                        <a href="#" class="contact-item">
+                                            <span class="contact-value">כניסת אמנים/ספקים</span>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="flex-xl-grow-1">
+                                    <div class="d-flex flex-column flex-xl-row justify-content-around gap-3">
+                                        <div class="mx-xl-auto">
+                                            <h5 class="title">קטגוריות נבחרות</h5>
+                                            <div class="contact-info">
+                                                <a href="#" class="contact-item">
+                                                    <span class="contact-value">מוזיקה יהודית</span>
+                                                </a>
+                                                <a href="#" class="contact-item">
+                                                    <span class="contact-value">תקליטורי שמע</span>
+                                                </a>
+                                                <a href="#" class="contact-item">
+                                                    <span class="contact-value">סרטים לילדים</span>
+                                                </a>
+                                                <a href="#" class="contact-item">
+                                                    <span class="contact-value">ניצוצות של קדושה</span>
+                                                </a>
+                                                <a href="#" class="contact-item">
+                                                    <span class="contact-value">בגן של דודו</span>
+                                                </a>
+                                                <a href="#" class="contact-item">
+                                                    <span class="contact-value">מלכהלי</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="ml-xl-auto">
+                                            <h5 class="title">אומנים נבחרים</h5>
+                                            <div class="contact-info">
+                                                <a href="#" class="contact-item">
+                                                    <span class="contact-value">אברהם פריד</span>
+                                                </a>
+                                                <a href="#" class="contact-item">
+                                                    <span class="contact-value">דודו פישר</span>
+                                                </a>
+                                                <a href="#" class="contact-item">
+                                                    <span class="contact-value">ישי ריבו</span>
+                                                </a>
+                                                <a href="#" class="contact-item">
+                                                    <span class="contact-value">מוטי שטינמץ</span>
+                                                </a>
+                                                <a href="#" class="contact-item">
+                                                    <span class="contact-value">שמוליק סוכות</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Footer -->
+            <div class="bottom-footer">
+                <div class="d-none d-md-flex gap-3">
+                    <svg width="25" height="20" viewBox="0 0 25 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M19.8522 8.89732C19.8522 8.89732 20.1731 10.558 20.2449 10.9062H18.8345C18.9738 10.5089 19.5101 8.96429 19.5101 8.96429C19.5017 8.97768 19.6495 8.55804 19.734 8.29911L19.8522 8.89732ZM24.3243 2.14286V17.8571C24.3243 19.0402 23.4164 20 22.2973 20H2.02703C0.907939 20 0 19.0402 0 17.8571V2.14286C0 0.959821 0.907939 0 2.02703 0H22.2973C23.4164 0 24.3243 0.959821 24.3243 2.14286ZM6.44003 13.3571L9.10895 6.42857H7.31419L5.65456 11.1607L5.47297 10.2009L4.88176 7.01339C4.78463 6.57143 4.4848 6.44643 4.11318 6.42857H1.38091L1.35135 6.56696C2.01858 6.74554 2.61402 7.00446 3.13345 7.33036L4.64527 13.3571H6.44003ZM10.4265 13.3661L11.4907 6.42857H9.79307L8.73311 13.3661H10.4265ZM16.3345 11.0982C16.3429 10.308 15.8868 9.70536 14.9113 9.20982C14.3159 8.89286 13.9527 8.67857 13.9527 8.35268C13.9611 8.05804 14.261 7.75446 14.9282 7.75446C15.4814 7.74107 15.8868 7.87946 16.1909 8.01786L16.3429 8.09375L16.5752 6.59375C16.2416 6.45536 15.7095 6.29911 15.0549 6.29911C13.3784 6.29911 12.2002 7.24554 12.1917 8.59375C12.1791 9.58929 13.0363 10.1429 13.6782 10.4777C14.3328 10.817 14.5566 11.0402 14.5566 11.3393C14.5481 11.8036 14.0245 12.0179 13.5389 12.0179C12.8632 12.0179 12.5 11.9062 11.9468 11.6473L11.723 11.5357L11.4865 13.0938C11.8834 13.2857 12.6182 13.4554 13.3784 13.4643C15.1605 13.4688 16.3218 12.5357 16.3345 11.0982ZM22.2973 13.3661L20.9291 6.42857H19.6157C19.2103 6.42857 18.902 6.55357 18.7289 7.00446L16.2078 13.3661H17.9899C17.9899 13.3661 18.2812 12.5089 18.3446 12.3259H20.5236C20.5743 12.5714 20.7263 13.3661 20.7263 13.3661H22.2973Z"
+                            fill="#494848" />
+                    </svg>
+                    <svg width="25" height="19" viewBox="0 0 25 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M20.3927 16.0016C20.3927 16.29 20.1985 16.4978 19.9198 16.4978C19.6326 16.4978 19.4468 16.2772 19.4468 16.0016C19.4468 15.7259 19.6326 15.5054 19.9198 15.5054C20.1985 15.5054 20.3927 15.7259 20.3927 16.0016ZM7.26774 15.5054C6.96791 15.5054 6.79476 15.7259 6.79476 16.0016C6.79476 16.2772 6.96791 16.4978 7.26774 16.4978C7.54223 16.4978 7.72804 16.29 7.72804 16.0016C7.72382 15.7259 7.54223 15.5054 7.26774 15.5054ZM12.2297 15.4926C12.0017 15.4926 11.8623 15.6411 11.8285 15.8616H12.6351C12.5971 15.6199 12.4493 15.4926 12.2297 15.4926ZM16.7821 15.5054C16.4949 15.5054 16.3218 15.7259 16.3218 16.0016C16.3218 16.2772 16.4949 16.4978 16.7821 16.4978C17.0693 16.4978 17.2551 16.29 17.2551 16.0016C17.2551 15.7259 17.0693 15.5054 16.7821 15.5054ZM21.2542 16.6123C21.2542 16.625 21.2669 16.6335 21.2669 16.6589C21.2669 16.6716 21.2542 16.6801 21.2542 16.7056C21.2416 16.7183 21.2416 16.7268 21.2331 16.7395C21.2204 16.7522 21.212 16.7607 21.1867 16.7607C21.174 16.7734 21.1655 16.7734 21.1402 16.7734C21.1275 16.7734 21.1191 16.7734 21.0937 16.7607C21.0811 16.7607 21.0726 16.748 21.06 16.7395C21.0473 16.7268 21.0389 16.7183 21.0389 16.7056C21.0262 16.6844 21.0262 16.6716 21.0262 16.6589C21.0262 16.6377 21.0262 16.625 21.0389 16.6123C21.0389 16.5911 21.0515 16.5783 21.06 16.5656C21.0726 16.5529 21.0811 16.5529 21.0937 16.5444C21.1149 16.5317 21.1275 16.5317 21.1402 16.5317C21.1613 16.5317 21.174 16.5317 21.1867 16.5444C21.2078 16.5571 21.2204 16.5571 21.2331 16.5656C21.2458 16.5741 21.2416 16.5911 21.2542 16.6123ZM21.1613 16.6717C21.1824 16.6717 21.1824 16.6589 21.1951 16.6589C21.2078 16.6462 21.2078 16.6377 21.2078 16.625C21.2078 16.6123 21.2078 16.6038 21.1951 16.5911C21.1824 16.5911 21.174 16.5783 21.1486 16.5783H21.0811V16.7268H21.1149V16.6674H21.1275L21.174 16.7268H21.2078L21.1613 16.6717ZM24.3243 2.03571V16.9643C24.3243 18.0882 23.4164 19 22.2973 19H2.02703C0.907939 19 0 18.0882 0 16.9643V2.03571C0 0.91183 0.907939 0 2.02703 0H22.2973C23.4164 0 24.3243 0.91183 24.3243 2.03571ZM2.7027 7.95625C2.7027 11.2007 5.32517 13.8301 8.55152 13.8301C9.70017 13.8301 10.8277 13.4824 11.7821 12.8504C8.70355 10.3355 8.72466 5.58973 11.7821 3.07478C10.8277 2.43862 9.70017 2.09509 8.55152 2.09509C5.32517 2.09085 2.7027 4.72455 2.7027 7.95625ZM12.1622 12.5705C15.1394 10.2379 15.1267 5.69152 12.1622 3.34621C9.19763 5.69152 9.18497 10.2422 12.1622 12.5705ZM6.15287 15.8065C6.15287 15.4375 5.91216 15.1958 5.53209 15.183C5.33784 15.183 5.13091 15.2424 4.99155 15.4587C4.8902 15.2848 4.71706 15.183 4.47635 15.183C4.31588 15.183 4.15541 15.2424 4.02872 15.4121V15.2254H3.68243V16.7819H4.02872C4.02872 15.9804 3.92314 15.5011 4.40878 15.5011C4.83953 15.5011 4.75507 15.9337 4.75507 16.7819H5.08868C5.08868 16.0058 4.98311 15.5011 5.46875 15.5011C5.89949 15.5011 5.81503 15.9252 5.81503 16.7819H6.16132V15.8065H6.15287ZM8.04899 15.2254H7.71537V15.4121C7.60135 15.2721 7.44088 15.183 7.22128 15.183C6.78632 15.183 6.4527 15.5308 6.4527 16.0016C6.4527 16.4766 6.78632 16.8201 7.22128 16.8201C7.44088 16.8201 7.60135 16.7395 7.71537 16.5911V16.7862H8.04899V15.2254ZM9.75929 16.3112C9.75929 15.675 8.79223 15.9634 8.79223 15.6665C8.79223 15.4248 9.29476 15.4629 9.57348 15.6199L9.71284 15.3442C9.31588 15.0855 8.4375 15.0897 8.4375 15.692C8.4375 16.2984 9.40456 16.044 9.40456 16.3281C9.40456 16.5953 8.83446 16.5741 8.53041 16.3621L8.3826 16.6292C8.85557 16.9516 9.75929 16.8837 9.75929 16.3112ZM11.2542 16.7056L11.1613 16.4172C11.0008 16.5063 10.6461 16.6038 10.6461 16.2433V15.5393H11.1993V15.2254H10.6461V14.7504H10.2998V15.2254H9.97888V15.535H10.2998V16.2433C10.2998 16.9897 11.0304 16.854 11.2542 16.7056ZM11.8159 16.1373H12.9772C12.9772 15.4502 12.6647 15.1788 12.2424 15.1788C11.7948 15.1788 11.4738 15.5138 11.4738 15.9973C11.4738 16.8667 12.4282 17.0109 12.9012 16.5996L12.7407 16.3451C12.4113 16.6165 11.913 16.5911 11.8159 16.1373ZM14.3117 15.2254C14.1174 15.1406 13.8218 15.1491 13.6698 15.4121V15.2254H13.3235V16.7819H13.6698V15.904C13.6698 15.4121 14.0709 15.4757 14.2103 15.5478L14.3117 15.2254ZM14.7593 16.0016C14.7593 15.5181 15.2492 15.3612 15.6334 15.6453L15.7939 15.3696C15.3041 14.9837 14.413 15.1958 14.413 16.0058C14.413 16.8455 15.359 17.0152 15.7939 16.642L15.6334 16.3663C15.2449 16.642 14.7593 16.4766 14.7593 16.0016ZM17.576 15.2254H17.2297V15.4121C16.8792 14.9455 15.9671 15.2085 15.9671 16.0016C15.9671 16.8158 16.913 17.0491 17.2297 16.5911V16.7862H17.576V15.2254ZM18.9992 15.2254C18.8978 15.1746 18.5346 15.1025 18.3573 15.4121V15.2254H18.0236V16.7819H18.3573V15.904C18.3573 15.4375 18.7373 15.4672 18.8978 15.5478L18.9992 15.2254ZM20.701 14.5935H20.3674V15.4121C20.0211 14.9498 19.1047 15.1958 19.1047 16.0016C19.1047 16.8243 20.0549 17.0449 20.3674 16.5911V16.7862H20.701V14.5935ZM21.022 11.4085V11.6036H21.0557V11.4085H21.136V11.3746H20.9417V11.4085H21.022ZM21.3007 16.6589C21.3007 16.6377 21.3007 16.6123 21.288 16.5911C21.2753 16.5783 21.2669 16.5571 21.2542 16.5444C21.2416 16.5317 21.2204 16.5232 21.2078 16.5105C21.1867 16.5105 21.1613 16.4978 21.1402 16.4978C21.1275 16.4978 21.1064 16.5105 21.0811 16.5105C21.06 16.5232 21.0473 16.5317 21.0346 16.5444C21.0135 16.5571 21.0008 16.5783 21.0008 16.5911C20.9882 16.6123 20.9882 16.6377 20.9882 16.6589C20.9882 16.6716 20.9882 16.6929 21.0008 16.7183C21.0008 16.731 21.0135 16.7522 21.0346 16.765C21.0473 16.7777 21.0557 16.7862 21.0811 16.7989C21.1022 16.8116 21.1275 16.8116 21.1402 16.8116C21.1613 16.8116 21.1867 16.8116 21.2078 16.7989C21.2204 16.7862 21.2416 16.7777 21.2542 16.765C21.2669 16.7522 21.2753 16.731 21.288 16.7183C21.3007 16.6929 21.3007 16.6716 21.3007 16.6589ZM21.4358 11.3703H21.3767L21.3091 11.5188L21.2416 11.3703H21.1824V11.5993H21.2162V11.4254L21.2838 11.5739H21.3302L21.3894 11.4254V11.5993H21.4358V11.3703ZM21.6216 7.95625C21.6216 4.72455 18.9992 2.09085 15.7728 2.09085C14.6242 2.09085 13.4966 2.43862 12.5422 3.07054C15.587 5.58549 15.6334 10.344 12.5422 12.8462C13.4966 13.4824 14.6326 13.8259 15.7728 13.8259C18.9992 13.8301 21.6216 11.2007 21.6216 7.95625Z"
+                            fill="#494848" />
+                    </svg>
+                    <svg width="26" height="20" viewBox="0 0 26 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M2.10811 20C0.943818 20 0 19.0402 0 17.8571V2.14286C0 0.959375 0.943818 0 2.10811 0H23.1892C24.353 0 25.2973 0.959375 25.2973 2.14286V2.25134H21.9814L21.2348 4.375L20.4926 2.25134H16.2236V5.07143L14.9895 2.25134H11.5375L7.94932 10.4955H10.8392V17.808H19.7855L21.1865 16.2411L22.5875 17.808H25.2973V17.8571C25.2973 19.0402 24.353 20 23.1892 20H2.10811ZM21.1953 14.8214L19.3419 16.8884H17.1503L20.1149 13.6875L17.1503 10.4509H19.4078L21.2304 12.5357L23.075 10.4509H25.2973L22.3108 13.6696L25.2973 16.8884H23.0399L21.1953 14.8214ZM25.2973 11.8259V15.5446L23.5713 13.6741L25.2973 11.8259ZM13.5095 15.4063H17.1547V16.8884H11.7966V10.4955H17.1547V11.9732H13.5095V12.9732H17.0625V14.4152H13.5095V15.4107V15.4063ZM23.5976 5.07589L21.977 9.56697H20.4662L18.85 5.08929V9.56697H17.1503V3.16964H19.8382L21.2392 7.15625L22.6534 3.16964H25.2973V9.56697H23.5976V5.07589ZM14.6909 8.28572H11.7966L11.274 9.56697H9.38547L12.126 3.16964H14.3747L17.1547 9.56697H15.2179L14.6909 8.28572ZM13.2416 4.75446L12.3851 6.84821H14.0936L13.2416 4.75446Z"
+                            fill="#494848" />
+                    </svg>
+                    <svg width="26" height="20" viewBox="0 0 26 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M8.18209 10.0982C8.18209 10.6429 7.75608 11.058 7.21588 11.058C6.81182 11.058 6.51318 10.8259 6.51318 10.3884C6.51318 9.84375 6.93041 9.40625 7.46622 9.40625C7.87466 9.40625 8.18209 9.66072 8.18209 10.0982ZM3.53547 7.93304H3.32905C3.26318 7.93304 3.1973 7.97768 3.18851 8.05357L2.99966 9.24554L3.3598 9.23214C3.84291 9.23214 4.21622 9.16518 4.30405 8.59822C4.40507 8 4.03176 7.93304 3.53547 7.93304ZM16.0084 7.93304H15.8108C15.7318 7.93304 15.6791 7.97768 15.6703 8.05357L15.4858 9.24554L15.8372 9.23214C16.4081 9.23214 16.8034 9.09822 16.8034 8.42857C16.799 7.95536 16.3818 7.93304 16.0084 7.93304ZM25.2973 2.14286V17.8571C25.2973 19.0402 24.353 20 23.1892 20H2.10811C0.944257 20 0 19.0402 0 17.8571V2.14286C0 0.959821 0.944257 0 2.10811 0H23.1892C24.353 0 25.2973 0.959821 25.2973 2.14286ZM5.6348 8.1875C5.6348 7.25 4.92331 6.9375 4.11081 6.9375H2.35405C2.24426 6.9375 2.13446 7.02679 2.12568 7.14732L1.40541 11.7054C1.39223 11.7946 1.45811 11.8839 1.54595 11.8839H2.38041C2.49899 11.8839 2.60878 11.7545 2.62196 11.6295L2.81959 10.442C2.86351 10.1205 3.39932 10.2321 3.61014 10.2321C4.86622 10.2321 5.6348 9.47321 5.6348 8.1875ZM9.33277 8.58036H8.49831C8.33142 8.58036 8.32264 8.82589 8.31385 8.94643C8.05912 8.56696 7.6902 8.5 7.27297 8.5C6.19696 8.5 5.37568 9.45982 5.37568 10.5179C5.37568 11.3884 5.91149 11.9554 6.76791 11.9554C7.16318 11.9554 7.65507 11.7366 7.93176 11.4241C7.9098 11.4911 7.88784 11.6339 7.88784 11.7009C7.88784 11.8036 7.93176 11.8795 8.02838 11.8795H8.78378C8.90236 11.8795 9.00338 11.75 9.02534 11.625L9.47331 8.75447C9.48649 8.66964 9.42061 8.58036 9.33277 8.58036ZM11.1115 12.9509L13.9091 8.81696C13.9311 8.79464 13.9311 8.77232 13.9311 8.74107C13.9311 8.66518 13.8652 8.58482 13.7905 8.58482H12.9473C12.8726 8.58482 12.7936 8.62947 12.7497 8.69643L11.5858 10.4375L11.1027 8.76339C11.0676 8.66518 10.9709 8.58482 10.8611 8.58482H10.0399C9.9652 8.58482 9.89932 8.66518 9.89932 8.74107C9.89932 8.79464 10.7557 11.2768 10.8304 11.5134C10.7118 11.683 9.93007 12.7902 9.93007 12.9241C9.93007 13.0045 9.99595 13.067 10.0706 13.067H10.9139C10.9929 13.0625 11.0676 13.0179 11.1115 12.9509ZM18.1078 8.1875C18.1078 7.25 17.3963 6.9375 16.5838 6.9375H14.8402C14.7216 6.9375 14.6118 7.02679 14.5986 7.14732L13.8872 11.7009C13.8784 11.7902 13.9443 11.8795 14.0277 11.8795H14.928C15.0159 11.8795 15.0818 11.8125 15.1037 11.7366L15.3014 10.442C15.3453 10.1205 15.8811 10.2321 16.0919 10.2321C17.3392 10.2321 18.1078 9.47321 18.1078 8.1875ZM21.8057 8.58036H20.9713C20.8044 8.58036 20.7956 8.82589 20.7824 8.94643C20.5409 8.56696 20.1676 8.5 19.7416 8.5C18.6655 8.5 17.8443 9.45982 17.8443 10.5179C17.8443 11.3884 18.3801 11.9554 19.2365 11.9554C19.6449 11.9554 20.1368 11.7366 20.4003 11.4241C20.3872 11.4911 20.3564 11.6339 20.3564 11.7009C20.3564 11.8036 20.4003 11.8795 20.497 11.8795H21.2568C21.3753 11.8795 21.4764 11.75 21.4983 11.625L21.9463 8.75447C21.9595 8.66964 21.8936 8.58036 21.8057 8.58036ZM23.8919 7.09375C23.8919 7.00446 23.826 6.9375 23.7514 6.9375H22.9389C22.873 6.9375 22.8071 6.99107 22.7983 7.05804L22.0868 11.7009L22.0736 11.7232C22.0736 11.8036 22.1395 11.8795 22.2274 11.8795H22.952C23.0618 11.8795 23.1716 11.75 23.1804 11.625L23.8919 7.10714V7.09375ZM19.9392 9.40625C19.4034 9.40625 18.9861 9.83929 18.9861 10.3884C18.9861 10.8214 19.2936 11.058 19.6976 11.058C20.2247 11.058 20.6507 10.6473 20.6507 10.0982C20.6551 9.66072 20.3476 9.40625 19.9392 9.40625Z"
+                            fill="#494848" />
+                    </svg>
+                </div>
+
+                <p class="copy-text">© 2026 גרינטק. כל הזכויות שמורות.</p>
+            </div>
+        </footer>
+        <!-- Footer End -->
+    </div>
+
+    <script src="vendor/jquery.min.js"
+        
+         referrerpolicy="no-referrer"></script>
+
+    <!-- Option 1: Bootstrap Bundle with Popper -->
+    <script src="vendor/bootstrap.bundle.min.js"
+        
+        ></script>
+
+    <!-- Option 2: Separate Popper and Bootstrap JS -->
+    <!--
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"  ></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"  ></script>
+    -->
+
+    <script src="./assets/js/main.js"></script>
+
+
+
+<script src="./assets/js/greenshow-teaser.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,55 @@
+﻿screen_id,module_am,action_ac,url,screen_name,business_purpose,key_fields,row_actions_buttons,status,notes
+A01,orders,manage,/admin?am=orders&ac=manage,ניהול הזמנות,"רשימת 35,650 הזמנות","ID, מספר, שם, תאריך, סה""כ, שיטת תשלום, משלוח, מצב תשלום, מצב הזמנה, עיר, טלפון; מסננים","צפייה, משתמש, שינוי סטטוס גורף",אומת בפועל,
+A02,orders,view,/admin?am=orders&ac=view,פרטי הזמנה,טיפול בהזמנה,"פרטי הזמנה/תשלום/לקוח/משלוח, שורות, סכומים, מעקב","שינוי מצב תשלום, עריכת שורות, הוספת מוצר/שורה, הערה, צפייה כלקוח",אומת בפועל,כפתור צפייה: הורדות + חשבונית ירוקה
+A03,orders,abandoned_carts,/admin?am=orders&ac=abandoned_carts,עגלות נטושות,151 עגלות,"id, מוצרים, שם, משתמש, תאריך","הסרה, התחברות כמשתמש (לא נפתח)",אומת בפועל,
+A04,orders,deleted_list,/admin?am=orders&ac=deleted_list,הזמנות שנמחקו,20 הזמנות,"מספר, שם, תאריך","שחזור, צפייה, מחק הכל (לא נלחץ)",אומת בפועל,
+A05,orders,user_order_status,/admin?am=orders&ac=user_order_status,סטטוס הזמנה,7 סטטוסים ללקוח,"שם; עריכה: כותרת מייל, תוכן, SMS, שליחת הודעה","עריכה, הסרה, סידור",אומת בפועל,
+A06,orders,manage_memos_templates,/admin?am=orders&ac=manage_memos_templates,עיצובי הערות,3 תבניות,"שם, תבנית","הוספה, הסרה",אומת בפועל,
+A07,orders,user_order_fields,/admin?am=orders&ac=user_order_fields,שדות הזמנה,שדות מותאמים בקופה,"שם, סוג (10 סוגים)",הוספה,אומת בפועל,כרגע ריק
+A08,products,manage,/admin?am=products&ac=manage,ניהול מוצרים,קטלוג,"ID, שם, קטגוריה, מחיר, סטטוס, מק""ט, סידור, דף הבית; מסננים","הוספה מהירה, עריכה",אומת בפועל,
+A09,products,edit,/admin?am=products&ac=edit,עריכת מוצר,הקמה ועריכה,"14 לשוניות: כללי, מחיר, קטגוריות, מאפיינים, תמונות, משימות מתוזמנות, SEO, נלווים, תוויות, עיצוב, הנחות, קבצים דיגיטליים, וריאציות, שונות","שמירה, העלאת תמונות, מחיקת תמונה",אומת בפועל,ראה 17 §3
+A10,products,manage_cat,/admin?am=products&ac=manage_cat,קטגוריות מוצרים,219 קטגוריות,"שם, הורה","עדכון, הסרה, סידור פריטים",אומת בפועל,
+A11,products,edit_cat,/admin?am=products&ac=edit_cat,עריכת קטגוריה,,"שם, תיאור, סדר מוצרים (27), הצג בתפריט, הסתר משנה, נעול, קישור, רווח, old id, תמונה, SEO, פילטרים",שמירה,אומת בפועל,
+A12,products,inventory,/admin?am=products&ac=inventory,מלאי,188 מוצרים במלאי מנוהל,"ID, שם, מחיר, כמות",עריכה בטבלה,אומת בפועל,
+A13,ProductVariations,inventory_v,/admin?am=ProductVariations&ac=inventory_v,מלאי וריאציות,96 מוצרים,"מוצר, וריאציות, כמות",קישור ללשונית וריאציות,אומת בפועל,
+A14,products,recycle_bin,/admin?am=products&ac=recycle_bin,סל מחזור,מוצרים שנמחקו,"שם, מחיר, מק""ט",מחק הכל (לא נלחץ),אומת בפועל,ריק
+A15,products,bulk_price,/admin?am=products&ac=bulk_price,עדכון מחיר גורף,,"Id, תמונה, כותרת, מחיר, מחיר חדש","הבא, שמירה",אומת בפועל,
+A16,products,importTools,/admin?am=products&ac=importTools,כלי ייבוא,ייבוא מוצרים,סוג כלי,שליחה,אומת בפועל,רק שלב 1 נבדק
+A17,ProductSuppliers,manage_suppliers,/admin?am=ProductSuppliers&ac=manage_suppliers,יצרנים,646 יצרנים/אמנים,"שם; עריכה: לוגו, תוכן, קישור, SEO","הוספה, עריכה, הסרה",אומת בפועל,
+A18,ProductProperties,manage_prod_props_lists,/admin?am=ProductProperties&ac=manage_prod_props_lists,תכונות מוצר,5 רשימות תוספות בתשלום,"קבוצות (שם, alias, סוג, חובה), פריטים עם מחיר, ברירת מחדל","הוספה, עריכה, הסרה",אומת בפועל,"ציציות, תכלת, הטבעה, סוללות, ספרון"
+A19,ProductsSets,manage_sets,/admin?am=ProductsSets&ac=manage_sets,סט מוצרים,59 סטים,"יצירה: שם, קטגוריה; רכיבים: רשימת מוצרים","מוצרים, עריכה, מחיקת רכיב",אומת בפועל,
+A20,labels,manage,/admin?am=labels&ac=manage,תוויות,10 תוויות,"שם, קישור, תוכן, סטטוס, תמונה","צפייה, עריכה, הסרה",אומת בפועל,
+A21,coupons,manage,/admin?am=coupons&ac=manage,קופונים,9 קופונים,"סטטוס, סוג (5), כמות, ייחודי, קבוצות, התאמות, קודים","עריכה, הסרה, יצירת קודים, ייצוא קודים",אומת בפועל,
+A22,discounts,manage,/admin?am=discounts&ac=manage,הנחות,4 הנחות,"סוג (6), סטטוס, תמונה, תנאים (מחיר, כמות), התאמות","עריכה, הסרה",אומת בפועל,
+A23,discounts,manage_general,/admin?am=discounts&ac=manage_general,הנחות כלליות,,"שם, סוג (אחוזים)",יצירה,אומת בפועל,ריק
+A24,campaigns,manage,/admin?am=campaigns&ac=manage,קמפיינים,1 קמפיין,"שם, קוד, קישור","דוחות, הסרה",אומת בפועל,
+A25,GoogleShopping,manage,/admin?am=GoogleShopping&ac=manage,Google Shopping,פיד מוצרים,"שם, קמפיין, סטטוס, התאמות, החרגות","עריכה, הסרה",אומת בפועל,
+A26,googleAnalytics,events,/admin?am=googleAnalytics&ac=events,אירועי GA,אירועים מותאמים,"סוג, Category, Action, Label, Value","הוספה, הסרה",אומת בפועל,
+A27,pages,manage,/admin?am=pages&ac=manage,עמודים,8 עמודים,"שם, תוכן, סטטוס, קישור, SEO, תמונה עליונה, header, class","צפייה, עריכה, עריכה באתר, הסרה",אומת בפועל,
+A28,pages,homepage,/admin?am=pages&ac=homepage,עמוד הבית,,"כותרת, מילות מפתח, תיאור, אייקון FB, מספר מאמרים",שמירה,אומת בפועל,
+A29,articles,manage,/admin?am=articles&ac=manage,מאמרים,33 מאמרים,"שם, תיאור מקוצר, תוכן, סטטוס, קישור, תמונה, SEO","צפייה, עריכה, הסרה",אומת בפועל,
+A30,articles,manage_categories,/admin?am=articles&ac=manage_categories,קטגוריות מאמרים,,כותרת,הוספה,אומת בפועל,ריק
+A31,menus,manage,/admin?am=menus&ac=manage,תפריטים,8 תפריטים,"פריטים: סוג (6), שם, קישור, תמונה, הורה","עריכה, פריטים, סידור, הסרה",אומת בפועל,
+A32,albums,manage,/admin?am=albums&ac=manage,גלריות,5 גלריות,"תמונות: תווית, תיאור, קישור, סדר; הגדרות מידות","ניהול תמונות, הגדרות, הסרה",אומת בפועל,
+A33,blocks,manage,/admin?am=blocks&ac=manage,קוביות תוכן,8 קוביות (טקסטים למיילים ולאתר),"כותרת, תוכן",עריכה,אומת בפועל,
+A34,faq,manage,/admin?am=faq&ac=manage,שאלות ותשובות,,"שם, alias",הוספה,אומת בפועל,ריק
+A35,shipping,manage,/admin?am=shipping&ac=manage,משלוחים,4 שיטות,"שם, מחיר, חינם מעל, תוכן, מחיר לקבוצה, משקלים, ארצות","עריכה, הסרה",אומת בפועל,טבלת משקלים לא נבדקה
+A36,shipping,countries_list,/admin?am=shipping&ac=countries_list,רשימת ארצות,249 ארצות,סימון פעילות,שמירה,אומת בפועל,
+A37,user,manage,/admin?am=user&ac=manage,משתמשים,לקוחות,"ID, מייל, שם, טלפון, פעיל, פעילות אחרונה, הרשמה; מסננים",ייצוא (לא הופעל),אומת בפועל,
+A38,user,edit_user,/admin?am=user&ac=edit_user,כרטיס משתמש,,"חשבון, הזמנות, זיכויים, SMS, מידע אישי, סיסמה, סוג, קבוצות, הערה","התחברות כמשתמש (לא נפתח), שליחת SMS (לא נשלח)",אומת בפועל,
+A39,admin,createUser,/admin?am=admin&ac=createUser,הוספת משתמש,,"מייל, סיסמה, סוג (0/50/70/80/99), שם",שמירה,אומת בפועל,
+A40,admin,profile,/admin?am=admin&ac=profile,הפרופיל שלי,,"מייל, שם, סיסמה, תמונה",שמירה,אומת בפועל,
+A41,reports,google_searches,/admin?am=reports&ac=google_searches,חיפושים בגוגל,Search Console 60 יום,"מילה, הופעות, לחיצות, CTR, מיקום",,אומת בפועל,
+A42,user,orders_reports,/admin?am=user&ac=orders_reports,דוח הזמנות משתמשים,,"ID, משתמש, הרשמה, גלישה, הזמנות, אחרונה",ייצוא (לא הופעל),אומת בפועל,
+A43,search,reports,/admin?am=search&ac=reports,חיפושים באתר,"4,702 מילים","מילה, כמות, אחרון",,אומת בפועל,
+A44,orders,statistics,/admin?am=orders&ac=statistics,סטטיסטיקת הזמנות,מוצרים מובילים,"שם, כמות",,אומת בפועל,
+A45,wishlist,w_statistics,/admin?am=wishlist&ac=w_statistics,דוח משאלות,"1,828 מוצרים","מוצר, כמות",,אומת בפועל,
+A46,ProductsDigitalDownloads,pdd_statistics,/admin?am=ProductsDigitalDownloads&ac=pdd_statistics,דוח קבצים דיגיטליים,הורדות לספקים,"מתאריך, עד, יצרן, משתמש ספק","PDF, Excel (לא הופק)",אומת בפועל,בסיס לתמלוגים
+A47,userwatch,products_statistics,/admin?am=userwatch&ac=products_statistics,סטטיסטיקת מוצרים,,"צפיות, סל, משאלות, הזמנות, רכישות, סה""כ",,אומת בפועל,
+A48,campaigns,statistics,/admin?am=campaigns&ac=statistics,סטטיסטיקת קמפיינים,,"קמפיין, הזמנה, תאריך, סכום",,אומת בפועל,
+A49,seo,configs,/admin?am=seo&ac=configs,הגדרות SEO,,google-site-verification,שמירה,אומת בפועל,
+A50,PermanentRedirect,list,/admin?am=PermanentRedirect&ac=list,הפניות 301,10 הפניות,"מ, עד","הוספה, הסרה",אומת בפועל,נשמרו ל-legacy-301-redirects.csv
+A51,configs,system,/admin?am=configs&ac=system,הגדרות מערכת,,"שם אתר, לוגו, טלפונים, וואטסאפ",שמירה,אומת בפועל,
+A52,configs,headers,/admin?am=configs&ac=headers,headers,קודי מעקב,"landing, order_success",שמירה,אומת בפועל,GTM
+A53,configs,manage_images,/admin?am=configs&ac=manage_images,ניהול תמונות,,,,אומת בפועל,ריק
+A54,configs,shutdown_site,/admin?am=configs&ac=shutdown_site,כיבוי האתר,,,,לא נבדק,לא נפתח בכוונה

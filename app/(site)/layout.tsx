@@ -1,0 +1,44 @@
+import type { Metadata } from 'next';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+
+const SITE = process.env.SITE_URL || 'https://www.greentec.co.il';
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE),
+  title: { default: 'גרינטק – מוזיקה יהודית, סרטים ותוכן יהודי', template: '%s' },
+  robots: process.env.STAGING === '1' ? { index: false, follow: false } : undefined,
+  icons: { icon: '/t/assets/images/logo-v.png' },
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="he" dir="rtl">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Varela+Round&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="/t/vendor/flickity.min.css" />
+        <link rel="stylesheet" href="/t/vendor/flickity-fade.css" />
+        <link rel="stylesheet" href="/t/vendor/bootstrap.rtl.min.css" />
+        <link rel="stylesheet" href="/t/assets/css/greenshow-topbar.css" />
+        <link rel="stylesheet" href="/t/assets/css/style.css" />
+        <link rel="stylesheet" href="/t/assets/css/gt-app.css" />
+        <script src="/t/vendor/flickity.pkgd.min.js"></script>
+        <script src="/t/vendor/flickity-fade.js"></script>
+      </head>
+      <body>
+        <div className="d-flex flex-column min-vh-100">
+          <Header />
+          {children}
+          <Footer />
+        </div>
+        <script src="/t/vendor/jquery.min.js"></script>
+        <script src="/t/vendor/bootstrap.bundle.min.js"></script>
+        <script src="/t/assets/js/main.js"></script>
+        <script src="/t/assets/js/quickview.js"></script>
+        <script src="/t/assets/js/greenshow-teaser.js"></script>
+        <script src="/t/assets/js/gt-site.js"></script>
+      </body>
+    </html>
+  );
+}
