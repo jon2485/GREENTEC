@@ -48,6 +48,7 @@ model Product {
   oneButtonTitle  String    @default("")
   onlyDigital     Boolean   @default(false)
   isSet           Boolean   @default(false) // ניהול סט מוצרים
+  propertyLists   String    @default("") // תכונות מוצר: מזהי PropertyList מופרדים בפסיק
   // תמונות / עיצוב / שונות
   mainImage       String    @default("")
   topImage        String    @default("")
