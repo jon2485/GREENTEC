@@ -199,28 +199,31 @@ export async function categoriesManage() {
     String(cnt.get(c.id) || 0), info.get(c.id)?.showInMenu ? '✓' : '',
     `<div class="d-flex gap-1">${btn(A('products', 'edit_cat', { id: c.id }), 'עדכון', 'btn-light-primary')}${btn(A('products', 'cat_items', { id: c.id }), 'סידור פריטים', 'btn-light')}${btn('/' + (info.get(c.id)?.url || ''), 'צפייה', 'btn-light')}${actBtn(AJ('products', 'delete_cat', c.id), 'הסרה', 'להסיר את הקטגוריה? המוצרים לא יימחקו.')}</div>`,
   ]));
-  return card('קטגוריות מוצרים', body, btn(A('products', 'edit_cat', { id: 0 }), '+ הוספת קטגוריה'));
+  return card('קטגוריות מוצרים', body, btn(A('products', 'edit_cat', { id: 'new' }), '+ הוספת קטגוריה'));
 }
 const ORDERS: Opt[] = [['', 'ידני (סידור פריטים)'], ['id_desc', 'מזהה – חדש לישן'], ['id_asc', 'מזהה – ישן לחדש'], ['updated', 'עדכון אחרון'], ['price_asc', 'מחיר – מהנמוך'], ['price_desc', 'מחיר – מהגבוה'], ['new_price', 'מחיר מבצע'], ['name', 'שם']];
-export async function categoryEdit(id: number) {
-  const c: any = id ? await db.category.findUnique({ where: { id } }) : { filterPrice: true, filterSupplier: true, bundlesFirst: true, robots: 'all' };
+// id === null → new category (category 0 "המוצרים שלנו" is a real category, so 0 is not "new")
+export async function categoryEdit(id: number | null) {
+  const isNew = id === null;
+  const c: any = !isNew ? await db.category.findUnique({ where: { id } }) : { filterPrice: true, filterSupplier: true, bundlesFirst: true, robots: 'all' };
   if (!c) return card('עריכת קטגוריה', 'לא נמצא');
   const cats = await catOpts();
-  const inner = (id ? '' : fText('id', 'מזהה (ID)', '', 'number', 'required')) + fText('name', 'שם *', c.name, 'text', 'required') + fSelect('parentId', 'קטגוריית אב', c.parentId ?? 0, [[0, 'המוצרים שלנו (ראשי)'], ...cats.filter(([k]) => +k !== id)]) +
+  const inner = (!isNew ? '' : fText('id', 'מזהה (ID)', '', 'number', 'required')) + fText('name', 'שם *', c.name, 'text', 'required') + (id === 0 ? '' : fSelect('parentId', 'קטגוריית אב', c.parentId ?? '', [['', '— ראשי (ללא הורה) —'], ...cats.filter(([k]) => +k !== id)])) +
     fArea('content', 'תיאור', c.content, 8, true) + fArea('shortContent', 'תיאור מקוצר', c.shortContent, 3) + fSelect('productsOrder', 'סדר מוצרים', c.productsOrder, ORDERS) +
     `<div class="row"><div class="col-md-4">${fBool('showInMenu', 'הצג בתפריט', c.showInMenu)}${fBool('hideChildCats', 'הסתר מוצרים של קטגוריות משנה', c.hideChildCats)}${fBool('closed', 'נעול', c.closed)}</div><div class="col-md-4">${fBool('bundlesFirst', 'מארזים לפני מוצרים בודדים', c.bundlesFirst)}${fBool('filterPrice', 'פילטר מחיר', c.filterPrice)}${fBool('filterSupplier', 'פילטר יצרן', c.filterSupplier)}</div></div>` +
     fText('url', 'קישור', c.url) + `<div class="row"><div class="col-md-4">${fText('profit', 'רווח', c.profit)}</div><div class="col-md-4">${fText('oldId', 'old id', c.oldId)}</div><div class="col-md-4">${fText('sort', 'סדר', c.sort ?? 0, 'number')}</div></div>` +
     fImage('image', 'תמונה', c.image, 'media/categories') + fImage('topImage', 'תמונה עליונה', c.topImage, 'media/categories') + fArea('header', 'header', c.header, 3) + '<h5 class="mt-4 border-top pt-3">SEO</h5>' + seoFields(c);
-  return card(id ? `עריכת קטגוריה #${id} · ${esc(c.name)}` : 'הוספת קטגוריה', form(AJ('products', 'save_cat', id), inner), btn(A('products', 'manage_cat'), 'חזרה', 'btn-light') + (id ? btn(A('products', 'cat_items', { id }), 'סידור פריטים', 'btn-light') : ''));
+  return card(!isNew ? `עריכת קטגוריה #${id} · ${esc(c.name)}` : 'הוספת קטגוריה', form(AJ('products', 'save_cat', isNew ? 'new' : id), inner), btn(A('products', 'manage_cat'), 'חזרה', 'btn-light') + (!isNew ? btn(A('products', 'cat_items', { id }), 'סידור פריטים', 'btn-light') : ''));
 }
-export async function categorySave(id: number, f: FormData) {
+export async function categorySave(id: number | null, f: FormData) {
   const b = (k: string) => bool(f, k);
-  const data: any = { name: str(f.get('name')), parentId: int(f.get('parentId')) ?? 0, content: str(f.get('content')), shortContent: str(f.get('shortContent')), productsOrder: str(f.get('productsOrder')),
+  const data: any = { name: str(f.get('name')), parentId: id === 0 ? null : int(f.get('parentId')), content: str(f.get('content')), shortContent: str(f.get('shortContent')), productsOrder: str(f.get('productsOrder')),
     showInMenu: b('showInMenu'), hideChildCats: b('hideChildCats'), closed: b('closed'), bundlesFirst: b('bundlesFirst'), filterPrice: b('filterPrice'), filterSupplier: b('filterSupplier'),
     url: str(f.get('url')).replace(/^\/+/, ''), profit: str(f.get('profit')), oldId: str(f.get('oldId')), sort: int(f.get('sort')) ?? 0, image: str(f.get('image')), topImage: str(f.get('topImage')), header: str(f.get('header')),
     robots: str(f.get('robots')) || 'all', metaTitle: str(f.get('metaTitle')), metaKeywords: str(f.get('metaKeywords')), metaDescription: str(f.get('metaDescription')), ogTitle: str(f.get('ogTitle')), ogDescription: str(f.get('ogDescription')), ogImage: str(f.get('ogImage')) };
   if (!data.name) return { status: 'error', message: 'שם הוא חובה' };
-  if (id) { await db.category.update({ where: { id }, data }); return { status: 'success', message: 'הקטגוריה נשמרה' }; }
+  if (data.parentId !== null && data.parentId === id) return { status: 'error', message: 'קטגוריה לא יכולה להיות ההורה של עצמה' };
+  if (id !== null) { await db.category.update({ where: { id }, data }); return { status: 'success', message: 'הקטגוריה נשמרה' }; }
   const nid = int(f.get('id')) || ((await db.category.aggregate({ _max: { id: true } }))._max.id || 0) + 1;
   await db.category.create({ data: { ...data, id: nid } });
   return { status: 'success', message: 'נוצרה', redirect: A('products', 'edit_cat', { id: nid }) };

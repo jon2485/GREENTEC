@@ -104,6 +104,26 @@ export async function importLegacyAdmin(db, data, log = () => {}) {
         arr(f['digital_downloads[ref_product][]']).map(Number).filter((x) => x && x !== p.id).forEach((x, k) => refRows.push({ bundleId: p.id, productId: x, sort: 1000 + k, source: 'ref_product' }));
       } catch (e) { s.failed++; note(s, `מוצר ${p.id}: ${e.message}`); }
     }
+    // categories: exactly product[categories][] from the legacy admin (incl. category 0 "המוצרים שלנו").
+    // Diff-based: links that stay keep their primary / pinned / sort; only missing links are added and extra ones removed.
+    { const cs = (R.categories = section());
+      const catIds = new Set((await db.category.findMany({ select: { id: true } })).map((c) => c.id));
+      for (const p of data.products || []) {
+        if (!products.has(p.id)) continue;
+        const raw = arr(p.f?.['product[categories][]']).map((x) => Number(x)).filter((x) => Number.isInteger(x));
+        const unknown = raw.filter((c) => !catIds.has(c)); if (unknown.length) note(cs, `מוצר ${p.id}: קטגוריות שלא קיימות (${unknown.join(',')}) – דולגו`);
+        const want = [...new Set(raw.filter((c) => catIds.has(c)))];
+        if (!want.length) { cs.skipped++; continue; }
+        const have = await db.productCategory.findMany({ where: { productId: p.id } });
+        const drop = have.filter((h) => !want.includes(h.categoryId)).map((h) => h.categoryId);
+        const add = want.filter((c) => !have.some((h) => h.categoryId === c));
+        if (!drop.length && !add.length) { cs.skipped++; continue; }
+        if (drop.length) await db.productCategory.deleteMany({ where: { productId: p.id, categoryId: { in: drop } } });
+        const hasPrimary = have.some((h) => h.primary && !drop.includes(h.categoryId));
+        if (add.length) await db.productCategory.createMany({ data: add.map((c, k) => ({ productId: p.id, categoryId: c, primary: !hasPrimary && k === 0 })), skipDuplicates: true });
+        cs.updated++; note(cs, `מוצר ${p.id}: +${add.length} / -${drop.length} שיוכי קטגוריה`);
+      }
+    }
     const legacyIds = data.products.map((p) => p.id).filter((id) => products.has(id));
     await db.productLabel.deleteMany({ where: { productId: { in: legacyIds } } });
     await db.productLabel.createMany({ data: labelRows, skipDuplicates: true });
@@ -275,7 +295,7 @@ async function fixSeq(db, table) {
   await db.$executeRawUnsafe(`SELECT setval(pg_get_serial_sequence('"${table}"','id'), (SELECT COALESCE(MAX(id),1) FROM "${table}"))`).catch(() => {});
 }
 
-export const SECTION_LABELS = { discounts: 'הנחות', propertyLists: 'תכונות מוצר', products: 'מוצרים', prices: '3 מחירים (השלמה)', productLinks: 'תוויות / הנחות / ref_product', files: 'קבצים דיגיטליים', sets: 'סטים (מארזים)', variations: 'וריאציות ומלאי', menus: 'תפריטים', shipping: 'משלוחים וארצות', campaigns: 'קמפיינים', labels: 'תוויות (תמונות)', settings: 'הגדרות', reports: 'דוחות היסטוריים' };
+export const SECTION_LABELS = { discounts: 'הנחות', propertyLists: 'תכונות מוצר', products: 'מוצרים', categories: 'שיוך קטגוריות (product[categories][])', prices: '3 מחירים (השלמה)', productLinks: 'תוויות / הנחות / ref_product', files: 'קבצים דיגיטליים', sets: 'סטים (מארזים)', variations: 'וריאציות ומלאי', menus: 'תפריטים', shipping: 'משלוחים וארצות', campaigns: 'קמפיינים', labels: 'תוויות (תמונות)', settings: 'הגדרות', reports: 'דוחות היסטוריים' };
 
 // ---- CLI ----
 async function main() {

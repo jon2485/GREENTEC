@@ -39,7 +39,7 @@ async function handle(mod: string, action: string, id: number, f: FormData, url:
     }
     case 'products/trash': await db.product.update({ where: { id }, data: { status: -1 } }); return ok('הועבר לסל המחזור', { redirect: '/admin?am=products&ac=recycle_bin' });
     case 'products/restore': await db.product.update({ where: { id }, data: { status: 0 } }); return ok('שוחזר (לא מפורסם)', { reload: true });
-    case 'products/save_cat': return P.categorySave(id, f) as Promise<R>;
+    case 'products/save_cat': return P.categorySave(url.pathname.endsWith('/new') ? null : id, f) as Promise<R>;
     case 'products/delete_cat': {
       if (await db.category.count({ where: { parentId: id } })) return err('לקטגוריה יש קטגוריות משנה. יש להעביר או למחוק אותן קודם.');
       await db.category.delete({ where: { id } }); return ok('הוסר', { reload: true });

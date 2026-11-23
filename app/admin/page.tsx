@@ -16,7 +16,7 @@ async function screen(am: string, ac: string, id: number, sp: Record<string, str
     case 'products/manage': return P.productsManage(sp);
     case 'products/edit': return P.productEdit(id);
     case 'products/manage_cat': return P.categoriesManage();
-    case 'products/edit_cat': return P.categoryEdit(id);
+    case 'products/edit_cat': return P.categoryEdit(sp.id === 'new' ? null : id);
     case 'products/cat_items': return P.categoryItems(id);
     case 'products/inventory': return P.inventory(sp);
     case 'ProductVariations/inventory_v': return P.inventoryV();
