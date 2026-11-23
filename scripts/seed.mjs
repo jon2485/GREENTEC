@@ -112,7 +112,7 @@ async function main() {
 // and bundles = the 59 real sets from ProductsSets (not "everything in a מארזים category").
 // Keeps existing pinned/sort values on links that stay.
 async function syncLegacyCatalog() {
-  const FLAG = 'sync_legacy_catalog_v1';
+  const FLAG = 'sync_legacy_catalog_v2'; // v2: re-run (diff-based, safe) to restore any link removed by a reverted cleanup
   if (await db.setting.findUnique({ where: { key: FLAG } })) return;
   const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
   const catIds = new Set((await db.category.findMany({ select: { id: true } })).map((c) => c.id));
