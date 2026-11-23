@@ -24,6 +24,8 @@ async function main() {
   if (count > 0 && process.env.FORCE_SEED !== '1') {
     console.log(`[seed] ${count} products already present – skipping`);
     await ensureAdmin();
+    await syncLegacyCatalog();
+    await syncHiddenProducts();
     return;
   }
   const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
@@ -39,10 +41,10 @@ async function main() {
 
   await db.supplier.createMany({ data: data.suppliers.map((s) => ({ id: s.id, name: s.name, logo: s.logo ? abs(s.logo) : '', content: s.content || '', url: s.url || '', ...seo(s) })), skipDuplicates: true });
 
-  const products = data.products.filter((p) => p.status === 200);
+  const products = data.products.filter((p) => p.status === 200 || p.status === '200' || p.status === 'hidden');
   await chunked(products, 400, (rows) => db.product.createMany({ data: rows.map((p) => ({
     id: p.id, name: p.name, urlPath: p.urlPath, content: p.content || '', shortContent: p.shortContent || '',
-    quantity: p.quantity, status: 1, price: num(p.price), digitalPrice: num(p.digitalPrice), physicalPrice: num(p.physicalPrice), bothPrice: num(p.bothPrice),
+    quantity: p.quantity, status: p.status === 'hidden' ? 0 : 1, sku: p.sku || '', price: num(p.price), digitalPrice: num(p.digitalPrice), physicalPrice: num(p.physicalPrice), bothPrice: num(p.bothPrice),
     purchaseModes: p.purchaseModes || 'none', mainImage: abs(p.images?.[0] || ''), sampleFile: p.sample ? abs(p.sample) : '',
     onlyDigital: p.purchaseModes === '1', metaTitle: p.title && p.title !== p.name ? p.title : '', metaDescription: p.metaDescription || '',
     ogImage: p.ogImage || '', showHome: false,
@@ -62,7 +64,6 @@ async function main() {
   await chunked(ps.filter((x) => supIds.has(x.supplierId)), 2000, (rows) => db.productSupplier.createMany({ data: rows, skipDuplicates: true }));
   await chunked(rel, 2000, (rows) => db.productRelated.createMany({ data: rows, skipDuplicates: true }));
   // products in the "מארזים" categories are bundles: shown before single products
-  await db.product.updateMany({ where: { categories: { some: { categoryId: { in: [61, 128, 167] } } } }, data: { isSet: true } });
   // newest products appear on the homepage
   await db.$executeRawUnsafe(`UPDATE "Product" SET "showHome" = true WHERE id IN (SELECT id FROM "Product" ORDER BY id DESC LIMIT 40)`);
 
@@ -102,7 +103,70 @@ async function main() {
     await db.$executeRawUnsafe(`SELECT setval(pg_get_serial_sequence('"${t}"','id'), (SELECT COALESCE(MAX(id),1) FROM "${t}"))`);
   }
   await ensureAdmin();
+  await syncLegacyCatalog();
   console.log('[seed] done:', products.length, 'products');
+}
+
+// One-time fix (v1): product↔category links exactly as assigned in the legacy admin
+// ("product[categories][]"), primary = deepest category under the URL's top category,
+// and bundles = the 59 real sets from ProductsSets (not "everything in a מארזים category").
+// Keeps existing pinned/sort values on links that stay.
+async function syncLegacyCatalog() {
+  const FLAG = 'sync_legacy_catalog_v2'; // v2: re-run (diff-based, safe) to restore any link removed by a reverted cleanup
+  if (await db.setting.findUnique({ where: { key: FLAG } })) return;
+  const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
+  const catIds = new Set((await db.category.findMany({ select: { id: true } })).map((c) => c.id));
+  const prodIds = new Set((await db.product.findMany({ select: { id: true } })).map((p) => p.id));
+  let added = 0, removed = 0;
+  for (const p of data.products) {
+    if (!prodIds.has(p.id)) continue;
+    const want = (p.categoryIds || []).filter((c) => catIds.has(c));
+    if (!want.length) continue;
+    const have = await db.productCategory.findMany({ where: { productId: p.id } });
+    const drop = have.filter((h) => !want.includes(h.categoryId)).map((h) => h.categoryId);
+    if (drop.length) { await db.productCategory.deleteMany({ where: { productId: p.id, categoryId: { in: drop } } }); removed += drop.length; }
+    for (const [i, c] of want.entries()) {
+      const ex = have.find((h) => h.categoryId === c);
+      if (ex) { if (ex.primary !== (i === 0)) await db.productCategory.update({ where: { productId_categoryId: { productId: p.id, categoryId: c } }, data: { primary: i === 0 } }); }
+      else { await db.productCategory.create({ data: { productId: p.id, categoryId: c, primary: i === 0 } }); added++; }
+    }
+  }
+  const sets = data.sets || [];
+  await db.product.updateMany({ where: { isSet: true, id: { notIn: sets.map((s) => s.id) } }, data: { isSet: false } });
+  for (const s of sets) {
+    if (!prodIds.has(s.id)) continue;
+    await db.product.update({ where: { id: s.id }, data: { isSet: true } });
+    const items = s.items.filter((i) => prodIds.has(i) && i !== s.id);
+    if (items.length) await db.bundleItem.createMany({ data: items.map((productId, sort) => ({ bundleId: s.id, productId, sort, source: 'set' })), skipDuplicates: true });
+  }
+  await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
+  console.log(`[seed] legacy catalog sync: +${added} / -${removed} category links, ${sets.length} sets`);
+}
+
+// One-time (v1): the 17 products that exist in the legacy admin as "לא מפורסם" (unpublished):
+// imported with status 0 (hidden), exact categories/suppliers/price/stock from the admin.
+async function syncHiddenProducts() {
+  const FLAG = 'sync_hidden_products_v2';
+  if (await db.setting.findUnique({ where: { key: FLAG } })) return;
+  const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
+  const hidden = data.products.filter((p) => p.status === 'hidden');
+  const catIds = new Set((await db.category.findMany({ select: { id: true } })).map((c) => c.id));
+  const supIds = new Set((await db.supplier.findMany({ select: { id: true } })).map((c) => c.id));
+  let n = 0;
+  for (const p of hidden) {
+    if (await db.product.findUnique({ where: { id: p.id } })) continue;
+    await db.product.create({ data: {
+      id: p.id, name: p.name, urlPath: p.urlPath, content: p.content || '', shortContent: p.shortContent || '', sku: p.sku || '',
+      quantity: p.quantity, status: 0, price: num(p.price), purchaseModes: 'none', mainImage: abs(p.images?.[0] || ''),
+      metaTitle: p.title && p.title !== p.name ? p.title : '', metaDescription: p.metaDescription || '',
+      images: { create: (p.images || []).map((u, i) => ({ url: abs(u), sort: i })) },
+      categories: { create: (p.categoryIds || []).filter((c) => catIds.has(c)).map((c, i) => ({ categoryId: c, primary: i === 0 })) },
+      suppliers: { create: (p.supplierIds || []).filter((s) => supIds.has(s)).map((s) => ({ supplierId: s })) },
+    } });
+    n++;
+  }
+  await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
+  console.log(`[seed] hidden (unpublished) legacy products imported: ${n}`);
 }
 
 async function ensureAdmin() {
