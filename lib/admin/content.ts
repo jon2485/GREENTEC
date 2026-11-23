@@ -134,5 +134,5 @@ export async function dashboard() {
 export const shutdownScreen = () => card('כיבוי האתר', '<div class="alert alert-warning m-0">המסך הזה לא נבנה בכוונה. לפי ההנחיות, "כיבוי האתר" ייבנה רק באישור מפורש של בעל האתר.</div>');
 export const googleSearches = async () => { const v = (await db.setting.findUnique({ where: { key: 'gsc_report' } }))?.value; return card('חיפושים בגוגל', v ? v : '<div class="adm-note">הדוח נשען על Google Search Console (60 יום). החיבור ל־Search Console API יוגדר בהמשך, עם הרשאה מחשבון הגוגל של האתר. עד אז אפשר לצפות בנתונים ישירות ב־Search Console.</div>'); };
 export async function manageImages() {
-  return card('ניהול תמונות', `<p>העלאת תמונה לאחסון וקבלת כתובת לשימוש בתוכן (עמודים, מאמרים, קוביות).</p>${fImage('tmp_image', 'תמונה', '', 'media/content')}<div class="form-text">אחרי ההעלאה הכתובת מופיעה בשדה – העתיקו אותה לתוכן.</div>`);
+  return card('הפעלת העלאות לאחסון', `<p>לפני העלאת הקבצים הראשונה יש ללחוץ פעם אחת על הכפתור. הוא מאפשר לדפדפן להעלות קבצים ישירות לאחסון (Bucket).</p><button type="button" class="btn btn-primary" data-act="${AJ('storage', 'cors')}">הפעלת העלאות לאחסון</button>`) + card('ניהול תמונות', `<p>העלאת תמונה לאחסון וקבלת כתובת לשימוש בתוכן (עמודים, מאמרים, קוביות).</p>${fImage('tmp_image', 'תמונה', '', 'media/content')}<div class="form-text">אחרי ההעלאה הכתובת מופיעה בשדה – העתיקו אותה לתוכן.</div>`);
 }
