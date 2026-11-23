@@ -31,3 +31,17 @@
 /* Header turns dark once the page is scrolled (transparent only at the very top) */
 .main-header { transition: background-color 250ms ease, box-shadow 250ms ease, backdrop-filter 250ms ease; }
 html.gt-scrolled .main-header { background-color: rgba(26, 26, 26, 0.94); box-shadow: 0 6px 24px rgba(0, 0, 0, .28); backdrop-filter: blur(8px); }
+
+/* Dropdown menu = the live greentec.co.il menu: full width, 3 equal columns, items flow row by row,
+   Varela Round 16px, opens right under the header (symmetric) */
+.main-header .submenu .gt-sub-grid { margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.main-header .submenu .gt-sub-grid li { min-width: 0; }
+.main-header .submenu .gt-sub-grid .submenu-link { display: block; font-family: "Varela Round", sans-serif !important; font-size: 16px !important; font-weight: 500 !important; line-height: 28px; padding: 8px 0; color: #fff !important; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .2s ease; }
+.main-header .submenu .gt-sub-grid .submenu-link:hover { color: #cadb2d !important; }
+@media (width >= 992px) {
+  .main-header .submenu { top: var(--gt-hdr, 150px) !important; }
+  .main-header .submenu .container { max-width: none; padding: 10px 20px !important; }
+  .main-header .submenu .submenu-container { padding-top: 10px !important; padding-bottom: 14px !important; }
+  .main-header .submenu .gt-sub-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .main-header .submenu .gt-sub-grid li { padding-inline: 20px; }
+}
