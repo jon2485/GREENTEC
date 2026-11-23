@@ -136,7 +136,9 @@ html.gt-scrolled .gt-utility { background: #0e0e0e; }
 @media (width < 992px) {
   .main-header .left-menu { gap: 18px !important; }
   .main-header .cart-button { display: inline-flex; position: relative; }
-  .main-header .cart-button .badge { top: -7px !important; left: -9px !important; right: auto !important; transform: none !important; translate: none !important; min-width: 18px; height: 18px; padding: 0 5px !important; font-size: 11px !important; line-height: 18px; font-weight: 700 !important; border: 2px solid #161616; box-sizing: content-box; }
+  .main-header .cart-button .cart-icon { width: 23px !important; height: 23px !important; }
+  .main-header .search-icon, .main-header .profile-icon { width: 21px !important; height: 21px !important; }
+  .main-header .cart-button .badge { top: -10px !important; left: -15px !important; right: auto !important; transform: none !important; translate: none !important; min-width: 16px; height: 16px; padding: 0 4px !important; font-size: 10px !important; line-height: 16px; font-weight: 700 !important; border: 1.5px solid #161616; box-sizing: content-box; }
 
   /* Search: a proper full-width bar that drops down under the header on tap */
   .main-header .search-box-wrapper {
