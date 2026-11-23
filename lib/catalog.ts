@@ -1,10 +1,22 @@
 import { db } from './db';
 import { priceOptions } from './format';
 
-export const cardSelect = { id: true, name: true, urlPath: true, mainImage: true, price: true, newPrice: true, digitalPrice: true, physicalPrice: true, bothPrice: true, isSet: true } as const;
+export const cardSelect = { id: true, name: true, urlPath: true, mainImage: true, price: true, newPrice: true, digitalPrice: true, physicalPrice: true, bothPrice: true, isSet: true, sort: true } as const;
 
+export async function withDescendants(ids: number[]) {
+  const all = await db.category.findMany({ select: { id: true, parentId: true } });
+  const out = new Set(ids); let grew = true;
+  while (grew) { grew = false; for (const c of all) if (c.parentId != null && out.has(c.parentId) && !out.has(c.id)) { out.add(c.id); grew = true; } }
+  return [...out];
+}
+// Homepage section = exactly like greentec.co.il: products marked "הצג בדף הבית" whose categories are under the
+// section's category, ordered by "סידור" (desc) then newest. Never mixes in products from other categories.
 export async function latestIn(categoryIds: number[], take: number) {
-  return db.product.findMany({ where: { status: 1, categories: { some: { categoryId: { in: categoryIds } } }, NOT: { mainImage: '' } }, orderBy: [{ showHome: 'desc' }, { id: 'desc' }], take, select: cardSelect });
+  const cats = await withDescendants(categoryIds);
+  const where = { status: 1, categories: { some: { categoryId: { in: cats } } }, NOT: { mainImage: '' } };
+  const flagged = await db.product.findMany({ where: { ...where, showHome: true }, orderBy: [{ sort: 'desc' }, { id: 'desc' }], take, select: cardSelect });
+  if (flagged.length) return flagged;
+  return db.product.findMany({ where, orderBy: [{ sort: 'desc' }, { id: 'desc' }], take, select: cardSelect });
 }
 
 export const minPrice = (p: any) => { const o = priceOptions(p); return o.length ? Math.min(...o.map((x) => x.price)) : 0; };
@@ -18,7 +30,7 @@ export async function categoryListing(categoryId: number, q: { sort?: string; mi
   if (q.max != null) rows = rows.filter((r) => r.min <= q.max!);
   const s = q.sort || 'i';
   const cmp: Record<string, (a: any, b: any) => number> = {
-    i: (a, b) => a.csort - b.csort || b.id - a.id, new: (a, b) => b.id - a.id,
+    i: (a, b) => (a.csort || 1e9) - (b.csort || 1e9) || (b.sort || 0) - (a.sort || 0) || b.id - a.id, new: (a, b) => b.id - a.id,
     az: (a, b) => a.name.localeCompare(b.name, 'he'), za: (a, b) => b.name.localeCompare(a.name, 'he'),
     lo: (a, b) => a.min - b.min, hi: (a, b) => b.min - a.min,
   };

@@ -26,6 +26,7 @@ async function main() {
     await ensureAdmin();
     await syncLegacyCatalog();
     await syncHiddenProducts();
+    await syncHomeFlags();
     return;
   }
   const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
@@ -65,7 +66,7 @@ async function main() {
   await chunked(rel, 2000, (rows) => db.productRelated.createMany({ data: rows, skipDuplicates: true }));
   // products in the "מארזים" categories are bundles: shown before single products
   // newest products appear on the homepage
-  await db.$executeRawUnsafe(`UPDATE "Product" SET "showHome" = true WHERE id IN (SELECT id FROM "Product" ORDER BY id DESC LIMIT 40)`);
+
 
   await db.page.createMany({ data: data.pages.map((p) => ({ id: p.id, title: p.title, content: p.content || '', active: !!p.active, url: p.url || '', header: p.header || '', cssClass: p.cssClass || '', ...seo(p) })), skipDuplicates: true });
   await db.article.createMany({ data: data.articles.map((a) => ({ id: a.id, title: a.title, shortContent: a.shortContent || '', content: a.content || '', status: !!a.status, url: a.url || '', ...seo(a) })), skipDuplicates: true });
@@ -167,6 +168,28 @@ async function syncHiddenProducts() {
   }
   await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
   console.log(`[seed] hidden (unpublished) legacy products imported: ${n}`);
+}
+
+// One-time (v1): "הצג בדף הבית" (legacy product attribute 1) and "סידור" (product[ordered]) exactly as in the
+// legacy admin. The live homepage shows, per section, products flagged for the homepage whose categories
+// fall under the section's top category, ordered by סידור desc then id desc (verified 1:1 against greentec.co.il).
+async function syncHomeFlags() {
+  const FLAG = 'sync_home_flags_v1';
+  if (await db.setting.findUnique({ where: { key: FLAG } })) return;
+  const p = new URL('../data/legacy-admin-full.json.gz', import.meta.url);
+  const adm = JSON.parse(gunzipSync(readFileSync(p)).toString('utf8'));
+  await db.product.updateMany({ data: { showHome: false } });
+  let home = 0;
+  for (const x of adm.products) {
+    const f = x.f || {};
+    const showHome = String(f['product[attributes][1]'] ?? '') === '1';
+    const sort = parseInt(f['product[ordered]'] || '0', 10) || 0;
+    if (!showHome && !sort) continue;
+    const r = await db.product.updateMany({ where: { id: x.id }, data: { showHome, sort } });
+    if (r.count && showHome) home++;
+  }
+  await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
+  console.log(`[seed] legacy homepage flags: ${home} products shown on the homepage`);
 }
 
 async function ensureAdmin() {
