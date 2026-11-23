@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   icons: { icon: '/t/assets/images/logo-v.png' },
 };
 
+const V = (process.env.RAILWAY_GIT_COMMIT_SHA || process.env.BUILD_ID || String(Date.now())).slice(0, 8);
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="he" dir="rtl">
@@ -20,9 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="stylesheet" href="/t/vendor/flickity.min.css" />
         <link rel="stylesheet" href="/t/vendor/flickity-fade.css" />
         <link rel="stylesheet" href="/t/vendor/bootstrap.rtl.min.css" />
-        <link rel="stylesheet" href="/t/assets/css/greenshow-topbar.css" />
-        <link rel="stylesheet" href="/t/assets/css/style.css" />
-        <link rel="stylesheet" href="/t/assets/css/gt-app.css" />
+        <link rel="stylesheet" href={"/t/assets/css/greenshow-topbar.css?v=" + V} />
+        <link rel="stylesheet" href={"/t/assets/css/style.css?v=" + V} />
+        <link rel="stylesheet" href={"/t/assets/css/gt-app.css?v=" + V} />
         <script src="/t/vendor/flickity.pkgd.min.js"></script>
         <script src="/t/vendor/flickity-fade.js"></script>
       </head>
@@ -34,10 +36,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div>
         <script src="/t/vendor/jquery.min.js"></script>
         <script src="/t/vendor/bootstrap.bundle.min.js"></script>
-        <script src="/t/assets/js/main.js"></script>
-        <script src="/t/assets/js/quickview.js"></script>
-        <script src="/t/assets/js/greenshow-teaser.js"></script>
-        <script src="/t/assets/js/gt-site.js"></script>
+        <script src={"/t/assets/js/main.js?v=" + V}></script>
+        <script src={"/t/assets/js/quickview.js?v=" + V}></script>
+        <script src={"/t/assets/js/greenshow-teaser.js?v=" + V}></script>
+        <script src={"/t/assets/js/gt-site.js?v=" + V}></script>
       </body>
     </html>
   );
