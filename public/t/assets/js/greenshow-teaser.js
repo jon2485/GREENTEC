@@ -8,7 +8,7 @@
     <div class="gs-teaser-dialog" role="dialog" aria-modal="true" aria-label="GreenShow – הצצה ראשונה">
       <button type="button" class="gs-teaser-close" aria-label="סגירה"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       <div class="gs-teaser-frame">
-        <video id="gsTeaserVideo" src="./assets/videos/greenshow-teaser.mp4" poster="./assets/images/greenshow-teaser-poster.jpg" playsinline controls preload="metadata"></video>
+        <video id="gsTeaserVideo" src="/t/assets/videos/greenshow-teaser.mp4" poster="/t/assets/images/greenshow-teaser-poster.jpg" playsinline controls preload="metadata"></video>
       </div>
       <div class="gs-teaser-foot">
         <p><strong>GreenShow</strong> מבית גרינטק – יש למה לצפות.</p>
