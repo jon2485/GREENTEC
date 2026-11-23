@@ -95,7 +95,7 @@ export async function designHome() {
   const hero = fSelect('heroAlbum', 'סליידר עליון (Hero)', d.heroAlbum ?? '', [['', 'ברירת מחדל מהעיצוב המאושר'], ...albums.map((a) => [a.id, `גלריה: ${a.title}`] as Opt)]) +
     `<div class="form-text mt-n2 mb-3">כשנבחרת גלריה, כל תמונה פעילה בה הופכת לשקופית: התווית = כותרת משנה, התיאור = כותרת, הקישור = כפתור. ${btn(A('albums', 'images', { id: d.heroAlbum || 1 }), 'עריכת תמונות הגלריה', 'btn-light')}</div>` + fText('heroButton', 'טקסט כפתור בשקופית', d.heroButton);
   const tb = (await db.setting.findUnique({ where: { key: 'topbar_messages' } }))?.value ?? TOPBAR_DEFAULT;
-  const topbar = `<div class="mb-3"><label class="form-label" for="topbar">הודעות ופרסומות בפס העליון</label><textarea class="form-control" id="topbar" name="topbar" rows="4" dir="rtl">${esc(tb)}</textarea><div class="form-text">שורה לכל הודעה. ההודעות מתחלפות אוטומטית. לקישור: <code>טקסט | /כתובת</code>. השארת השדה ריק מסתירה את ההודעות.</div></div>`;
+  const topbar = `<div class="mb-3"><label class="form-label" for="topbar">הודעות ופרסומות בפס העליון</label><textarea class="form-control" id="topbar" name="topbar" rows="4" dir="rtl">${esc(tb)}</textarea><div class="form-text">שורה לכל הודעה. ההודעות מתחלפות אוטומטית. לקישור: <code>טקסט | /כתובת</code>. השארת השדה ריק מציגה במקום ההודעות את באנר GreenShow לכל רוחב הפס.</div></div>`;
   return card('עיצוב דף הבית', form(AJ('design', 'save_home'), `<h5>פס עליון</h5>${topbar}<h5 class="mt-4">סליידר</h5>${hero}<h5 class="mt-4">אזורי דף הבית</h5>${sec}<p class="small">התפריט העליון מנוהל ב־${btn(A('menus', 'items', { id: 1 }), 'תפריטים → עליון', 'btn-light')}</p>`), btn('/', 'צפייה בדף הבית', 'btn-light'));
 }
 export async function designHomeSave(f: FormData) {

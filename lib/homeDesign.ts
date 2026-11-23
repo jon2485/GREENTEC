@@ -41,7 +41,8 @@ export async function heroCells(albumId: number, button: string) {
 }
 
 // Top announcement bar (above the header): one message per line, optional link after "|". Rotates automatically.
-export const TOPBAR_DEFAULT = ['משלוח חינם בהזמנה מעל ₪150', 'הורדה מיידית של האלבומים מיד אחרי התשלום | /מדריך-הורדות-דיגיטליות', 'חנוכה שמח! כל מה שצריך לחנוכה בגרינטק'].join('\n');
+// Empty = the bar shows the GreenShow banner across its full width (owner's choice for now).
+export const TOPBAR_DEFAULT = '';
 export async function getTopbar(): Promise<{ text: string; link: string }[]> {
   const row = await db.setting.findUnique({ where: { key: 'topbar_messages' } }).catch(() => null);
   const raw = row ? row.value : TOPBAR_DEFAULT;
