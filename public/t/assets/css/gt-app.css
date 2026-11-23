@@ -87,3 +87,16 @@ a, button, .btn { -webkit-tap-highlight-color: transparent; }
   .shop-pin { top: auto !important; bottom: 8px !important; left: 8px !important; right: auto !important; inset-inline-end: auto; width: 28px; height: 28px; }
   .shop-body { padding-top: 10px; }
 }
+
+/* Phones: heart on the cover = Apple-style frosted glass */
+@media (width < 576px) {
+  .shop-media .shop-icon.wish {
+    background: rgba(255,255,255,.28) !important;
+    backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: .5px solid rgba(255,255,255,.55) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,.10), inset 0 1px 0 rgba(255,255,255,.45) !important;
+    color: #1d1d1f !important;
+  }
+  .shop-media .shop-icon.wish svg { filter: drop-shadow(0 0 1px rgba(255,255,255,.6)); }
+  .shop-media .shop-icon.wish.on { background: rgba(29,29,31,.55) !important; color: #cadb2d !important; border-color: rgba(255,255,255,.25) !important; }
+}
