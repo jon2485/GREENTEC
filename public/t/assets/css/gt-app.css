@@ -65,18 +65,20 @@ a, button, .btn { -webkit-tap-highlight-color: transparent; }
   .album-badge { font-size: 12px !important; padding: 4px 9px !important; top: 8px !important; inset-inline-start: 8px !important; }
 }
 
-/* Phones – category / search / supplier cards: same clean look as the homepage cards.
-   Small see-through circles in the corners instead of big stacked circles + a full-width cart bar. */
+/* Phones – category / search / supplier cards: buttons move UNDER the product (cover stays clean).
+   Desktop keeps the template hover buttons on the image. */
+.shop-actions { display: none; }
 @media (width < 576px) {
-  .shop-icons { top: 8px !important; inset-inline: auto 8px !important; flex-direction: row !important; gap: 6px !important; transform: none !important; opacity: 1 !important; }
-  .shop-icon { width: 32px !important; height: 32px !important; background: rgba(255,255,255,.55) !important; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 1px 4px rgba(0,0,0,.12) !important; color: #2a2b2c !important; position: relative; }
-  .shop-icon.on { background: #2a2b2c !important; color: #cadb2d !important; }
-  .shop-icon svg { width: 16px; height: 16px; }
-  .shop-cart { inset-inline-start: auto !important; inset-inline-end: 8px !important; bottom: 8px !important; width: 34px !important; height: 34px !important; padding: 0 !important; border-radius: 50% !important; justify-content: center; gap: 0 !important; transform: none !important; background: rgba(255,255,255,.55) !important; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 1px 4px rgba(0,0,0,.12) !important; color: #2a2b2c !important; }
-  .shop-cart span { display: none !important; }
-  .shop-cart svg { width: 17px; height: 17px; }
-  .shop-cart.added { background: #cadb2d !important; }
-  .shop-icon::before, .shop-cart::before { content: ""; position: absolute; inset: -5px; border-radius: 50%; }
+  .shop-media .shop-icons, .shop-media .shop-cart { display: none !important; }
+  .shop-actions { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+  .shop-actions .sa-cart { flex: 1; min-width: 0; height: 36px; border: 0; border-radius: 980px; background: #2a2b2c; color: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; font-family: "Heebo", sans-serif; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+  .shop-actions .sa-cart svg { width: 16px; height: 16px; flex: none; }
+  .shop-actions .sa-cart.added { background: #cadb2d; color: #121010; }
+  .shop-actions .sa-icon { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 1px solid #e2e2de; background: #fff; color: #2a2b2c; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .shop-actions .sa-icon svg { width: 16px; height: 16px; }
+  .shop-actions .sa-icon.on { background: #2a2b2c; color: #cadb2d; border-color: #2a2b2c; }
+  .shop-actions button { -webkit-tap-highlight-color: transparent; }
   .shop-badge { font-size: 12px !important; padding: 3px 9px !important; top: 8px !important; inset-inline-start: 8px !important; }
-  .shop-pin { top: auto !important; bottom: 8px; inset-inline-end: auto !important; inset-inline-start: 8px; width: 28px; height: 28px; }
+  .shop-pin { top: 8px !important; inset-inline-end: 8px !important; width: 28px; height: 28px; }
+  .shop-body { padding-top: 10px; }
 }
