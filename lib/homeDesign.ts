@@ -5,11 +5,11 @@ export type HomeDesign = { heroAlbum: number | null; heroButton: string; section
 export const HOME_DEFAULTS: HomeDesign = {
   heroAlbum: null, heroButton: 'לפרטים',
   sections: [
-    { token: 'MUSIC', label: 'מוזיקה יהודית', title: 'מוזיקה יהודית', categoryIds: [56], count: 8, link: '' },
+    { token: 'MUSIC', label: 'מוזיקה יהודית', title: 'מוזיקה יהודית', categoryIds: [56], count: 20, link: '' },
     { token: 'MOVIES', label: 'סרטים', title: '', categoryIds: [79], count: 8, link: '' },
-    { token: 'JUDAICA', label: 'יודאיקה', title: 'יודאיקה', categoryIds: [80, 177], count: 10, link: '' },
-    { token: 'GAMES', label: 'משחקים יהודיים', title: 'משחקים יהודיים', categoryIds: [351, 352], count: 10, link: '' },
-    { token: 'ACCESSORIES', label: 'אביזרים', title: 'אביזרים', categoryIds: [81], count: 10, link: '' },
+    { token: 'JUDAICA', label: 'יודאיקה', title: 'יודאיקה', categoryIds: [80, 177], count: 20, link: '' },
+    { token: 'GAMES', label: 'משחקים יהודיים', title: 'משחקים יהודיים', categoryIds: [351, 352], count: 20, link: '' },
+    { token: 'ACCESSORIES', label: 'אביזרים', title: 'אביזרים', categoryIds: [81], count: 20, link: '' },
   ],
 };
 export async function getHomeDesign(): Promise<HomeDesign> {
