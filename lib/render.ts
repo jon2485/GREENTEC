@@ -26,7 +26,7 @@ export function articleCell(a: any) {
   const img = a.image || '/t/assets/images/ar-img-1.jpg';
   const d = new Date(a.createdAt).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const txt = String(a.shortContent || a.content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 150);
-  return `<div class="carousel-cell"><div class="card article-card"><img src="${esc(img)}" class="card-img-top" alt="${esc(a.title)}"><div class="card-body"><div class="d-flex date-box">${I.date}<span class="mt-1">${d}</span></div><h5 class="card-title">${esc(a.title)}</h5><p class="card-text">${esc(txt)}</p><a href="/${enc(a.url || 'articles/' + a.id)}" class="btn group">קרא עוד <span>←</span></a></div></div></div>`;
+  return `<div class="carousel-cell"><div class="card article-card"><img src="${esc(img)}" class="card-img-top" alt="${esc(a.title)}"><div class="card-body"><div class="d-flex date-box">${I.date}<span class="mt-1">${d}</span></div><h5 class="card-title">${esc(a.title)}</h5><p class="card-text">${esc(txt)}</p><a href="/${(a.url ? enc(a.url) : 'articles/id/' + a.id)}" class="btn group">קרא עוד <span>←</span></a></div></div></div>`;
 }
 export function shopCard(p: any, i = 0, pinned = false) {
   const price = priceOptions(p)[0]?.price ?? 0;
