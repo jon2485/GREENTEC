@@ -109,3 +109,12 @@ a, button, .btn { -webkit-tap-highlight-color: transparent; }
   .shop-grid:not(.is-list) .shop-name { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: calc(2 * 1.35em); }
   .shop-grid:not(.is-list) .shop-actions { margin-top: auto; padding-top: 8px; }
 }
+
+/* Header rows: the phone logo is centred in the logo row (not across the whole header),
+   so it no longer overlaps the GreenShow bar above it */
+.main-header > .container.d-flex { position: relative; }
+
+/* Clear separation between the header and the page once scrolled: solid dark bar + thin line */
+html.gt-scrolled .main-header { background-color: #161616 !important; box-shadow: 0 1px 0 rgba(202, 219, 45, .35), 0 8px 22px rgba(0, 0, 0, .35) !important; backdrop-filter: none !important; }
+html.gt-scrolled .main-header .bg-left, html.gt-scrolled .main-header .bg-right { opacity: 0 !important; }
+html.gt-scrolled .gt-utility { background: #0e0e0e; }
