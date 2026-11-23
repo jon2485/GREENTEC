@@ -39,3 +39,11 @@ export async function heroCells(albumId: number, button: string) {
   const imgs = await db.albumImage.findMany({ where: { albumId, active: true }, orderBy: { sort: 'asc' } });
   return imgs.map((im) => `<div class="carousel-cell w-100"><div class="position-relative heros d-flex justify-content-end flex-column"><div class="position-absolute heros-bg"><picture>${im.mobileImage ? `<source media="(max-width: 767px)" srcset="${esc(im.mobileImage)}">` : ''}<img src="${esc(im.image)}" alt="${esc(im.description || im.label)}" class="w-100 h-100 object-cover"></picture></div><div class="container position-relative z-1 heros-container">${im.label ? `<h6 class="subheader-text mb-12px">${esc(im.label)}</h6>` : ''}${im.description ? `<h1 class="header-text">${esc(im.description)}</h1>` : ''}${im.link ? `<div class="d-flex hero-btn"><a href="${esc(im.link)}" class="btn btn-primary">${esc(button || 'לפרטים')}</a></div>` : ''}</div></div></div>`).join('');
 }
+
+// Top announcement bar (above the header): one message per line, optional link after "|". Rotates automatically.
+export const TOPBAR_DEFAULT = ['משלוח חינם בהזמנה מעל ₪150', 'הורדה מיידית של האלבומים מיד אחרי התשלום | /מדריך-הורדות-דיגיטליות', 'חנוכה שמח! כל מה שצריך לחנוכה בגרינטק'].join('\n');
+export async function getTopbar(): Promise<{ text: string; link: string }[]> {
+  const row = await db.setting.findUnique({ where: { key: 'topbar_messages' } }).catch(() => null);
+  const raw = row ? row.value : TOPBAR_DEFAULT;
+  return raw.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => { const [t, ...rest] = l.split('|'); return { text: t.trim(), link: rest.join('|').trim() }; }).filter((x) => x.text);
+}

@@ -2,7 +2,7 @@
 import { db } from '@/lib/db';
 import { A, AJ, esc, card, table, btn, actBtn, form, fText, fArea, fBool, fSelect, fImage, badge, dt, shekel, type Opt } from './ui';
 import { catOpts } from './products';
-import { HOME_DEFAULTS, type HomeDesign } from '@/lib/homeDesign';
+import { HOME_DEFAULTS, type HomeDesign, TOPBAR_DEFAULT } from '@/lib/homeDesign';
 
 type SField = { key: string; label: string; type?: 'text' | 'textarea' | 'bool' | 'image' | 'int'; help?: string };
 export const SETTINGS: Record<string, { title: string; fields: SField[]; note?: string }> = {
@@ -94,13 +94,17 @@ export async function designHome() {
     <label class="form-label">קטגוריות שמזינות את האזור</label><select class="form-select" name="s_cats_${s.token}" multiple size="6">${cats.map(([k, l]) => `<option value="${k}"${s.categoryIds.includes(+k) ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select><div class="form-text">Ctrl/Cmd + לחיצה לבחירה מרובה. מוצרים שסומנו "הצג בדף הבית" מוצגים ראשונים.</div></div>`).join('');
   const hero = fSelect('heroAlbum', 'סליידר עליון (Hero)', d.heroAlbum ?? '', [['', 'ברירת מחדל מהעיצוב המאושר'], ...albums.map((a) => [a.id, `גלריה: ${a.title}`] as Opt)]) +
     `<div class="form-text mt-n2 mb-3">כשנבחרת גלריה, כל תמונה פעילה בה הופכת לשקופית: התווית = כותרת משנה, התיאור = כותרת, הקישור = כפתור. ${btn(A('albums', 'images', { id: d.heroAlbum || 1 }), 'עריכת תמונות הגלריה', 'btn-light')}</div>` + fText('heroButton', 'טקסט כפתור בשקופית', d.heroButton);
-  return card('עיצוב דף הבית', form(AJ('design', 'save_home'), `<h5>סליידר</h5>${hero}<h5 class="mt-4">אזורי דף הבית</h5>${sec}<p class="small">התפריט העליון מנוהל ב־${btn(A('menus', 'items', { id: 1 }), 'תפריטים → עליון', 'btn-light')}</p>`), btn('/', 'צפייה בדף הבית', 'btn-light'));
+  const tb = (await db.setting.findUnique({ where: { key: 'topbar_messages' } }))?.value ?? TOPBAR_DEFAULT;
+  const topbar = `<div class="mb-3"><label class="form-label" for="topbar">הודעות ופרסומות בפס העליון</label><textarea class="form-control" id="topbar" name="topbar" rows="4" dir="rtl">${esc(tb)}</textarea><div class="form-text">שורה לכל הודעה. ההודעות מתחלפות אוטומטית. לקישור: <code>טקסט | /כתובת</code>. השארת השדה ריק מסתירה את ההודעות.</div></div>`;
+  return card('עיצוב דף הבית', form(AJ('design', 'save_home'), `<h5>פס עליון</h5>${topbar}<h5 class="mt-4">סליידר</h5>${hero}<h5 class="mt-4">אזורי דף הבית</h5>${sec}<p class="small">התפריט העליון מנוהל ב־${btn(A('menus', 'items', { id: 1 }), 'תפריטים → עליון', 'btn-light')}</p>`), btn('/', 'צפייה בדף הבית', 'btn-light'));
 }
 export async function designHomeSave(f: FormData) {
   const tok = f.getAll('s_token').map(String), ti = f.getAll('s_title').map(String), co = f.getAll('s_count').map(String), li = f.getAll('s_link').map(String), on = f.getAll('s_on').map(String);
   const d: HomeDesign = { heroAlbum: f.get('heroAlbum') ? +String(f.get('heroAlbum')) : null, heroButton: String(f.get('heroButton') || ''),
     sections: tok.map((t, i) => { const def = HOME_DEFAULTS.sections.find((s) => s.token === t)!; return { ...def, title: ti[i] || def.title, count: Math.min(40, Math.max(1, +co[i] || def.count)), link: li[i] || '', enabled: on[i] !== '0', categoryIds: f.getAll('s_cats_' + t).map(Number).filter((n) => !isNaN(n)) }; }) };
   await db.setting.upsert({ where: { key: 'home_design' }, create: { key: 'home_design', value: JSON.stringify(d) }, update: { value: JSON.stringify(d) } });
+  const tb = String(f.get('topbar') ?? '').replace(/\r/g, '').split('\n').map((x) => x.trim()).filter(Boolean).slice(0, 12).join('\n');
+  await db.setting.upsert({ where: { key: 'topbar_messages' }, create: { key: 'topbar_messages', value: tb }, update: { value: tb } });
   return { status: 'success', message: 'דף הבית עודכן' };
 }
 

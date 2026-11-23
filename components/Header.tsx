@@ -1,6 +1,14 @@
 import { db } from '@/lib/db';
 import { getCart } from '@/lib/cart';
 import parts from './template-parts.json';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { getTopbar } from '@/lib/homeDesign';
+
+// crisp vector logo (traced from the original artwork) – horizontal on phones, stacked on desktop
+const LOGO_H = readFileSync(join(process.cwd(), 'components', 'logo-h.svg'), 'utf8');
+const LOGO_V = readFileSync(join(process.cwd(), 'components', 'logo-v.svg'), 'utf8');
+const escH = (t: string) => t.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' } as any)[c]);
 
 export default async function Header({ active = '/' }: { active?: string }) {
   const items = await db.menuItem.findMany({ where: { menuId: 1, parentId: null }, orderBy: { sort: 'asc' } });
@@ -8,6 +16,8 @@ export default async function Header({ active = '/' }: { active?: string }) {
   const subs = await db.menuItem.findMany({ where: { menuId: 1, parentId: { in: items.map((i) => i.id) } }, orderBy: { sort: 'asc' } });
   const cart = await getCart();
   const count = cart.reduce((a, l) => a + l.qty, 0);
+  const msgs = await getTopbar();
+  const ann = msgs.map((m, i) => `<${m.link ? `a href="${escH(encodeURI(m.link))}"` : 'span'} class="gt-ann-item${i ? '' : ' on'}"><span class="gt-ann-dot" aria-hidden="true"></span>${escH(m.text)}</${m.link ? 'a' : 'span'}>`).join('');
   const left = (parts as any).leftMenu
     .replace(/<span class="position-absolute top-0 start-0 translate-middle badge rounded-pill">[\s\S]*?<\/span>\s*<\/span>/, count ? `<span class="position-absolute top-0 start-0 translate-middle badge rounded-pill">${count}</span>` : '')
     .replace('<button type="button" class="position-relative cart-button">', '<a href="/cart" class="position-relative cart-button" aria-label="סל קניות">')
@@ -25,6 +35,7 @@ export default async function Header({ active = '/' }: { active?: string }) {
             <a href="/account?tab=downloads">ההורדות שלי</a>
             <a href="/account">התחברות</a>
           </nav>
+          {msgs.length ? <div className="gt-ann" role="region" aria-label="הודעות" aria-live="polite" dangerouslySetInnerHTML={{ __html: ann }} /> : null}
           <div className="gs-topbar-promo" dir="ltr" role="group" aria-label="GreenShow — יש למה לצפות">
             <img className="gs-topbar-art" src="/t/assets/greenshow/greenshow_topbar_compact.png" alt="GreenShow — יש למה לצפות. הצצה ראשונה" width={1700} height={183} decoding="async" />
             <span className="gs-topbar-green-light" aria-hidden="true"></span>
@@ -38,7 +49,7 @@ export default async function Header({ active = '/' }: { active?: string }) {
         <button className="d-lg-none btn-toogle-nav text-white" id="toggle-nav" aria-label="תפריט" dangerouslySetInnerHTML={{ __html: (parts as any).toggle }} />
         <div className="d-flex right-side nav-open" id="nav">
           <span dangerouslySetInnerHTML={{ __html: (parts as any).menuBgLeft + (parts as any).menuBgRight }} />
-          <a className="d-none d-lg-block logo-desk" href="/"><img src="/t/assets/images/logo.png" alt="גרינטק – מוזיקה ותוכן יהודי" className="logo-img" /></a>
+          <a className="d-none d-lg-block logo-desk gt-logo" href="/" aria-label="גרינטק – לדף הבית" dangerouslySetInnerHTML={{ __html: LOGO_V }} />
           <ul className="navbar-nav">
             {items.map((it) => {
               const sub = subs.filter((k) => k.parentId === it.id && k.link);
@@ -64,7 +75,7 @@ export default async function Header({ active = '/' }: { active?: string }) {
             })}
           </ul>
         </div>
-        <a href="/" className="middle-logo d-lg-none"><img src="/t/assets/images/logo-v.png" alt="גרינטק" className="logo-img" /></a>
+        <a href="/" className="middle-logo d-lg-none gt-logo" aria-label="גרינטק – לדף הבית" dangerouslySetInnerHTML={{ __html: LOGO_H }} />
         <div className="d-flex left-menu-wrap" dangerouslySetInnerHTML={{ __html: left.replace('<!-- Left Menu -->', '') }} />
       </div>
     </header>

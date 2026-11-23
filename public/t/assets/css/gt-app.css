@@ -268,3 +268,35 @@ body:not(:has(.hero-carousel, .heros, .shop-hero)) .main-header .bg-left, body:n
 .pp-descfull img, .pp-descfull iframe { max-width: 100%; height: auto; }
 .pp-descfull table { width: 100%; }
 @media (width < 576px) { .pp-descfull { font-size: 15px; } .pp-vchip { min-height: 40px; padding: 7px 12px; } }
+
+/* ---- Logo: crisp vector (traced from the original artwork) ---- */
+.gt-logo { display: inline-flex; line-height: 0; }
+.gt-logo .gt-logo-svg { display: block; width: auto; }
+.main-header .middle-logo.gt-logo .gt-logo-svg { height: 38px; }
+@media (width < 576px) { .main-header .middle-logo.gt-logo .gt-logo-svg { height: 34px; } .main-header .middle-logo.gt-logo text { display: none; } }
+.main-header .logo-desk.gt-logo .gt-logo-svg { height: 74px; }
+@media (width >= 1400px) { .main-header .logo-desk.gt-logo .gt-logo-svg { height: 84px; } }
+@media (width < 380px) { .main-header .middle-logo.gt-logo .gt-logo-svg { height: 30px; } }
+
+/* ---- Top bar: announcements & promotions get real presence ---- */
+.gt-utility { background: linear-gradient(90deg, #0b0b0b, #151a06 50%, #0b0b0b) !important; border-bottom: 1px solid rgba(202, 219, 45, .28) !important; }
+.gt-utility-in { height: 46px !important; gap: 18px !important; }
+@media (width >= 1200px) { .gt-utility-in { height: 52px !important; } }
+.gt-ann { position: relative; flex: 1 1 auto; min-width: 0; height: 100%; overflow: hidden; }
+.gt-ann-item { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 9px; color: #fff; font-family: "Heebo", sans-serif; font-weight: 500; font-size: 15px; letter-spacing: .1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none;
+  opacity: 0; transform: translateY(100%); transition: opacity .45s ease, transform .45s ease; pointer-events: none; }
+.gt-ann-item.on { opacity: 1; transform: none; pointer-events: auto; }
+.gt-ann-item.out { opacity: 0; transform: translateY(-100%); }
+a.gt-ann-item:hover { color: #cadb2d; }
+a.gt-ann-item::after { content: "‹"; color: #cadb2d; font-weight: 700; margin-inline-start: 2px; }
+.gt-ann-dot { width: 7px; height: 7px; flex: none; border-radius: 50%; background: #cadb2d; box-shadow: 0 0 0 4px rgba(202, 219, 45, .18); }
+@media (width < 1200px) {
+  .gt-utility .gs-topbar-mobile-link { position: static !important; transform: none !important; flex: none; margin: 0 !important; }
+  .gt-ann-item { justify-content: flex-start; font-size: 14px; }
+}
+@media (width < 576px) {
+  .gt-utility-in { height: 44px !important; padding-inline: 14px !important; gap: 10px !important; }
+  .gt-ann-item { font-size: 13.5px; }
+  .gt-utility .gs-topbar-mobile-link { padding: 5px 11px !important; font-size: 12.5px !important; }
+}
+@media (prefers-reduced-motion: reduce) { .gt-ann-item { transition: none; } }

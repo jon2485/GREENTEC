@@ -101,4 +101,18 @@
     if (f) f.addEventListener('input', function () { var v = f.value.trim().toLowerCase(); [].forEach.call(list.children, function (li) { li.hidden = v && li.textContent.toLowerCase().indexOf(v) < 0; }); });
     if (chips) chips.addEventListener('click', function (e) { var b = e.target.closest('[data-unsup]'); if (!b) return; var cur = (new URL(location.href).searchParams.get('sup') || '').split(',').filter(Boolean); go(b.dataset.unsup === 'all' ? [] : cur.filter(function (x) { return x !== b.dataset.unsup; })); });
   })();
+
+  // top bar: rotating announcements
+  (function () {
+    var items = [].slice.call(document.querySelectorAll('.gt-ann .gt-ann-item')); if (items.length < 2) return;
+    var i = 0, paused = false, box = document.querySelector('.gt-ann');
+    box.addEventListener('mouseenter', function () { paused = true; }); box.addEventListener('mouseleave', function () { paused = false; });
+    setInterval(function () {
+      if (paused || document.hidden) return;
+      var cur = items[i]; i = (i + 1) % items.length; var nx = items[i];
+      cur.classList.remove('on'); cur.classList.add('out');
+      setTimeout(function () { cur.classList.remove('out'); }, 460);
+      nx.classList.add('on');
+    }, 4500);
+  })();
 })();
