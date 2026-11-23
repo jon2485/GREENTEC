@@ -38,7 +38,7 @@ export default async function Home() {
   return (
     <>
       <div dangerouslySetInnerHTML={{ __html: html }} />
-      {T.homeScripts.map((s, i) => <script key={i} dangerouslySetInnerHTML={{ __html: s }} />)}
+      {T.homeScripts.map((s, i) => <script key={i} dangerouslySetInnerHTML={{ __html: s.replace('const sc=Math.max(W/IW,H/IH)', "const sc=(getComputedStyle(img).objectFit==='contain'?Math.min:Math.max)(W/IW,H/IH)").replace('oy=(H-rh)*0.5', "oy=(H-rh)*((parseFloat(getComputedStyle(img).objectPosition.split(' ')[1]) || 50) / 100)") }} />)}
     </>
   );
 }
