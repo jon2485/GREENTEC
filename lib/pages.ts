@@ -53,14 +53,29 @@ export function cleanDesc(h: string) {
 function attrRows(h: string) {
   return [...String(h || '').matchAll(/<tr[^>]*>\s*<th[^>]*>([\s\S]*?)<\/th>\s*<td[^>]*>([\s\S]*?)<\/td>/gi)].map((m) => [plain(m[1]), plain(m[2])]).filter(([k, v]) => k && v);
 }
-function variantsHtml(p: any) {
+export function variantsHtml(p: any) {
   const v = parseVariants(p.variantsJson); if (!v) return '';
-  const g = v.groups.map((gr, gi) => `<div class="pp-vgroup" data-gi="${gi}"><span class="pp-vname">${esc(gr.name)}:</span><div class="pp-vchips">${gr.options.map((o) => {
-    const c = v.groups.length === 1 ? v.combos['.' + o.id + '.'] : null; const out = c && c.qty != null && c.qty <= 0;
-    const lb = optLabel(gr, o);
-    return `<button type="button" class="pp-vchip${o.color ? ' sw' : ''}${o.color && !o.label ? ' sw-only' : ''}" data-o="${o.id}" aria-label="${esc(lb)}"${out ? ' disabled title="אזל מהמלאי"' : ` title="${esc(lb)}"`}${o.color ? ` style="--sw:${esc(o.color)}"` : ''}>${o.img ? `<img src="${esc(o.img)}" alt="">` : ''}${o.label ? `<span>${esc(o.label)}</span>` : ''}</button>`; }).join('')}</div></div>`).join('');
-  const pr = v.props.filter((x) => x.kind !== 'text' && x.options.length).map((x) => `<label class="pp-prop"><span class="pp-vname">${esc(x.name)}:</span><select data-prop="${x.id}">${x.options.map((o) => `<option value="${o.id}" data-price="${o.price || 0}"${o.def ? ' selected' : ''}>${esc(o.label)}${o.price ? ` (+${money(o.price)})` : ''}</option>`).join('')}</select></label>`).join('');
-  return `<div class="pp-vars" id="ppVars" data-vars="${esc(JSON.stringify({ groups: v.groups.map((x) => ({ name: x.name })), combos: v.combos }))}">${g}${pr}<p class="pp-vmsg" id="ppVmsg" hidden></p></div>`;
+  // inspired by Nike / Zara / Uniqlo: equal tiles, main value big + detail small, out-of-stock crossed, selected value in the header
+  const split = (t: string) => { const m = String(t).match(/^(.*?)\s*[(\[](.+)[)\]]\s*$/); return m && m[1].trim() ? [m[1].trim(), m[2].replace(/\s*,\s*/g, ', ').trim()] : [String(t).trim(), '']; };
+  const full = Object.keys(v.combos).some((k) => k.split('.').filter(Boolean).length === v.groups.length);
+  const prices = Object.entries(v.combos).filter(([k]) => k.split('.').filter(Boolean).length === v.groups.length).map(([, c]) => c.price).filter((x): x is number => x != null && x > 0);
+  const minP = prices.length ? Math.min(...prices) : 0;
+  const g = v.groups.map((gr, gi) => {
+    const swatches = gr.options.every((o) => o.color && !o.label);
+    const tiles = gr.options.map((o) => {
+      const c = v.groups.length === 1 ? v.combos['.' + o.id + '.'] : null;
+      const out = !!(c && c.qty != null && c.qty <= 0) || (v.groups.length === 1 && full && !c);
+      const lb = optLabel(gr, o); const [main, sub] = split(o.label || lb);
+      const diff = c && c.price != null && minP && c.price !== minP ? c.price : 0;
+      if (swatches) return `<button type="button" class="vt-sw" data-o="${o.id}" data-label="${esc(lb)}" style="--sw:${esc(o.color || '#ccc')}" aria-label="${esc(lb)}"${out ? ' disabled' : ''}><span></span></button>`;
+      return `<button type="button" class="vt${o.color ? ' has-sw' : ''}" data-o="${o.id}" data-label="${esc(lb)}" aria-label="${esc(lb)}${out ? ' – אזל' : ''}"${out ? ' disabled' : ''}${o.color ? ` style="--sw:${esc(o.color)}"` : ''}>${o.img ? `<img src="${esc(o.img)}" alt="">` : ''}<b>${esc(main)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}${diff ? `<em>${money(diff)}</em>` : ''}</button>`;
+    }).join('');
+    const long = !swatches && gr.options.some((o) => split(o.label || '')[0].length > 9);
+    const hasSub = !swatches && gr.options.some((o) => split(o.label || '')[1]);
+    return `<div class="vg" data-gi="${gi}"><div class="vg-head"><span class="vg-name">${esc(gr.name.replace(/^בחירת\s+/, ''))}</span><span class="vg-sel" data-ph="בחרו ${esc(gr.name.replace(/^בחירת\s+/, ''))}">בחרו ${esc(gr.name.replace(/^בחירת\s+/, ''))}</span></div><div class="vg-grid${swatches ? ' is-sw' : long ? ' is-long' : hasSub ? ' has-sub' : ''}">${tiles}</div></div>`;
+  }).join('');
+  const pr = v.props.filter((x) => x.kind !== 'text' && x.options.length).map((x) => `<fieldset class="vg vg-addon"><legend class="vg-head"><span class="vg-name">${esc(x.name)}</span></legend><div class="vg-list">${x.options.map((o, i) => `<label class="va"><input type="radio" name="prop-${x.id}" data-prop="${x.id}" value="${o.id}" data-price="${o.price || 0}"${o.def || (!x.options.some((y) => y.def) && !i) ? ' checked' : ''}><span class="va-dot"></span><span class="va-txt">${esc(o.label)}</span><span class="va-price">${o.price ? '+' + money(o.price) : 'ללא תוספת'}</span></label>`).join('')}</div></fieldset>`).join('');
+  return `<div class="pp-vars" id="ppVars" data-vars="${esc(JSON.stringify({ groups: v.groups.map((x) => ({ name: x.name.replace(/^בחירת\s+/, '') })), combos: v.combos }))}">${g}${pr}<p class="pp-vstock" id="ppVstock" hidden></p><p class="pp-vmsg" id="ppVmsg" hidden></p></div>`;
 }
 
 export function productPage(o: { p: any; crumbs: Crumb[]; kicker: string; catName: string; catUrl: string; suppliers: { name: string; url: string; count: number }[]; related: any[]; delivery: string; returns: string; siteUrl: string }) {
@@ -104,14 +119,23 @@ export const ppScript = `{
   let V=null; try{V=vb?JSON.parse(vb.dataset.vars):null}catch(e){}
   const basePrice=()=>{const r=document.querySelector('.pp-opt input:checked');return r?+r.value:+(price.dataset.base||String(price.textContent).replace(/[^\\d.]/g,''))};
   if(price&&!price.dataset.base)price.dataset.base=String(price.textContent).replace(/[^\\d.]/g,'');
-  const pick=()=>{if(!vb)return {ok:true};const ids=[...vb.querySelectorAll('.pp-vgroup')].map(g=>{const b=g.querySelector('.pp-vchip.on');return b?+b.dataset.o:0});
+  const pick=()=>{if(!vb)return {ok:true};const ids=[...vb.querySelectorAll('.vg[data-gi]')].map(g=>{const b=g.querySelector('.on[data-o]');return b?+b.dataset.o:0});
     const missing=V.groups.filter((g,i)=>!ids[i]).map(g=>g.name);const key=ids.length?'.'+[...ids].sort((a,b)=>a-b).join('.')+'.':'';const c=V.combos[key];
     const full=Object.keys(V.combos).some(k=>k.split('.').filter(Boolean).length===V.groups.length);
-    const pr=[...vb.querySelectorAll('[data-prop]')].map(s=>s.dataset.prop+':'+s.value).join(',');
-    const add2=[...vb.querySelectorAll('[data-prop]')].reduce((a,s)=>a+(+(s.selectedOptions[0]?.dataset.price||0)),0);
-    return {ok:!missing.length,missing,key:ids.length?key:'',pr,price:((c&&c.price>0)?+c.price:basePrice())+add2,out:!!c&&c.qty!=null&&c.qty<=0,known:!ids.length||!full||!!c};};
-  const refresh=()=>{if(!vb)return;const s=pick();price.textContent='₪'+(Math.round(s.price*100)/100);vmsg.hidden=true;if(s.ok&&(s.out||!s.known)){vmsg.textContent='האפשרות שבחרת אינה במלאי כרגע';vmsg.hidden=false;}};
-  if(vb){vb.addEventListener('click',e=>{const b=e.target.closest('.pp-vchip');if(!b||b.disabled)return;b.parentNode.querySelectorAll('.pp-vchip').forEach(x=>x.classList.toggle('on',x===b));refresh();});vb.addEventListener('change',refresh);refresh();}
+    const sel=[...vb.querySelectorAll('input[data-prop]:checked')];
+    const pr=sel.map(s=>s.dataset.prop+':'+s.value).join(',');
+    const add2=sel.reduce((a,s)=>a+(+(s.dataset.price||0)),0);
+    return {ok:!missing.length,missing,key:ids.length?key:'',pr,price:((c&&c.price>0)?+c.price:basePrice())+add2,qty:c&&c.qty!=null?c.qty:null,out:!!c&&c.qty!=null&&c.qty<=0,known:!ids.length||!full||!!c};};
+  const vst=document.getElementById('ppVstock');
+  const refresh=()=>{if(!vb)return;const s=pick();price.textContent='₪'+(Math.round(s.price*100)/100);vmsg.hidden=true;vst.hidden=true;
+    const gs=[...vb.querySelectorAll('.vg[data-gi]')];const cur=gs.map(g=>{const b=g.querySelector('.on[data-o]');return b?+b.dataset.o:0});
+    const fullK=Object.keys(V.combos).some(k=>k.split('.').filter(Boolean).length===V.groups.length);
+    gs.forEach((g,gi)=>{const b=g.querySelector('.on[data-o]');const t=g.querySelector('.vg-sel');t.textContent=b?b.dataset.label:t.dataset.ph;t.classList.toggle('chosen',!!b);
+      if(gs.length>1&&fullK){const others=cur.filter((x,i)=>i!==gi);const ready=others.every(Boolean);
+        g.querySelectorAll('[data-o]').forEach(x=>{if(!ready){x.classList.remove('na');return;}const k='.'+[...others,+x.dataset.o].sort((a,b)=>a-b).join('.')+'.';const c=V.combos[k];x.classList.toggle('na',!c||(c.qty!=null&&c.qty<=0));});}});
+    if(s.ok&&(s.out||!s.known)){vmsg.textContent='האפשרות שבחרת אזלה מהמלאי';vmsg.hidden=false;}
+    else if(s.ok&&s.qty!=null&&s.qty>0&&s.qty<=3){vst.textContent='נותרו '+s.qty+' יחידות בלבד';vst.hidden=false;}};
+  if(vb){vb.addEventListener('click',e=>{const b=e.target.closest('[data-o]');if(!b||b.disabled)return;b.parentNode.querySelectorAll('[data-o]').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b)});refresh();});vb.addEventListener('change',refresh);refresh();}
   document.querySelectorAll('[data-open-tab]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const t=document.querySelector('.pp-tablist [data-t="'+a.dataset.openTab+'"]');if(t){t.click();t.scrollIntoView({behavior:'smooth',block:'start'});}}));
   if(add) add.addEventListener('click',()=>{const s=pick();if(!s.ok){vmsg.textContent='נא לבחור '+s.missing.join(' ו')+' לפני ההוספה לסל';vmsg.hidden=false;vb.scrollIntoView({behavior:'smooth',block:'center'});return;}if(s.out||!s.known){vmsg.textContent='האפשרות שבחרת אינה במלאי כרגע';vmsg.hidden=false;return;}
     window.gtAdd(add.dataset.id,add.dataset.mode,+document.getElementById('ppQty').value||1,{v:s.key,pr:s.pr}).then(()=>{add.querySelector('span').textContent='נוסף לסל ✓';setTimeout(()=>add.querySelector('span').textContent='הוספה לסל',2200);}).catch(()=>{});});
