@@ -45,3 +45,10 @@ a, button, .btn { -webkit-tap-highlight-color: transparent; }
 .btn:focus, .btn:active, .btn:focus-within { outline: none !important; box-shadow: none !important; }
 .btn:focus-visible { outline: 2px solid #cadb2d !important; outline-offset: 3px; border-radius: 980px !important; }
 .btn-outline-primary:active, .btn-outline-primary:focus-within, .btn-outline-primary.active { border-radius: 980px !important; background-clip: padding-box; }
+
+/* Phones: a little more breathing room between products (homepage sections, shop pages, movies) */
+@media (width < 576px) {
+  .album-grid { gap: 26px 18px; }
+  .shop-grid { gap: 28px 18px; }
+  .movies-grid { gap: 22px 18px; }
+}
