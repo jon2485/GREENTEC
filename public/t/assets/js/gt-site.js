@@ -73,15 +73,11 @@
     if (st && side) st.addEventListener('click', function () { side.classList.toggle('open'); });
   }
 
-  // phone/tablet menu: chevrons to open sub-categories in place, and no page scrolling behind the open menu
-  (function () {
-    var nav = document.getElementById('nav'), tg = document.getElementById('toggle-nav');
-    document.querySelectorAll('.main-header .nav-item.dropdown').forEach(function (li) {
-      var b = document.createElement('button'); b.type = 'button'; b.className = 'gt-chev d-lg-none'; b.setAttribute('aria-label', 'פתיחת תת־קטגוריות');
-      b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
-      b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); li.classList.toggle('open'); });
-      li.insertBefore(b, li.children[1] || null);
-    });
-    if (nav && tg) tg.addEventListener('click', function () { setTimeout(function () { document.documentElement.classList.toggle('gt-menu-open', !nav.classList.contains('nav-open')); }, 0); });
-  })();
+  // phone/tablet menu: chevrons (rendered by the server) open sub-categories in place; no page scroll behind the open menu.
+  // Delegated listeners only — never add DOM nodes inside React-rendered markup (it breaks hydration and drops handlers).
+  document.addEventListener('click', function (e) {
+    var c = e.target.closest('.main-header .gt-chev');
+    if (c) { e.preventDefault(); e.stopPropagation(); c.closest('.nav-item').classList.toggle('open'); return; }
+    if (e.target.closest('#toggle-nav')) setTimeout(function () { var nav = document.getElementById('nav'); document.documentElement.classList.toggle('gt-menu-open', !!nav && !nav.classList.contains('nav-open')); }, 0);
+  });
 })();

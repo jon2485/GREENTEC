@@ -47,6 +47,7 @@ export default async function Header({ active = '/' }: { active?: string }) {
               return (
                 <li key={it.id} className="nav-item group dropdown">
                   <a className={cls + ' dropdown-toggle'} href={it.link || '#'} role="button" aria-expanded="false">{it.title}</a>
+                  <button type="button" className="gt-chev d-lg-none" aria-label={`פתיחת תת־קטגוריות: ${it.title}`} dangerouslySetInnerHTML={{ __html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>' }} />
                   <div className="dropdown-menu submenu">
                     <div className="submenu-box position-relative">
                       <div className="container submenu-container">

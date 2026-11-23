@@ -1,13 +1,8 @@
-// Nav Toggle Start
-const $barIcon = $(".bar-icon");
-const $closeIcon = $(".close-icon");
-const $toggleNavButton = $("#toggle-nav");
-const $nav = $("#nav");
-
-$toggleNavButton.on("click", () => {
-  $nav.toggleClass("nav-open");
-  $barIcon.toggleClass("d-none");
-  $closeIcon.toggleClass("d-none");
+// Nav Toggle Start (delegated, so it keeps working even if the header markup is re-rendered)
+$(document).on("click", "#toggle-nav", () => {
+  $("#nav").toggleClass("nav-open");
+  $("#toggle-nav .bar-icon").toggleClass("d-none");
+  $("#toggle-nav .close-icon").toggleClass("d-none");
 });
 // Nav Toggle End
 $(document).ready(function () {
