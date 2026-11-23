@@ -118,3 +118,13 @@ a, button, .btn { -webkit-tap-highlight-color: transparent; }
 html.gt-scrolled .main-header { background-color: #161616 !important; box-shadow: 0 1px 0 rgba(202, 219, 45, .35), 0 8px 22px rgba(0, 0, 0, .35) !important; backdrop-filter: none !important; }
 html.gt-scrolled .main-header .bg-left, html.gt-scrolled .main-header .bg-right { opacity: 0 !important; }
 html.gt-scrolled .gt-utility { background: #0e0e0e; }
+
+/* Phones – homepage: bigger product squares, less side margin, less empty space above section titles */
+@media (width < 576px) {
+  .jewish-music-section, .new-on-section, .movies-section, .accessories-section, .albums-section, .new-singles-section, .recent-articles-section { padding-inline: 0 !important; }
+  .jewish-music-section > .container, .new-on-section > .container, .movies-section > .container, .accessories-section > .container, .albums-section > .container, .new-singles-section > .container, .recent-articles-section > .container { padding-inline: 14px !important; }
+  .jewish-music-section { margin-top: 64px !important; margin-bottom: 72px !important; }
+  .album-grid { gap: 22px 14px !important; }
+  .movies-grid { gap: 18px 14px !important; }
+  .main-header .cart-button .badge { top: -6px !important; right: -8px !important; padding-inline: 6px; min-width: 18px; line-height: 16px; }
+}
