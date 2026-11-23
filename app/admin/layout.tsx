@@ -16,6 +16,7 @@ export default function AdminRoot({ children }: { children: React.ReactNode }) {
         {children}
         <script src="/t/vendor/bootstrap.bundle.min.js" defer></script>
         <script src="/admin-assets/admin.js" defer></script>
+        <script src="/admin-assets/legacy-import.js" defer></script>
       </body>
     </html>
   );

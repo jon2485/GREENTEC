@@ -6,6 +6,11 @@ import { RESOURCES, resourceByModel, saveResource, deleteResource } from '@/lib/
 import * as P from '@/lib/admin/products';
 import * as O from '@/lib/admin/orders';
 import * as C from '@/lib/admin/content';
+import { statusLine } from '@/lib/admin/legacyImport';
+import { importUsers, importOrders, importCarts } from '@/lib/legacyPersonal';
+import { startImageMigration, imageStatus } from '@/lib/imageMigration';
+import { importLegacyAdmin, loadLegacyAdmin, SECTION_LABELS } from '@/scripts/import-legacy-admin.mjs';
+import { MIGRATE_ORIGINS } from '@/lib/migrate';
 import { storageReady, signedUpload, signedDownload, multipartStart, multipartPartUrls, multipartComplete, multipartAbort, setBucketCors, safeKeyPart } from '@/lib/storage';
 
 export const dynamic = 'force-dynamic';
@@ -34,7 +39,7 @@ async function handle(mod: string, action: string, id: number, f: FormData, url:
     }
     case 'products/trash': await db.product.update({ where: { id }, data: { status: -1 } }); return ok('הועבר לסל המחזור', { redirect: '/admin?am=products&ac=recycle_bin' });
     case 'products/restore': await db.product.update({ where: { id }, data: { status: 0 } }); return ok('שוחזר (לא מפורסם)', { reload: true });
-    case 'products/save_cat': return P.categorySave(id, f) as Promise<R>;
+    case 'products/save_cat': return P.categorySave(url.pathname.endsWith('/new') ? null : id, f) as Promise<R>;
     case 'products/delete_cat': {
       if (await db.category.count({ where: { parentId: id } })) return err('לקטגוריה יש קטגוריות משנה. יש להעביר או למחוק אותן קודם.');
       await db.category.delete({ where: { id } }); return ok('הוסר', { reload: true });
@@ -69,7 +74,7 @@ async function handle(mod: string, action: string, id: number, f: FormData, url:
     case 'storage/complete': await multipartComplete(String(f.get('key')), String(f.get('uploadId')), JSON.parse(String(f.get('parts')))); return ok('הקובץ הועלה');
     case 'storage/abort': await multipartAbort(String(f.get('key')), String(f.get('uploadId'))).catch(() => {}); return ok('בוטל');
     case 'storage/cors': {
-      const origins = [process.env.SITE_URL, url.origin].filter(Boolean) as string[];
+      const origins = [process.env.SITE_URL, url.origin, ...MIGRATE_ORIGINS].filter(Boolean) as string[];
       await setBucketCors([...new Set(origins)]); return ok('הוגדר CORS לדליים עבור: ' + [...new Set(origins)].join(', '));
     }
     // orders
@@ -101,6 +106,23 @@ async function handle(mod: string, action: string, id: number, f: FormData, url:
     case 'albums/delete': await db.album.delete({ where: { id } }); return ok('הוסר', { reload: true });
     case 'albums/save_images': return C.albumImagesSave(id, f) as Promise<R>;
     case 'shipping/save_countries': return C.countriesSave(f) as Promise<R>;
+    // legacy migration (docs/MIGRATION.md)
+    case 'legacy/import_admin': {
+      const rep = await importLegacyAdmin(db, loadLegacyAdmin());
+      const e = (s: any) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+      const html = `<div class="table-responsive"><table class="table table-sm adm-table"><thead><tr><th>חלק</th><th>נוצרו</th><th>עודכנו</th><th>דולגו</th><th>נכשלו</th><th>הערות</th></tr></thead><tbody>${Object.entries(rep).map(([k, s]: any) => `<tr><td>${e((SECTION_LABELS as any)[k] || k)}</td><td>${s.created}</td><td>${s.updated}</td><td>${s.skipped}</td><td>${s.failed}</td><td class="small">${s.notes.map(e).join('<br>')}</td></tr>`).join('')}</tbody></table></div>`;
+      return ok('הייבוא הסתיים', { html });
+    }
+    case 'legacy/images_start': { await startImageMigration(); return ok('העתקת התמונות התחילה ברקע', { reload: true }); }
+    case 'legacy/images_status': return ok('', { line: statusLine(await imageStatus()) });
+    case 'legacy/batch': {
+      const kind = String(f.get('kind')); const dry = f.get('dry') === '1';
+      let recs: any[]; try { recs = JSON.parse(String(f.get('records') || '[]')); } catch { return err('JSON לא תקין'); }
+      if (!Array.isArray(recs) || recs.length > 1000) return err('חבילה לא תקינה');
+      const res = kind === 'users' ? await importUsers(recs, dry) : kind === 'orders' ? await importOrders(recs, dry) : kind === 'carts' ? await importCarts(recs[0], dry) : null;
+      if (!res) return err('סוג לא מוכר');
+      return ok('', res);
+    }
   }
   // generic resources: {am}/save_{model}/{id}, {am}/delete_{model}/{id}
   const m = action.match(/^(save|delete)_(\w+)$/);

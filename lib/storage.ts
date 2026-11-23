@@ -8,7 +8,9 @@ export const BUCKET = env('S3_BUCKET', 'BUCKET');
 let client: S3Client | null = null;
 export function s3() {
   if (!client) client = new S3Client({
-    region: env('S3_REGION', 'REGION') || 'auto', endpoint: env('S3_ENDPOINT', 'ENDPOINT') || undefined, forcePathStyle: false,
+    // presigned browser uploads must not carry an SDK-computed checksum (it would be the checksum of an empty body)
+    requestChecksumCalculation: 'WHEN_REQUIRED', responseChecksumValidation: 'WHEN_REQUIRED',
+    region: env('S3_REGION', 'REGION') || 'auto', endpoint: env('S3_ENDPOINT', 'ENDPOINT') || undefined, forcePathStyle: env('S3_FORCE_PATH_STYLE') === '1',
     credentials: { accessKeyId: env('S3_ACCESS_KEY_ID', 'ACCESS_KEY_ID'), secretAccessKey: env('S3_SECRET_ACCESS_KEY', 'SECRET_ACCESS_KEY') },
   });
   return client;

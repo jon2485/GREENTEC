@@ -71,6 +71,12 @@ design/template-v2/    approved HTML pages (assets are under public/t — paths 
    - The other screens can start as working lists.
    - **Never build "כיבוי האתר" (shutdown) or "התחברות כמשתמש" (login‑as‑user) without the owner's explicit approval.**
    - Admin access: `User.type` in 69/70/99 (`lib/auth.ts requireAdmin`).
+3a. **Migration from the legacy site (docs/MIGRATION.md) — A–D BUILT (2026-11-23), E waits for `design/admin-template`:**
+   - A: `scripts/import-legacy-admin.mjs` merges `data/legacy-admin-full.json.gz` (runs once automatically on start via `--once`; re-run from admin → מערכת → ייבוא נתונים מהמערכת הישנה). Never touches urlPath/SEO/names seeded from the storefront.
+   - C: `lib/imageMigration.ts` copies legacy images to `media/legacy/...` in the bucket and rewrites DB URLs (admin button, background job, status in Setting `image_migration`).
+   - D: `app/api/migrate/{files,upload-url,complete,cors}` with `MIGRATION_TOKEN` (Railway variable; endpoints are exempt from staging basic auth). **TODO after the file migration: delete `app/api/migrate/*`, `lib/migrate.ts`, the middleware exemption, and the `MIGRATION_TOKEN` variable.**
+   - B: `lib/legacyPersonal.ts` + the same admin screen: files are parsed in the browser and sent in batches (nothing stored on disk/logged). Users keyed on `User.legacyId`, orders keep their legacy id (`Order.legacy=true`), paid digital lines → DownloadGrant. "שכחתי סיסמה": `/forgot-password`, `/reset-password`, `lib/mail.ts` (`MAIL_PROVIDER` resend|brevo|sendgrid, `MAIL_API_KEY`, `MAIL_FROM`). Imported customers have no password; login sends them to set one.
+   - Tracking codes (`header_landing`, `header_order_success`, `google_site_verification`) are wired into the storefront, **production only** (not when `STAGING=1`).
 4. **Bulk upload of the 100 GB:** a script or guide (e.g. rclone or Cyberduck to the bucket), matched to products by id/filename, then setting `Product.digitalFile`.
 5. **Later, each with separate approval:** import real users and orders (from the owner's PC export, never committed), the real payment gateway, emails/SMS for order statuses, image migration, and DNS cutover.
 
