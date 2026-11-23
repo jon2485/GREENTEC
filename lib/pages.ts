@@ -1,6 +1,7 @@
 import { I } from './tpl';
 import { esc, shopCard, bundleCard, thumb, href } from './render';
 import { enc, money, priceOptions } from './format';
+import { parseVariants, optLabel } from './variants';
 
 type Crumb = { name: string; url?: string };
 export const crumbsHtml = (c: Crumb[]) => `<nav aria-label="breadcrumb" class="shop-crumbs"><a href="/">דף הבית</a>${c.map((x) => ' / ' + (x.url ? `<a href="${enc(x.url)}">${esc(x.name)}</a>` : `<span>${esc(x.name)}</span>`)).join('')}</nav>`;
@@ -33,12 +34,45 @@ ${L.items.length ? '' : '<p class="shop-empty">לא נמצאו מוצרים.</p>
 </div></div></section>`;
 }
 
+
+// ---- product description helpers (legacy HTML from the UPME editor) ----
+export const decodeEnt = (t: string) => String(t || '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+  .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n)).replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16))).replace(/&amp;/g, '&');
+const plain = (h: string) => decodeEnt(String(h || '').replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
+// clean the editor's markup: no inline fonts/colours/margins, no empty paragraphs – keeps bold, lists, links, line breaks, alignment
+export function cleanDesc(h: string) {
+  let x = String(h || '');
+  x = x.replace(/<(script|style)[\s\S]*?<\/\1>/gi, '');
+  x = x.replace(/<\/?(font|span|o:p)[^>]*>/gi, '');
+  x = x.replace(/\s(style|class|lang|dir|face|size|color|width|height|align)="[^"]*"/gi, (m, a) => (a.toLowerCase() === 'align' && /center/.test(m) ? ' class="tc"' : ''));
+  x = x.replace(/<(p|div|h[1-6])([^>]*)>\s*(?:&nbsp;|\s|<br\s*\/?>)*\s*<\/\1>/gi, '');
+  x = x.replace(/(?:<br\s*\/?>\s*){3,}/gi, '<br><br>');
+  x = x.replace(/&nbsp;/g, ' ');
+  return x.trim();
+}
+function attrRows(h: string) {
+  return [...String(h || '').matchAll(/<tr[^>]*>\s*<th[^>]*>([\s\S]*?)<\/th>\s*<td[^>]*>([\s\S]*?)<\/td>/gi)].map((m) => [plain(m[1]), plain(m[2])]).filter(([k, v]) => k && v);
+}
+function variantsHtml(p: any) {
+  const v = parseVariants(p.variantsJson); if (!v) return '';
+  const g = v.groups.map((gr, gi) => `<div class="pp-vgroup" data-gi="${gi}"><span class="pp-vname">${esc(gr.name)}:</span><div class="pp-vchips">${gr.options.map((o) => {
+    const c = v.groups.length === 1 ? v.combos['.' + o.id + '.'] : null; const out = c && c.qty != null && c.qty <= 0;
+    const lb = optLabel(gr, o);
+    return `<button type="button" class="pp-vchip${o.color ? ' sw' : ''}${o.color && !o.label ? ' sw-only' : ''}" data-o="${o.id}" aria-label="${esc(lb)}"${out ? ' disabled title="אזל מהמלאי"' : ` title="${esc(lb)}"`}${o.color ? ` style="--sw:${esc(o.color)}"` : ''}>${o.img ? `<img src="${esc(o.img)}" alt="">` : ''}${o.label ? `<span>${esc(o.label)}</span>` : ''}</button>`; }).join('')}</div></div>`).join('');
+  const pr = v.props.filter((x) => x.kind !== 'text' && x.options.length).map((x) => `<label class="pp-prop"><span class="pp-vname">${esc(x.name)}:</span><select data-prop="${x.id}">${x.options.map((o) => `<option value="${o.id}" data-price="${o.price || 0}"${o.def ? ' selected' : ''}>${esc(o.label)}${o.price ? ` (+${money(o.price)})` : ''}</option>`).join('')}</select></label>`).join('');
+  return `<div class="pp-vars" id="ppVars" data-vars="${esc(JSON.stringify({ groups: v.groups.map((x) => ({ name: x.name })), combos: v.combos }))}">${g}${pr}<p class="pp-vmsg" id="ppVmsg" hidden></p></div>`;
+}
+
 export function productPage(o: { p: any; crumbs: Crumb[]; kicker: string; catName: string; catUrl: string; suppliers: { name: string; url: string; count: number }[]; related: any[]; delivery: string; returns: string; siteUrl: string }) {
   const { p } = o; const opts = priceOptions(p);
   const share = encodeURIComponent(o.siteUrl + p.urlPath);
   const optIcon = (k: string) => (k === 'digital' ? I.optDigital : I.optBoth);
   const optsHtml = opts.length > 1 ? `<fieldset class="pp-opts"><legend>בחרו איך לקבל את ${p.digitalPrice != null ? 'האלבום' : 'המוצר'}</legend>${opts.map((x, i) => `<label class="pp-opt"><input type="radio" name="buy" value="${x.price}" data-mode="${x.key}" data-note="${esc(x.label)}"${i ? '' : ' checked'}><span class="pp-opt-ic">${optIcon(x.key)}</span><span class="pp-opt-txt"><strong>${esc(x.label)}</strong><small>${esc(x.note)}</small></span><span class="pp-opt-price">${money(x.price)}</span></label>`).join('')}</fieldset>` : '';
-  const short = String(p.shortContent || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const isAttr = /shop_attributes/.test(p.content || '');
+  const desc = cleanDesc(isAttr ? p.shortContent : (p.content || p.shortContent));
+  const extra = isAttr ? attrRows(p.content) : [];
+  const full = plain(desc); const short = full.length > 220 ? full.slice(0, 220).replace(/\s+\S*$/, '') + '…' : full;
+  const vars = variantsHtml(p);
   const soldOut = p.quantity === 0 && !opts.some((x) => x.key === 'digital');
   return `<section class="shop-page pp"><div class="shop-hero"><div class="container"><span class="shop-kicker">${esc(o.kicker)}</span><p class="shop-title">${esc(o.catName)}</p>${crumbsHtml(o.crumbs)}</div></div>
 <div class="container pp-wrap"><div class="pp-top"><div class="pp-gallery"><div class="pp-main" id="ppMain">${p.id >= 8700 ? '<span class="shop-badge">חדש</span>' : ''}<img src="${esc(p.mainImage || '/t/assets/images/logo.png')}" alt="${esc(p.name)}" id="ppImg"></div>
@@ -47,15 +81,15 @@ ${p.sampleFile ? `<audio class="pp-sample" controls preload="none" src="${esc(p.
 <div class="pp-info"><h1 class="pp-title">${esc(p.name)}</h1>
 ${o.suppliers.length ? `<div class="pp-by">${o.suppliers.map((s) => `<a href="${s.url}">${esc(s.name)} <span>(${s.count} מוצרים)</span></a>`).join('')}</div>` : ''}
 <p class="pp-price"><span id="ppPrice">${opts[0] ? money(opts[0].price) : ''}</span> <small id="ppPriceNote">${esc(opts[0]?.label || '')}</small></p>
-${short ? `<p class="pp-desc">${esc(short)}</p>` : ''}${optsHtml}
+${short ? `<p class="pp-desc">${esc(short)}${full.length > 220 ? ' <a href="#t1" class="pp-more" data-open-tab="t1">לתיאור המלא</a>' : ''}</p>` : ''}${optsHtml}${vars}
 ${soldOut ? '<p class="gt-flash err">המוצר אזל מהמלאי</p>' : `<div class="pp-buy"><div class="qv-qty"><button type="button" aria-label="פחות" data-pq="-1">−</button><input id="ppQty" type="number" min="1" value="1" aria-label="כמות"><button type="button" aria-label="יותר" data-pq="1">+</button></div><button type="button" class="qv-add" id="ppAdd" data-id="${p.id}" data-mode="${opts[0]?.key || 'physical'}">${I.ppAdd}<span>הוספה לסל</span></button><button type="button" class="pp-wish" id="ppWish" data-wish="${p.id}" aria-label="הוספה לרשימת המשאלות">${I.ppWish}</button></div>`}
 <p class="pp-ship">${I.ship}<span>משלוח חינם מעל ₪150 בישראל, בדואר רשום</span></p>
 <ul class="pp-meta"><li><span>מק״ט:</span> ${esc(p.sku || p.id)}</li>${o.catName ? `<li><span>קטגוריה:</span> <a href="${enc(o.catUrl)}">${esc(o.catName)}</a></li>` : ''}${p.releaseYear ? `<li><span>שנת הוצאה:</span> ${p.releaseYear}</li>` : ''}</ul>
 <div class="qv-share pp-share"><span class="qv-label">שיתוף:</span><a href="https://wa.me/?text=${share}" target="_blank" rel="noopener" aria-label="שיתוף בוואטסאפ">${I.wa}</a><a href="https://www.facebook.com/sharer/sharer.php?u=${share}" target="_blank" rel="noopener" aria-label="שיתוף בפייסבוק">${I.fb}</a><a href="mailto:?subject=${encodeURIComponent(p.name)}&body=${share}" aria-label="שליחה במייל">${I.mail}</a></div>
 </div></div>
 <div class="pp-tabs"><div class="pp-tablist" role="tablist"><button type="button" role="tab" aria-selected="true" class="active" data-t="t1">תיאור</button><button type="button" role="tab" aria-selected="false" data-t="t2">מידע נוסף</button><button type="button" role="tab" aria-selected="false" data-t="t3">זמני אספקה</button><button type="button" role="tab" aria-selected="false" data-t="t4">החזרות והחלפות</button></div>
-<div class="pp-pane active gt-content" id="t1" role="tabpanel">${p.content || p.shortContent || ''}</div>
-<div class="pp-pane" id="t2" role="tabpanel"><table class="pp-table"><tbody>${o.suppliers.map((s) => `<tr><th>יוצר / חברה</th><td>${esc(s.name)}</td></tr>`).join('')}${p.releaseYear ? `<tr><th>שנת הוצאה</th><td>${p.releaseYear}</td></tr>` : ''}${opts.length ? `<tr><th>אפשרויות רכישה</th><td>${opts.map((x) => `${esc(x.label)} ${money(x.price)}`).join(' · ')}</td></tr>` : ''}</tbody></table></div>
+<div class="pp-pane active gt-content pp-descfull" id="t1" role="tabpanel">${desc || '<p>אין תיאור למוצר זה.</p>'}</div>
+<div class="pp-pane" id="t2" role="tabpanel"><table class="pp-table"><tbody>${o.suppliers.map((s) => `<tr><th>יוצר / חברה</th><td>${esc(s.name)}</td></tr>`).join('')}${p.releaseYear ? `<tr><th>שנת הוצאה</th><td>${p.releaseYear}</td></tr>` : ''}${extra.filter(([k]) => !/תאריך הוצאה/.test(k)).map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}${opts.length ? `<tr><th>אפשרויות רכישה</th><td>${opts.map((x) => `${esc(x.label)} ${money(x.price)}`).join(' · ')}</td></tr>` : ''}</tbody></table></div>
 <div class="pp-pane gt-content" id="t3" role="tabpanel">${o.delivery}</div>
 <div class="pp-pane gt-content" id="t4" role="tabpanel">${o.returns}</div></div>
 ${o.related.length ? `<div class="pp-related"><h2 class="pp-h2">מוצרים <span>דומים</span></h2><div class="shop-grid pp-rel-grid">${o.related.map((r, i) => shopCard(r, i)).join('')}</div></div>` : ''}
@@ -64,9 +98,23 @@ ${o.related.length ? `<div class="pp-related"><h2 class="pp-h2">מוצרים <sp
 
 export const ppScript = `{
   const price=document.getElementById('ppPrice'), note=document.getElementById('ppPriceNote'), add=document.getElementById('ppAdd');
-  document.querySelectorAll('.pp-opt input').forEach(r=>r.addEventListener('change',()=>{price.textContent='₪'+r.value;note.textContent=r.dataset.note;if(add)add.dataset.mode=r.dataset.mode;}));
+  document.querySelectorAll('.pp-opt input').forEach(r=>r.addEventListener('change',()=>{price.textContent='₪'+r.value;note.textContent=r.dataset.note;if(add)add.dataset.mode=r.dataset.mode;if(typeof refresh==='function'&&r.dataset.mode!=='digital')setTimeout(refresh);}));
   document.querySelectorAll('[data-pq]').forEach(b=>b.addEventListener('click',()=>{const i=document.getElementById('ppQty');i.value=Math.max(1,(+i.value||1)+(+b.dataset.pq));}));
-  if(add) add.addEventListener('click',()=>{window.gtAdd(add.dataset.id,add.dataset.mode,+document.getElementById('ppQty').value||1).then(()=>{add.querySelector('span').textContent='נוסף לסל ✓';setTimeout(()=>add.querySelector('span').textContent='הוספה לסל',2200);});});
+  const vb=document.getElementById('ppVars'), vmsg=document.getElementById('ppVmsg');
+  let V=null; try{V=vb?JSON.parse(vb.dataset.vars):null}catch(e){}
+  const basePrice=()=>{const r=document.querySelector('.pp-opt input:checked');return r?+r.value:+(price.dataset.base||String(price.textContent).replace(/[^\\d.]/g,''))};
+  if(price&&!price.dataset.base)price.dataset.base=String(price.textContent).replace(/[^\\d.]/g,'');
+  const pick=()=>{if(!vb)return {ok:true};const ids=[...vb.querySelectorAll('.pp-vgroup')].map(g=>{const b=g.querySelector('.pp-vchip.on');return b?+b.dataset.o:0});
+    const missing=V.groups.filter((g,i)=>!ids[i]).map(g=>g.name);const key=ids.length?'.'+[...ids].sort((a,b)=>a-b).join('.')+'.':'';const c=V.combos[key];
+    const full=Object.keys(V.combos).some(k=>k.split('.').filter(Boolean).length===V.groups.length);
+    const pr=[...vb.querySelectorAll('[data-prop]')].map(s=>s.dataset.prop+':'+s.value).join(',');
+    const add2=[...vb.querySelectorAll('[data-prop]')].reduce((a,s)=>a+(+(s.selectedOptions[0]?.dataset.price||0)),0);
+    return {ok:!missing.length,missing,key:ids.length?key:'',pr,price:((c&&c.price>0)?+c.price:basePrice())+add2,out:!!c&&c.qty!=null&&c.qty<=0,known:!ids.length||!full||!!c};};
+  const refresh=()=>{if(!vb)return;const s=pick();price.textContent='₪'+(Math.round(s.price*100)/100);vmsg.hidden=true;if(s.ok&&(s.out||!s.known)){vmsg.textContent='האפשרות שבחרת אינה במלאי כרגע';vmsg.hidden=false;}};
+  if(vb){vb.addEventListener('click',e=>{const b=e.target.closest('.pp-vchip');if(!b||b.disabled)return;b.parentNode.querySelectorAll('.pp-vchip').forEach(x=>x.classList.toggle('on',x===b));refresh();});vb.addEventListener('change',refresh);refresh();}
+  document.querySelectorAll('[data-open-tab]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const t=document.querySelector('.pp-tablist [data-t="'+a.dataset.openTab+'"]');if(t){t.click();t.scrollIntoView({behavior:'smooth',block:'start'});}}));
+  if(add) add.addEventListener('click',()=>{const s=pick();if(!s.ok){vmsg.textContent='נא לבחור '+s.missing.join(' ו')+' לפני ההוספה לסל';vmsg.hidden=false;vb.scrollIntoView({behavior:'smooth',block:'center'});return;}if(s.out||!s.known){vmsg.textContent='האפשרות שבחרת אינה במלאי כרגע';vmsg.hidden=false;return;}
+    window.gtAdd(add.dataset.id,add.dataset.mode,+document.getElementById('ppQty').value||1,{v:s.key,pr:s.pr}).then(()=>{add.querySelector('span').textContent='נוסף לסל ✓';setTimeout(()=>add.querySelector('span').textContent='הוספה לסל',2200);}).catch(()=>{});});
   const tabs=document.querySelectorAll('.pp-tablist button');
   tabs.forEach(t=>t.addEventListener('click',()=>{tabs.forEach(x=>{x.classList.toggle('active',x===t);x.setAttribute('aria-selected',x===t)});document.querySelectorAll('.pp-pane').forEach(p=>p.classList.toggle('active',p.id===t.dataset.t));}));
   const main=document.getElementById('ppMain'), img=document.getElementById('ppImg');

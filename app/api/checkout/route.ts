@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     shippingMethodId: v.method?.id ?? null, shippingPrice: v.shipping, couponCode: v.coupon?.code || '', discount: v.discount, total: v.total,
     firstName: g('firstName'), lastName: g('lastName'), email: g('email'), phone: g('phone'), address: g('address'), city: g('city'), zip: g('zip'), notes: g('notes'),
     ip: req.headers.get('x-forwarded-for') || '', userAgent: req.headers.get('user-agent') || '', isTest: process.env.STAGING === '1',
-    items: { create: v.items.map((i: any) => ({ productId: i.product.id, name: i.product.name, sku: i.product.sku || String(i.product.id), mode: i.mode, quantity: i.qty, origPrice: i.unit, price: i.unit })) },
+    items: { create: v.items.map((i: any) => ({ productId: i.product.id, name: i.variant ? `${i.product.name} (${i.variant})` : i.product.name, sku: i.product.sku || String(i.product.id), mode: i.mode, quantity: i.qty, origPrice: i.unit, price: i.unit })) },
   } });
   return NextResponse.redirect(new URL(`/pay/${order.id}`, req.url), 303);
 }

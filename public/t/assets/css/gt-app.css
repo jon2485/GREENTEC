@@ -206,3 +206,29 @@ body:not(:has(.hero-carousel, .heros, .shop-hero)) .main-header .bg-left, body:n
 .maker-chip { border: 0; border-radius: 980px; background: #2a2b2c; color: #fff; font-family: "Heebo", sans-serif; font-size: 14px; padding: 6px 14px; }
 .maker-chip span { color: #cadb2d; margin-inline-start: 4px; }
 .maker-chip.clear { background: transparent; color: #2a2b2c; text-decoration: underline; }
+
+/* Product page – variations (מידה / צבע…) and add-ons, as on the live site */
+.pp-vars { display: flex; flex-direction: column; gap: 14px; margin: 18px 0 6px; }
+.pp-vname { display: block; font-family: "Heebo", sans-serif; font-weight: 600; font-size: 15px; color: #2a2b2c; margin-bottom: 8px; }
+.pp-vchips { display: flex; flex-wrap: wrap; gap: 8px; }
+.pp-vchip { min-width: 48px; min-height: 42px; padding: 8px 14px; border: 1.5px solid #d6d6d2; border-radius: 12px; background: #fff; color: #2a2b2c; font-family: "Heebo", sans-serif; font-size: 14px; line-height: 1.25; display: inline-flex; align-items: center; gap: 8px; transition: border-color .15s, background .15s; }
+.pp-vchip img { width: 28px; height: 28px; object-fit: cover; border-radius: 6px; }
+.pp-vchip.sw::before { content: ""; width: 18px; height: 18px; border-radius: 50%; background: var(--sw); box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
+.pp-vchip:hover { border-color: #8a9a10; }
+.pp-vchip.on { border-color: #2a2b2c; background: #2a2b2c; color: #fff; }
+.pp-vchip:disabled { opacity: .4; text-decoration: line-through; cursor: not-allowed; }
+.pp-prop select { width: 100%; max-width: 420px; border: 1.5px solid #d6d6d2; border-radius: 12px; padding: 10px 14px; font-family: "Heebo", sans-serif; font-size: 15px; background: #fff; }
+.pp-vmsg { margin: 0; color: #b42318; font-family: "Heebo", sans-serif; font-size: 14px; font-weight: 600; }
+.pp-more { color: #6b7500; font-weight: 600; white-space: nowrap; }
+/* full description: readable, the editor's leftovers neutralised */
+.pp-descfull { font-family: "Heebo", sans-serif; font-size: 16px; line-height: 1.75; color: #3a3a38; }
+.pp-descfull p { margin: 0 0 12px; }
+.pp-descfull .tc { text-align: center; }
+.pp-descfull h1, .pp-descfull h2, .pp-descfull h3, .pp-descfull h4 { font-size: 19px; font-weight: 700; margin: 18px 0 8px; line-height: 1.4; }
+.pp-descfull ul, .pp-descfull ol { padding-inline-start: 22px; margin: 0 0 12px; }
+.pp-descfull img, .pp-descfull iframe { max-width: 100%; height: auto; }
+.pp-descfull table { width: 100%; }
+@media (width < 576px) { .pp-descfull { font-size: 15px; } .pp-vchip { min-height: 40px; padding: 7px 12px; } }
+.pp-vchip.sw-only { min-width: 44px; width: 44px; height: 44px; padding: 0; justify-content: center; border-radius: 50%; }
+.pp-vchip.sw-only::before { width: 30px; height: 30px; }
+.pp-vchip.sw-only.on { background: #fff; box-shadow: 0 0 0 2px #2a2b2c; }

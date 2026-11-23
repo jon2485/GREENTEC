@@ -28,6 +28,8 @@ async function main() {
     await syncHiddenProducts();
     await syncHomeFlags();
     await syncSupplierLinks();
+    await syncNames();
+    await syncVariants();
     return;
   }
   const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
@@ -106,6 +108,7 @@ async function main() {
   }
   await ensureAdmin();
   await syncLegacyCatalog();
+  await syncHiddenProducts(); await syncHomeFlags(); await syncSupplierLinks(); await syncNames(); await syncVariants();
   console.log('[seed] done:', products.length, 'products');
 }
 
@@ -212,6 +215,40 @@ async function syncSupplierLinks() {
   }
   await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
   console.log(`[seed] legacy supplier links: +${added} / -${removed}`);
+}
+
+// One-time (v1): product names exactly as in the legacy admin (product[name]) – the storefront scrape took a
+// sub-heading instead of the H1 for 33 products (e.g. "100% כותנה סרוקה" instead of "גופיית ציצית - מלאכת מחשבת").
+// urlPath / SEO fields are not touched.
+async function syncNames() {
+  const FLAG = 'sync_names_v1';
+  if (await db.setting.findUnique({ where: { key: FLAG } })) return;
+  const adm = JSON.parse(gunzipSync(readFileSync(new URL('../data/legacy-admin-full.json.gz', import.meta.url))).toString('utf8'));
+  const dec = (t) => String(t || '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&#0?39;/g, "'").replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+  let n = 0;
+  for (const x of adm.products) {
+    const name = dec(x.f?.['product[name]']); if (!name) continue;
+    const p = await db.product.findUnique({ where: { id: Number(x.id) }, select: { name: true } });
+    if (p && dec(p.name) !== name) { await db.product.update({ where: { id: Number(x.id) }, data: { name } }); n++; }
+  }
+  await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
+  console.log(`[seed] legacy product names: ${n} corrected`);
+}
+
+// Variations (מידה / צבע / דגם…) and add-on properties exactly as on the live product pages (data/legacy-variants.json.gz).
+async function syncVariants() {
+  const FLAG = 'sync_variants_v1';
+  if (await db.setting.findUnique({ where: { key: FLAG } })) return;
+  const file = new URL('../data/legacy-variants.json.gz', import.meta.url);
+  let data; try { data = JSON.parse(gunzipSync(readFileSync(file)).toString('utf8')); } catch { return; }
+  let n = 0;
+  for (const [id, v] of Object.entries(data.products || {})) {
+    const has = (v.groups || []).length || (v.props || []).length;
+    const r = await db.product.updateMany({ where: { id: Number(id) }, data: { variantsJson: has ? JSON.stringify(v) : '', hasVariants: !!has } });
+    if (r.count && has) n++;
+  }
+  await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
+  console.log(`[seed] legacy variations: ${n} products`);
 }
 
 async function ensureAdmin() {

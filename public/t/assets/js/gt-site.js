@@ -10,18 +10,28 @@
     if (!s) { s = document.createElement('span'); s.className = 'position-absolute top-0 start-0 translate-middle badge rounded-pill'; b.appendChild(s); }
     s.textContent = n; s.hidden = !n;
   }
-  window.gtAdd = function (id, mode, qty) {
-    return fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: +id, mode: mode, qty: qty || 1 }) })
-      .then(function (r) { return r.json(); }).then(function (d) { badge(d.count); return d; });
+  // extra = { v, pr } for products with sizes / add-ons. A product that needs a choice and has none
+  // (e.g. tapped from a product card or quick view) opens its product page instead.
+  window.gtAdd = function (id, mode, qty, extra) {
+    extra = extra || {};
+    return fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: +id, mode: mode, qty: qty || 1, v: extra.v, pr: extra.pr }) })
+      .then(function (r) { return r.json(); }).then(function (d) {
+        if (d.error) {
+          if (d.error === 'choose' && extra.href) { location.href = extra.href; return Promise.reject(d); }
+          alert(d.message || 'לא ניתן להוסיף לסל'); return Promise.reject(d);
+        }
+        badge(d.count); return d;
+      });
   };
   document.addEventListener('click', function (e) {
     var a = e.target.closest('[data-add]');
     if (a && !a.hasAttribute('data-qv')) {
       e.preventDefault();
-      window.gtAdd(a.dataset.add, a.dataset.mode, 1).then(function () {
+      var card = a.closest('article, .album-card, .item-box, .carousel-cell'); var ln = card && card.querySelector('a[href]:not([href="#"])');
+      window.gtAdd(a.dataset.add, a.dataset.mode, 1, { href: ln ? ln.href : '' }).then(function () {
         a.classList.add('added'); var s = a.querySelector('span'); var t = s && s.textContent;
         if (s) s.textContent = 'נוסף ✓'; setTimeout(function () { a.classList.remove('added'); if (s) s.textContent = t; }, 1800);
-      });
+      }).catch(function () {});
     }
     var w = e.target.closest('[data-wish]');
     if (w) {

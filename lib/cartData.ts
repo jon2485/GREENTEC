@@ -1,6 +1,7 @@
 import { db } from './db';
 import { getCart, type CartLine } from './cart';
 import { priceOptions } from './format';
+import { parseVariants, resolveChoice } from './variants';
 
 export async function cartView(lines?: CartLine[], couponCode?: string, shippingId?: number) {
   lines = lines ?? (await getCart());
@@ -10,7 +11,10 @@ export async function cartView(lines?: CartLine[], couponCode?: string, shipping
     const p = prods.find((x) => x.id === l.id); if (!p) return null;
     const opts = priceOptions(p); const o = opts.find((x) => x.key === l.mode) || opts[0];
     if (!o) return null;
-    return { ...l, mode: o.key, product: p, label: o.label, unit: o.price, total: o.price * l.qty };
+    const ch = o.key === 'digital' ? { unit: o.price, label: '', stock: null } : resolveChoice(parseVariants((p as any).variantsJson), o.price, l.v, l.pr);
+    if (!ch) return null;
+    const label = ch.label ? (opts.length > 1 ? o.label + ' · ' : '') + ch.label : o.label;
+    return { ...l, mode: o.key, product: p, label, variant: ch.label, unit: ch.unit, total: ch.unit * l.qty };
   }).filter(Boolean) as any[];
   const subtotal = items.reduce((a, i) => a + i.total, 0);
   const needsShipping = items.some((i) => i.mode !== 'digital');

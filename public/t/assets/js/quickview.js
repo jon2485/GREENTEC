@@ -52,7 +52,7 @@
     $('qvDesc').textContent = d.desc || '';
     $('qvDesc').hidden = !d.desc;
     let opts = []; try { opts = JSON.parse(d.opts || '[]'); } catch (e) {}
-    box.dataset.id = d.id || '';
+    box.dataset.id = d.id || ''; box.dataset.href = d.href || '';
     $('qvOpts').hidden = opts.length < 2;
     box.querySelector('.qv-chips').innerHTML = opts.map((o, i) => `<button type="button" class="qv-chip${i ? '' : ' active'}" data-mode="${o.key}" data-price="${o.price}">${o.label}</button>`).join('');
     box.dataset.mode = opts[0] ? opts[0].key : 'physical';
@@ -83,7 +83,7 @@
     if (ch) { box.querySelectorAll('.qv-chip').forEach((b) => b.classList.toggle('active', b === ch)); box.dataset.mode = ch.dataset.mode; $('qvPrice').textContent = '₪' + ch.dataset.price; }
     const q = e.target.closest('[data-q]');
     if (q) { const i = $('qvQty'); i.value = Math.max(1, (+i.value || 1) + +q.dataset.q); }
-    if (e.target.closest('#qvAdd')) { window.gtAdd && window.gtAdd(box.dataset.id, box.dataset.mode, +$('qvQty').value || 1); $('qvAdd').querySelector('span').textContent = 'נוסף לסל ✓'; }
+    if (e.target.closest('#qvAdd')) { window.gtAdd && window.gtAdd(box.dataset.id, box.dataset.mode, +$('qvQty').value || 1, { href: box.dataset.href || '' }).then(function () { $('qvAdd').querySelector('span').textContent = 'נוסף לסל ✓'; }).catch(function () {}); }
     if (e.target.closest('.qv-share a')) e.preventDefault();
   });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !box.hidden) close(); });

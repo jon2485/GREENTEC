@@ -57,6 +57,8 @@ model Product {
   searchText      String    @default("")
   // SEO
   robots          String    @default("all")
+  variantsJson    String    @default("") // storefront variations (מידה/צבע…) + properties (תוספות) as on the live site
+  hasVariants     Boolean   @default(false)
   metaTitle       String    @default("")
   metaKeywords    String    @default("")
   metaDescription String    @default("")
