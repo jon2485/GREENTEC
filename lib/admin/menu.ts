@@ -68,6 +68,7 @@ export const MENU: { group: string; icon: string; items: MenuItem[] }[] = [
     { id: 'A51', am: 'configs', ac: 'system', title: 'הגדרות מערכת' },
     { id: 'A53', am: 'configs', ac: 'manage_images', title: 'ניהול תמונות' },
     { id: 'A52', am: 'configs', ac: 'headers', title: 'headers' },
+    { id: 'M01', am: 'configs', ac: 'legacy_import', title: 'ייבוא נתונים מהמערכת הישנה' },
     { id: 'A54', am: 'configs', ac: 'shutdown_site', title: 'כיבוי האתר' },
   ] },
 ];

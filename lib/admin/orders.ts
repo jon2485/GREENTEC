@@ -178,8 +178,8 @@ export async function reportDigital(sp: Record<string, string>, csv = false) {
     btn(AJ('ProductsDigitalDownloads', 'export') + '?' + new URLSearchParams(Object.fromEntries(Object.entries(q).filter(([, v]) => v)) as any).toString(), 'ייצוא Excel (CSV)', 'btn-light') + '<button class="btn btn-sm btn-light" onclick="print()">PDF / הדפסה</button>');
 }
 export async function reportSearches() {
-  const rows = await db.searchLog.groupBy({ by: ['term'], _count: { _all: true }, _max: { createdAt: true }, orderBy: { _count: { term: 'desc' } }, take: 1000 });
-  return card('חיפושים באתר', table(['מילה', 'כמות', 'חיפוש אחרון'], rows.map((r) => [esc(r.term), String(r._count._all), dt(r._max.createdAt)])));
+  const rows = await db.searchLog.groupBy({ by: ['term'], _sum: { count: true }, _max: { createdAt: true }, orderBy: { _sum: { count: 'desc' } }, take: 2000 });
+  return card('חיפושים באתר', table(['מילה', 'כמות', 'חיפוש אחרון'], rows.map((r) => [esc(r.term), String(r._sum.count || 0), dt(r._max.createdAt)])));
 }
 export async function reportWishlist() {
   const rows = await db.wishlist.groupBy({ by: ['productId'], _count: { _all: true }, orderBy: { _count: { productId: 'desc' } }, take: 1000 });

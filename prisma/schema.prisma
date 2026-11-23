@@ -49,6 +49,7 @@ model Product {
   onlyDigital     Boolean   @default(false)
   isSet           Boolean   @default(false) // ניהול סט מוצרים
   propertyLists   String    @default("") // תכונות מוצר: מזהי PropertyList מופרדים בפסיק
+  attributes      String    @default("{}") // product[attributes][n] מהמערכת הישנה (JSON)
   // תמונות / עיצוב / שונות
   mainImage       String    @default("")
   topImage        String    @default("")
@@ -246,6 +247,7 @@ model ScheduledTask {
 // ---------- Users ----------
 model User {
   id           Int      @id @default(autoincrement())
+  legacyId     Int?     // מזהה המשתמש במערכת הישנה (unique in practice; enforced by the importer)
   email        String   @unique
   name         String   @default("")
   phone        String   @default("")
@@ -261,16 +263,30 @@ model User {
   grants       DownloadGrant[]
   credits      Credit[]
   wishes       Wishlist[]
+  resets       PasswordReset[]
+  @@index([legacyId])
+}
+
+model PasswordReset { // "שכחתי סיסמה" – only a hash of the token is stored
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Credit {
   id      Int     @id @default(autoincrement())
+  legacyKey String? // userLegacyId:index for imported credits
   userId  Int
   orderId Int?
   amount  Decimal @db.Decimal(10, 2)
   note    String  @default("")
   createdAt DateTime @default(now())
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([legacyKey])
 }
 
 model Wishlist {
@@ -310,12 +326,17 @@ model Order {
   ip              String   @default("")
   userAgent       String   @default("")
   isTest          Boolean  @default(false)
+  legacy          Boolean  @default(false) // imported from the old system (id = legacy order id)
+  orderNumber     String   @default("")
+  legacyUserId    Int?     // legacy user id, linked to User when the users are imported
+  importWarning   String   @default("")
   deleted         Boolean  @default(false)
   createdAt       DateTime @default(now())
   user            User?    @relation(fields: [userId], references: [id])
   items           OrderItem[]
   memos           OrderMemo[]
   grants          DownloadGrant[]
+  @@index([legacyUserId])
 }
 
 model OrderItem {
@@ -398,6 +419,7 @@ model ShippingMethod {
 
 model Country {
   id     Int     @id @default(autoincrement())
+  code   String  @default("") // ISO 3166-1 alpha-2
   name   String
   active Boolean @default(false)
 }
@@ -496,6 +518,7 @@ model MenuItem {
   menuId    Int
   parentId  Int?
   type      String  @default("link") // page | link | article | product | category | supplier
+  cssClass  String  @default("")
   contentId Int?
   title     String
   link      String  @default("")
@@ -554,6 +577,7 @@ model Redirect {
 model SearchLog {
   id        Int      @id @default(autoincrement())
   term      String
+  count     Int      @default(1) // >1 only for aggregated legacy history
   createdAt DateTime @default(now())
 }
 

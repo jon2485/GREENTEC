@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { getSettings } from '@/lib/settings';
+import { parseScripts, trackingEnabled } from '@/lib/headerCodes';
 
 const SITE = process.env.SITE_URL || 'https://www.greentec.co.il';
 export const metadata: Metadata = {
@@ -10,7 +12,9 @@ export const metadata: Metadata = {
   icons: { icon: '/t/assets/images/logo-v.png' },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const st = trackingEnabled() ? await getSettings().catch(() => ({} as Record<string, string>)) : ({} as Record<string, string>);
+  const codes = parseScripts(st.header_landing || '');
   return (
     <html lang="he" dir="rtl">
       <head>
@@ -25,6 +29,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="stylesheet" href="/t/assets/css/gt-app.css" />
         <script src="/t/vendor/flickity.pkgd.min.js"></script>
         <script src="/t/vendor/flickity-fade.js"></script>
+        {st.google_site_verification ? <meta name="google-site-verification" content={st.google_site_verification} /> : null}
+        {codes.map((c, i) => (c.src ? <script key={i} src={c.src} async={c.async} /> : <script key={i} dangerouslySetInnerHTML={{ __html: c.code! }} />))}
       </head>
       <body>
         <div className="d-flex flex-column min-vh-100">

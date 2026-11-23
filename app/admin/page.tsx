@@ -6,6 +6,7 @@ import { findResource, listScreen, editScreen } from '@/lib/admin/resources';
 import * as P from '@/lib/admin/products';
 import * as O from '@/lib/admin/orders';
 import * as C from '@/lib/admin/content';
+import { legacyImportScreen } from '@/lib/admin/legacyImport';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,6 +52,7 @@ async function screen(am: string, ac: string, id: number, sp: Record<string, str
     case 'shipping/countries_list': return C.countries();
     case 'configs/manage_images': return C.manageImages();
     case 'configs/shutdown_site': return C.shutdownScreen();
+    case 'configs/legacy_import': return legacyImportScreen();
     case 'dashboard/index': return C.dashboard();
   }
   if (C.SETTINGS[k]) return C.settingsScreen(k);
