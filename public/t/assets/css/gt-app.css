@@ -52,3 +52,15 @@ a, button, .btn { -webkit-tap-highlight-color: transparent; }
   .shop-grid { gap: 28px 18px; }
   .movies-grid { gap: 22px 18px; }
 }
+
+/* Phones: smaller, see-through quick-view / cart circles so the album cover stays visible.
+   The tap area stays ~44px through an invisible ::before. */
+@media (width < 576px) {
+  .album-cart, .album-eye { width: 34px !important; height: 34px !important; bottom: 8px !important; background: rgba(255,255,255,.55) !important; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 1px 4px rgba(0,0,0,.12) !important; color: #2a2b2c !important; }
+  .album-cart { inset-inline-end: 8px !important; }
+  .album-eye { inset-inline-end: 48px !important; }
+  .album-cart svg, .album-eye svg { width: 17px; height: 17px; }
+  .album-cart::before, .album-eye::before { content: ""; position: absolute; inset: -5px; border-radius: 50%; }
+  .album-cart.added { background: #cadb2d !important; }
+  .album-badge { font-size: 12px !important; padding: 4px 9px !important; top: 8px !important; inset-inline-start: 8px !important; }
+}
