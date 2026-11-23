@@ -193,7 +193,7 @@ export async function importLegacyAdmin(db, data, log = () => {}) {
       else if (pg) { type = 'page'; contentId = pg.id; link = '/' + pg.url; }
       else if (ct) { type = 'category'; contentId = ct.id; link = '/' + ct.url; }
       else if (prod) { type = 'product'; contentId = prod.id; }
-      else if (sp) { type = 'supplier'; contentId = sp.id; link = '/supplier/' + sp.id; }
+      else if (sp) { type = 'supplier'; contentId = sp.id; link = '/ProductSuppliers/id/' + sp.id; }
       else note(s, `פריט תפריט "${t}" (תפריט ${m.menuId}) – לא נמצא קישור, נשמר בלי קישור`);
       if (t === 'דף הבית') { type = 'link'; link = '/'; }
       return { id: m.id, menuId: m.menuId, parentId: m.parentId || null, type, contentId, title: t, link, image: str(m.f?.['item[img]']), cssClass: str(m.cls), sort: m.sort || 0 };

@@ -57,7 +57,7 @@ export const RESOURCES: Resource[] = [
   { am: 'PermanentRedirect', ac: 'list', editAc: 'edit', model: 'redirect', title: 'הפניות 301', singular: 'הפניה', orderBy: { id: 'asc' }, search: ['from', 'to'],
     cols: [{ name: 'id', label: 'ID' }, { name: 'from', label: 'מ', fmt: (v) => `<span dir="ltr">${esc(v)}</span>` }, { name: 'to', label: 'עד', fmt: (v) => `<span dir="ltr">${esc(v)}</span>` }],
     fields: [{ name: 'from', label: 'מ (נתיב, לדוגמה /old-page)', type: 'text', required: true }, { name: 'to', label: 'עד', type: 'text', required: true }], creatable: true, deletable: true },
-  { am: 'ProductSuppliers', ac: 'manage_suppliers', editAc: 'edit_supplier', model: 'supplier', title: 'יצרנים', singular: 'יצרן', orderBy: { name: 'asc' }, seo: true, search: ['name'], per: 50, viewUrl: (r) => '/supplier/' + r.id,
+  { am: 'ProductSuppliers', ac: 'manage_suppliers', editAc: 'edit_supplier', model: 'supplier', title: 'יצרנים', singular: 'יצרן', orderBy: { name: 'asc' }, seo: true, search: ['name'], per: 50, viewUrl: (r) => '/ProductSuppliers/id/' + r.id,
     cols: [{ name: 'id', label: 'ID' }, { name: 'logo', label: 'לוגו', fmt: (v) => (v ? `<img src="${esc(v)}" class="adm-thumb-sm" alt="">` : '') }, { name: 'name', label: 'שם' }],
     fields: [{ name: 'name', label: 'שם', type: 'text', required: true }, { name: 'logo', label: 'לוגו', type: 'image' }, { name: 'content', label: 'תוכן', type: 'html' }, { name: 'url', label: 'קישור', type: 'text' }], creatable: true, deletable: true },
   { am: 'GoogleShopping', ac: 'manage', editAc: 'edit', model: 'setting', title: 'Google Shopping', singular: '', cols: [], fields: [] },

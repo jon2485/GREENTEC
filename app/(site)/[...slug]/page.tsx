@@ -77,7 +77,7 @@ export default async function Page({ params, searchParams }: P) {
       p, related, siteUrl: SITE,
       kicker: chain[0]?.name || 'גרינטק', catName: deepest?.category.name || '', catUrl: deepest ? '/' + deepest.category.url : '/',
       crumbs: [...chain.map((x) => ({ name: x.name, url: '/' + x.url })), { name: p.name }],
-      suppliers: p.suppliers.map((s) => ({ name: s.supplier.name, url: `/supplier/${s.supplierId}`, count: counts.find((c) => c.supplierId === s.supplierId)?._count || 0 })),
+      suppliers: p.suppliers.map((s) => ({ name: s.supplier.name, url: `/ProductSuppliers/id/${s.supplierId}`, count: counts.find((c) => c.supplierId === s.supplierId)?._count || 0 })),
       delivery: blocks.find((b) => b.id === 5)?.content || '', returns: blocks.find((b) => b.id === 6)?.content || '',
     });
     await db.productStat.upsert({ where: { productId: p.id }, create: { productId: p.id, views: 1 }, update: { views: { increment: 1 } } }).catch(() => {});
