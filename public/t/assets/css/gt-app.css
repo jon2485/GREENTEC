@@ -70,7 +70,7 @@ a, button, .btn { -webkit-tap-highlight-color: transparent; }
 .shop-actions { display: none; }
 @media (width < 576px) {
   .shop-media .shop-cart, .shop-media .shop-icons .shop-icon:not(.wish), .shop-actions .sa-icon.wish { display: none !important; }
-  .shop-media .shop-icons { top: 8px !important; right: 8px !important; left: auto !important; inset-inline: auto !important; transform: none !important; opacity: 1 !important; }
+  .shop-media .shop-icons { top: 8px !important; inset-inline: auto !important; right: 8px !important; left: auto !important; transform: none !important; opacity: 1 !important; }
   .shop-media .shop-icon.wish { position: absolute; top: 0; right: 0; width: 32px !important; height: 32px !important; background: rgba(255,255,255,.6) !important; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 1px 4px rgba(0,0,0,.12) !important; color: #2a2b2c !important; }
   .shop-media .shop-icon.wish svg { width: 16px; height: 16px; }
   .shop-media .shop-icon.wish.on { background: #2a2b2c !important; color: #cadb2d !important; }
