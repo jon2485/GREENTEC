@@ -16,3 +16,7 @@
 .chan-cell .chan-scene { top: var(--gt-hdr, 150px); }
 @media (width < 768px) { .chan-cell .chan-scene { top: calc(var(--gt-hdr, 120px) - 10px); } }
 @keyframes chanZoom { from { transform: scale(1.04); } to { transform: scale(1); } }
+
+/* Rounded buttons: the outline button's fill (::after) was square, so on hover/touch the button looked square */
+.btn-outline-primary, .btn-secondary-outline { overflow: hidden; isolation: isolate; }
+.btn-outline-primary::after, .btn-secondary-outline::after { border-radius: inherit !important; }
