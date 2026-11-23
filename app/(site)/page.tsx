@@ -34,7 +34,20 @@ export default async function Home() {
     html = applySection(html, s); html = keep(`{{${s.token}}}`, lists[i], fns[s.token], html);
   });
   // Template demo sections that are not real store data → removed (the homepage shows only real, "הצג בדף הבית" products)
-  for (const name of ['New on the site', 'New singles']) {
+  // "חדש באתר" = the live site's 3 USB-collection boxes, each linking to its category (template look, live links)
+  {
+    const a = html.indexOf('<!-- New on the site Section Start -->'), b = html.indexOf('<!-- New on the site Section End -->');
+    if (a >= 0 && b > a) {
+      let sec = html.slice(a, b);
+      const links = ['/מוזיקה-ב-usb', '/שמע-לילדים-usb', '/dvd-usb'];
+      links.forEach((href, i) => {
+        sec = sec.replace(new RegExp(`<div class="item-box group i-${i + 1}">([\\s\\S]*?)</div>`), `<a href="${encodeURI(href)}" class="item-box group i-${i + 1}">$1</a>`);
+      });
+      sec = sec.replace(/<div class="d-flex justify-content-center">\s*<a href="\/search\?sort=new"[\s\S]*?<\/div>/, '');
+      html = html.slice(0, a) + sec + html.slice(b);
+    }
+  }
+  for (const name of ['New singles']) {
     const a = html.indexOf(`<!-- ${name} Section Start -->`), b = html.indexOf(`<!-- ${name} Section End -->`);
     if (a >= 0 && b > a) html = html.slice(0, a) + html.slice(b);
   }
