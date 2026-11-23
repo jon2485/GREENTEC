@@ -69,7 +69,12 @@ a, button, .btn { -webkit-tap-highlight-color: transparent; }
    Desktop keeps the template hover buttons on the image. */
 .shop-actions { display: none; }
 @media (width < 576px) {
-  .shop-media .shop-icons, .shop-media .shop-cart { display: none !important; }
+  .shop-media .shop-cart, .shop-media .shop-icons .shop-icon:not(.wish), .shop-actions .sa-icon.wish { display: none !important; }
+  .shop-media .shop-icons { top: 8px !important; right: 8px !important; left: auto !important; inset-inline: auto !important; transform: none !important; opacity: 1 !important; }
+  .shop-media .shop-icon.wish { position: absolute; top: 0; right: 0; width: 32px !important; height: 32px !important; background: rgba(255,255,255,.6) !important; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 1px 4px rgba(0,0,0,.12) !important; color: #2a2b2c !important; }
+  .shop-media .shop-icon.wish svg { width: 16px; height: 16px; }
+  .shop-media .shop-icon.wish.on { background: #2a2b2c !important; color: #cadb2d !important; }
+  .shop-media .shop-icon.wish::before { content: ""; position: absolute; inset: -6px; border-radius: 50%; }
   .shop-actions { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
   .shop-actions .sa-cart { flex: 1; min-width: 0; height: 36px; border: 0; border-radius: 980px; background: #2a2b2c; color: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; font-family: "Heebo", sans-serif; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; }
   .shop-actions .sa-cart svg { width: 16px; height: 16px; flex: none; }
@@ -78,7 +83,7 @@ a, button, .btn { -webkit-tap-highlight-color: transparent; }
   .shop-actions .sa-icon svg { width: 16px; height: 16px; }
   .shop-actions .sa-icon.on { background: #2a2b2c; color: #cadb2d; border-color: #2a2b2c; }
   .shop-actions button { -webkit-tap-highlight-color: transparent; }
-  .shop-badge { font-size: 12px !important; padding: 3px 9px !important; top: 8px !important; inset-inline-start: 8px !important; }
-  .shop-pin { top: 8px !important; inset-inline-end: 8px !important; width: 28px; height: 28px; }
+  .shop-badge { font-size: 12px !important; padding: 3px 9px !important; top: 8px !important; left: 8px !important; right: auto !important; inset-inline-start: auto; }
+  .shop-pin { top: auto !important; bottom: 8px !important; left: 8px !important; right: auto !important; inset-inline-end: auto; width: 28px; height: 28px; }
   .shop-body { padding-top: 10px; }
 }
