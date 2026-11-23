@@ -1,33 +1,57 @@
 import { cartView } from '@/lib/cartData';
-import { I } from '@/lib/tpl';
 import { esc, thumb, href } from '@/lib/render';
 import { money } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'סל קניות | גרינטק', robots: { index: false } };
 
+// Cart in the style of the big stores (Apple / Shopify / Zara): item cards instead of a wide table,
+// a clear quantity stepper, a summary card, and a sticky "to checkout" bar on phones.
+const ic = {
+  minus: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
+  lock: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  truck: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>',
+  dl: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
+};
+
 export default async function Cart({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
   const sp = await searchParams;
   const v = await cartView(undefined, sp.coupon);
-  const rows = v.items.map((i: any) => `<tr>
-<td class="px-4 border-start-0 border-end-0 border-light-subtle text-center text-secondary"><a href="#" class="trash-icon mx-auto d-inline-block" data-del="${i.id}" data-mode="${i.mode}" data-vk="${esc(i.v || '')}" data-pr="${esc(i.pr || '')}" aria-label="הסרה">${I.trash}</a></td>
-<td class="px-2 border-start-0 border-end-0 border-light-subtle">${money(i.total)}</td>
-<td class="px-2 border-start-0 border-end-0 border-light-subtle">${i.mode === 'digital' ? '1' : `<div class="d-flex align-items-center justify-content-between mx-auto qty-counter"><button type="button" class="btn btn-qty shadow-none" data-q="${i.id}" data-mode="${i.mode}" data-vk="${esc(i.v || '')}" data-pr="${esc(i.pr || '')}" data-v="${i.qty - 1}">${I.minus}</button><input type="text" class="form-control text-center border-0 bg-transparent shadow-none qty-input p-0" value="${i.qty}" readonly><button type="button" class="btn btn-qty shadow-none" data-q="${i.id}" data-mode="${i.mode}" data-vk="${esc(i.v || '')}" data-pr="${esc(i.pr || '')}" data-v="${i.qty + 1}">${I.plus}</button></div>`}</td>
-<td class="px-2 border-start-0 border-end-0 border-light-subtle">${money(i.unit)}</td>
-<td class="px-2 text-nowrap border-start-0 border-end-0 border-light-subtle text-dark"><p class="mb-0"><a href="${href(i.product)}" class="text-dark">${esc(i.product.name)}</a></p><p class="text-secondary mb-0">${esc(i.label)}</p></td>
-<td class="px-4 text-nowrap border-start-0 border-end-0 border-light-subtle text-dark"><div class="item-img"><img src="${esc(thumb(i.product.mainImage))}" alt="" class="w-100 h-100 object-fit-cover"></div></td></tr>`).join('');
-  const html = `<section class="content-section"><div class="container"><h1 class="header-text">סל קניות</h1><p class="subheader-text">${v.count ? `יש לך ${v.count} מוצרים בסל` : 'הסל שלך ריק'}</p>
-${v.count ? `<div class="mx-auto cart_area"><div class="row"><div class="col-12 col-lg-8 mb-5 mb-lg-0"><div class="card items-card mb-4 mb-lg-3"><div class="card-body"><div class="table-responsive"><table class="table align-middle text-center font-heebo mb-0"><thead style="--bs-table-bg: #CADB2D; --bs-table-border-color: #CADB2D; color: #494848;"><tr><th scope="col" class="px-4 border-start-0 border-end-0 border-light-subtle fw-normal text-center">הסרה</th><th scope="col" class="px-2 border-start-0 border-end-0 border-light-subtle fw-normal">מחיר</th><th scope="col" class="px-2 border-start-0 border-end-0 border-light-subtle fw-normal">כמות</th><th scope="col" class="px-2 border-start-0 border-end-0 border-light-subtle fw-normal">מחיר ליחידה</th><th scope="col" class="px-2 border-start-0 border-end-0 border-light-subtle fw-normal">מוצר</th><th scope="col" class="px-2 border-start-0 border-end-0 border-light-subtle fw-normal"></th></tr></thead><tbody class="border-top-0">${rows}</tbody></table></div></div></div>
-<div class="card coupon-card"><div class="card-body"><div class="d-flex justify-content-start align-items-center mb-2 gap-2"><p class="mb-0 title-text font-heebo">הוספת קופון</p></div><form method="get" class="d-flex align-items-center gap-3 font-heebo"><div class="flex-grow-1"><input type="text" name="coupon" value="${esc(sp.coupon || '')}" class="form-control coupon-input shadow-none" placeholder="הזן קוד קופון"></div><button class="btn btn-primary">החל</button></form>${v.couponError ? `<p class="text-danger mt-2 mb-0">${v.couponError}</p>` : v.coupon ? '<p class="text-success mt-2 mb-0">הקופון הופעל</p>' : ''}</div></div></div>
-<div class="col-12 col-lg-4"><div class="card card-summary"><div class="card-body font-heebo"><h6 class="card-title font-heebo">סיכום הזמנה</h6><div class="d-flex flex-column gap-3 items border-bottom pb-4">
-<div class="d-flex justify-content-between font-heebo fs-6 font-normal tracking-tight"><p class="mb-0">סכום ביניים</p><p class="mb-0">${money(v.subtotal)}</p></div>
-<div class="d-flex justify-content-between font-heebo fs-6 font-normal tracking-tight"><p class="mb-0">משלוח</p><p class="mb-0">${!v.needsShipping ? 'ללא (הורדה דיגיטלית)' : v.shipping ? money(v.shipping) : 'חינם'}</p></div>
-<div class="d-flex justify-content-between font-heebo fs-6 font-normal tracking-tight"><p class="mb-0">הנחה</p><p class="mb-0">${money(v.discount)}</p></div></div>
-<div class="d-flex justify-content-between py-4 border-bottom"><h5 class="fs-5 font-normal t-1 tracking-tight mb-0">סה״כ</h5><h5 class="fs-4 font-normal t-1 tracking-tihgt text-green mb-0">${money(v.total)}</h5></div>
-<div class="d-flex flex-column py-4 border-bottom gap-3"><a href="/checkout${sp.coupon ? '?coupon=' + encodeURIComponent(sp.coupon) : ''}" class="btn btn-primary"><span>להזמין</span></a><a href="/" class="btn btn-secondary-outline">המשך קניות</a></div>
-<div class="pt-4 d-flex flex-column gap-2"><div class="d-flex align-items-center gap-3"><span class="i-text">תשלום מאובטח ב-SSL</span></div><div class="d-flex align-items-center gap-3"><span class="i-text">משלוח חינם בהזמנה מעל ₪150</span></div></div></div></div></div></div></div>` : '<p><a href="/" class="btn btn-primary">לחנות</a></p>'}
+  const FREE = 150;
+  const data = (i: any) => `data-id="${i.id}" data-mode="${i.mode}" data-vk="${esc(i.v || '')}" data-pr="${esc(i.pr || '')}"`;
+  const items = v.items.map((i: any) => `<article class="ci">
+  <a href="${href(i.product)}" class="ci-img"><img src="${esc(thumb(i.product.mainImage))}" alt="" loading="lazy"></a>
+  <div class="ci-body">
+    <div class="ci-top"><a href="${href(i.product)}" class="ci-name">${esc(i.product.name)}</a><button type="button" class="ci-del" ${data(i)} aria-label="הסרה מהסל: ${esc(i.product.name)}">${ic.trash}</button></div>
+    <p class="ci-opt">${i.mode === 'digital' ? ic.dl : ''}${esc(i.label)}</p>
+    <div class="ci-bottom">
+      ${i.mode === 'digital' ? '<span class="ci-one">הורדה דיגיטלית · יחידה אחת</span>' : `<div class="ci-qty" role="group" aria-label="כמות"><button type="button" ${data(i)} data-set="${i.qty - 1}" aria-label="הפחתת כמות"${i.qty <= 1 ? ' data-last="1"' : ''}>${i.qty <= 1 ? ic.trash : ic.minus}</button><output aria-live="polite">${i.qty}</output><button type="button" ${data(i)} data-set="${i.qty + 1}" aria-label="הוספת כמות">${ic.plus}</button></div>`}
+      <div class="ci-price">${i.qty > 1 ? `<small>${money(i.unit)} × ${i.qty}</small>` : ''}<strong>${money(i.total)}</strong></div>
+    </div>
+  </div>
+</article>`).join('');
+  const left = v.needsShipping && v.subtotal < FREE ? FREE - v.subtotal : 0;
+  const prog = v.needsShipping ? `<div class="cs-free">${left ? `<p>${ic.truck} עוד <b>${money(left)}</b> למשלוח חינם</p>` : `<p class="ok">${ic.truck} יש לך משלוח חינם!</p>`}<div class="cs-bar"><span style="width:${Math.min(100, Math.round((v.subtotal / FREE) * 100))}%"></span></div></div>` : '';
+  const checkout = `/checkout${sp.coupon ? '?coupon=' + encodeURIComponent(sp.coupon) : ''}`;
+  const summary = `<aside class="cs" aria-label="סיכום הזמנה"><h2 class="cs-title">סיכום הזמנה</h2>${prog}
+<dl class="cs-rows"><div><dt>סכום ביניים (${v.count} פריטים)</dt><dd>${money(v.subtotal)}</dd></div>
+<div><dt>משלוח</dt><dd>${!v.needsShipping ? 'ללא – הורדה דיגיטלית' : v.shipping ? money(v.shipping) : 'חינם'}</dd></div>
+${v.discount ? `<div class="disc"><dt>הנחה${v.coupon ? ` (${esc(v.coupon.code)})` : ''}</dt><dd>−${money(v.discount)}</dd></div>` : ''}
+<div class="tot"><dt>סה״כ לתשלום</dt><dd>${money(v.total)}</dd></div></dl>
+<details class="cs-coupon"${sp.coupon ? ' open' : ''}><summary>יש לך קוד קופון?</summary><form method="get" class="cs-cform"><input type="text" name="coupon" value="${esc(sp.coupon || '')}" placeholder="קוד קופון" aria-label="קוד קופון" autocomplete="off"><button type="submit">החלה</button></form>${v.couponError ? `<p class="cs-err">${v.couponError}</p>` : v.coupon ? '<p class="cs-ok">הקופון הופעל ✓</p>' : ''}</details>
+<a href="${checkout}" class="cs-go">${ic.lock}<span>להמשך לתשלום</span></a>
+<a href="/" class="cs-back">המשך קניות</a>
+<ul class="cs-trust"><li>${ic.lock} תשלום מאובטח</li><li>${ic.dl} הורדה מיידית לאלבומים דיגיטליים</li><li>${ic.truck} משלוח חינם מעל ${money(FREE)}</li></ul></aside>`;
+  const html = `<section class="content-section gt-cartpage"><div class="container">
+<div class="cart-head"><h1>סל הקניות</h1><span>${v.count ? `${v.count} פריטים` : ''}</span></div>
+${v.count ? `<div class="cart-grid"><div class="cart-items">${items}</div>${summary}</div>
+<div class="cart-sticky"><div><small>סה״כ</small><strong>${money(v.total)}</strong></div><a href="${checkout}" class="cs-go">${ic.lock}<span>לתשלום</span></a></div>`
+: `<div class="cart-empty"><p>הסל שלך ריק כרגע.</p><a href="/" class="cs-go"><span>לחנות</span></a></div>`}
 </div></section>`;
-  const js = `document.addEventListener('click',e=>{const d=e.target.closest('[data-del]');if(d){e.preventDefault();fetch('/api/cart',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:+d.dataset.del,mode:d.dataset.mode,v:d.dataset.vk,pr:d.dataset.pr})}).then(()=>location.reload());}
-const q=e.target.closest('[data-q]');if(q){fetch('/api/cart',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:+q.dataset.q,mode:q.dataset.mode,v:q.dataset.vk,pr:q.dataset.pr,qty:+q.dataset.v,set:true})}).then(()=>location.reload());}});`;
+  const js = `document.addEventListener('click',e=>{const b=e.target.closest('.ci-del,[data-set]');if(!b)return;e.preventDefault();b.closest('.ci')?.classList.add('busy');
+const d=b.dataset;const del=b.classList.contains('ci-del')||(d.set!==undefined&&+d.set<1);
+fetch('/api/cart',{method:del?'DELETE':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(del?{id:+d.id,mode:d.mode,v:d.vk,pr:d.pr}:{id:+d.id,mode:d.mode,v:d.vk,pr:d.pr,qty:+d.set,set:true})}).then(()=>location.reload());});`;
   return (<><div dangerouslySetInnerHTML={{ __html: html }} /><script dangerouslySetInnerHTML={{ __html: js }} /></>);
 }
