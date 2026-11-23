@@ -24,7 +24,15 @@ export default async function Home() {
       html = html.slice(0, a) + seg.slice(0, open) + cells + seg.slice(close) + html.slice(b);
     }
   }
-  design.sections.forEach((s, i) => { html = applySection(html, s); html = keep(`{{${s.token}}}`, lists[i], fns[s.token], html); });
+  // A section with no products marked "הצג בדף הבית" is hidden entirely (never filled with other products)
+  const SECTION: Record<string, string> = { MUSIC: 'Jewish music', MOVIES: 'Movies', JUDAICA: 'Judaica', GAMES: 'Games', ACCESSORIES: 'Accessories' };
+  design.sections.forEach((s, i) => {
+    if (!lists[i].length) {
+      const a = html.indexOf(`<!-- ${SECTION[s.token]} Section Start -->`), b = html.indexOf(`<!-- ${SECTION[s.token]} Section End -->`);
+      if (a >= 0 && b > a) { html = html.slice(0, a) + html.slice(b); return; }
+    }
+    html = applySection(html, s); html = keep(`{{${s.token}}}`, lists[i], fns[s.token], html);
+  });
   html = keep('{{ARTICLES}}', articles, articleCell, html);
   html = html.replace(/\{\{\w+\}\}/g, '');
   return (

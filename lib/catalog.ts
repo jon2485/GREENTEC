@@ -14,9 +14,8 @@ export async function withDescendants(ids: number[]) {
 export async function latestIn(categoryIds: number[], take: number) {
   const cats = await withDescendants(categoryIds);
   const where = { status: 1, categories: { some: { categoryId: { in: cats } } }, NOT: { mainImage: '' } };
-  const flagged = await db.product.findMany({ where: { ...where, showHome: true }, orderBy: [{ sort: 'desc' }, { id: 'desc' }], take, select: cardSelect });
-  if (flagged.length) return flagged;
-  return db.product.findMany({ where, orderBy: [{ sort: 'desc' }, { id: 'desc' }], take, select: cardSelect });
+  // only products marked "הצג בדף הבית"; newest uploads first (a legacy "סידור" value, if set, still wins as on the live site)
+  return db.product.findMany({ where: { ...where, showHome: true }, orderBy: [{ sort: 'desc' }, { id: 'desc' }], take, select: cardSelect });
 }
 
 export const minPrice = (p: any) => { const o = priceOptions(p); return o.length ? Math.min(...o.map((x) => x.price)) : 0; };
