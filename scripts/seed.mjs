@@ -24,6 +24,7 @@ async function main() {
   if (count > 0 && process.env.FORCE_SEED !== '1') {
     console.log(`[seed] ${count} products already present – skipping`);
     await ensureAdmin();
+    await syncLegacyCatalog();
     return;
   }
   const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
@@ -62,7 +63,6 @@ async function main() {
   await chunked(ps.filter((x) => supIds.has(x.supplierId)), 2000, (rows) => db.productSupplier.createMany({ data: rows, skipDuplicates: true }));
   await chunked(rel, 2000, (rows) => db.productRelated.createMany({ data: rows, skipDuplicates: true }));
   // products in the "מארזים" categories are bundles: shown before single products
-  await db.product.updateMany({ where: { categories: { some: { categoryId: { in: [61, 128, 167] } } } }, data: { isSet: true } });
   // newest products appear on the homepage
   await db.$executeRawUnsafe(`UPDATE "Product" SET "showHome" = true WHERE id IN (SELECT id FROM "Product" ORDER BY id DESC LIMIT 40)`);
 
@@ -102,7 +102,44 @@ async function main() {
     await db.$executeRawUnsafe(`SELECT setval(pg_get_serial_sequence('"${t}"','id'), (SELECT COALESCE(MAX(id),1) FROM "${t}"))`);
   }
   await ensureAdmin();
+  await syncLegacyCatalog();
   console.log('[seed] done:', products.length, 'products');
+}
+
+// One-time fix (v1): product↔category links exactly as assigned in the legacy admin
+// ("product[categories][]"), primary = deepest category under the URL's top category,
+// and bundles = the 59 real sets from ProductsSets (not "everything in a מארזים category").
+// Keeps existing pinned/sort values on links that stay.
+async function syncLegacyCatalog() {
+  const FLAG = 'sync_legacy_catalog_v1';
+  if (await db.setting.findUnique({ where: { key: FLAG } })) return;
+  const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
+  const catIds = new Set((await db.category.findMany({ select: { id: true } })).map((c) => c.id));
+  const prodIds = new Set((await db.product.findMany({ select: { id: true } })).map((p) => p.id));
+  let added = 0, removed = 0;
+  for (const p of data.products) {
+    if (!prodIds.has(p.id)) continue;
+    const want = (p.categoryIds || []).filter((c) => catIds.has(c));
+    if (!want.length) continue;
+    const have = await db.productCategory.findMany({ where: { productId: p.id } });
+    const drop = have.filter((h) => !want.includes(h.categoryId)).map((h) => h.categoryId);
+    if (drop.length) { await db.productCategory.deleteMany({ where: { productId: p.id, categoryId: { in: drop } } }); removed += drop.length; }
+    for (const [i, c] of want.entries()) {
+      const ex = have.find((h) => h.categoryId === c);
+      if (ex) { if (ex.primary !== (i === 0)) await db.productCategory.update({ where: { productId_categoryId: { productId: p.id, categoryId: c } }, data: { primary: i === 0 } }); }
+      else { await db.productCategory.create({ data: { productId: p.id, categoryId: c, primary: i === 0 } }); added++; }
+    }
+  }
+  const sets = data.sets || [];
+  await db.product.updateMany({ where: { isSet: true, id: { notIn: sets.map((s) => s.id) } }, data: { isSet: false } });
+  for (const s of sets) {
+    if (!prodIds.has(s.id)) continue;
+    await db.product.update({ where: { id: s.id }, data: { isSet: true } });
+    const items = s.items.filter((i) => prodIds.has(i) && i !== s.id);
+    if (items.length) await db.bundleItem.createMany({ data: items.map((productId, sort) => ({ bundleId: s.id, productId, sort, source: 'set' })), skipDuplicates: true });
+  }
+  await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
+  console.log(`[seed] legacy catalog sync: +${added} / -${removed} category links, ${sets.length} sets`);
 }
 
 async function ensureAdmin() {
