@@ -33,6 +33,11 @@ export default async function Home() {
     }
     html = applySection(html, s); html = keep(`{{${s.token}}}`, lists[i], fns[s.token], html);
   });
+  // Template demo sections that are not real store data → removed (the homepage shows only real, "הצג בדף הבית" products)
+  for (const name of ['New on the site', 'New singles']) {
+    const a = html.indexOf(`<!-- ${name} Section Start -->`), b = html.indexOf(`<!-- ${name} Section End -->`);
+    if (a >= 0 && b > a) html = html.slice(0, a) + html.slice(b);
+  }
   html = keep('{{ARTICLES}}', articles, articleCell, html);
   html = html.replace(/\{\{\w+\}\}/g, '');
   return (
