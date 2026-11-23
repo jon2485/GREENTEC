@@ -74,6 +74,10 @@ design/template-v2/    approved HTML pages (assets are under public/t — paths 
 4. **Bulk upload of the 100 GB:** a script or guide (e.g. rclone or Cyberduck to the bucket), matched to products by id/filename, then setting `Product.digitalFile`.
 5. **Later, each with separate approval:** import real users and orders (from the owner's PC export, never committed), the real payment gateway, emails/SMS for order statuses, image migration, and DNS cutover.
 
+## 5b. Full migration & admin redesign
+
+See **docs/MIGRATION.md** (owner request 2026-11-23): import everything from the legacy site (non-personal data in `data/legacy-admin-full.json.gz`; personal data only via the admin import screen), images, digital files receiving endpoint, and rebuild the admin look on the "Modern" admin1 template, RTL and mobile-first.
+
 ## 6. Conventions
 
 - Storefront HTML is generated server‑side as strings that copy the template markup (`lib/render.ts`, `lib/pages.ts`) and are rendered with `dangerouslySetInnerHTML`. Use plain `<a>` links (full page loads), so the template's jQuery/Flickity scripts re‑initialize.
