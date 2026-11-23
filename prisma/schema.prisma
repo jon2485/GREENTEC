@@ -595,3 +595,14 @@ model DownloadLog {
   ip        String   @default("")
   createdAt DateTime @default(now())
 }
+
+model ContactMessage { // טופס "צור קשר" (/contact – legacy URL)
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String   @default("")
+  email     String   @default("")
+  subject   String   @default("")
+  message   String
+  handled   Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
