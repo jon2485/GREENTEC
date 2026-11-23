@@ -12,8 +12,10 @@ import { join } from 'node:path';
 const HOST_RE = /^https?:\/\/(www\.)?greentec\.co\.il/i;
 const LEGACY = 'https://www.greentec.co.il';
 const IMG_EXT = /\.(webp|png|jpe?g|gif|svg|ico|bmp|avif)(\?|$)/i;
+// album samples (short preview tracks shown on the product page – NOT the purchased download)
+const SAMPLE_EXT = /\.(mp3|m4a|ogg|wav|zip)(\?|$)/i;
 const FIELDS: { model: string; table: string; cols: string[] }[] = [
-  { model: 'product', table: 'Product', cols: ['mainImage', 'topImage', 'ogImage'] },
+  { model: 'product', table: 'Product', cols: ['mainImage', 'topImage', 'ogImage', 'sampleFile'] },
   { model: 'productImage', table: 'ProductImage', cols: ['url'] },
   { model: 'productVariation', table: 'ProductVariation', cols: ['image'] },
   { model: 'category', table: 'Category', cols: ['image', 'topImage', 'ogImage'] },
@@ -47,12 +49,13 @@ export function legacyKey(u: string) {
   return { key: 'media/legacy' + path, pub: '/media/legacy' + path.split('/').map(encodeURIComponent).join('/'), fetchUrl: LEGACY + url.pathname };
 }
 const isLegacy = (u: string) => !!u && (HOST_RE.test(u) || /^\/(uploads|uploads_thumbs)\//.test(u)) && IMG_EXT.test(u.split('#')[0]);
+const isLegacySample = (u: string) => !!u && (HOST_RE.test(u) || /^\/uploads\//.test(u)) && SAMPLE_EXT.test(u.split('#')[0]);
 
 async function collect() {
   const urls = new Set<string>();
   for (const f of FIELDS) {
     const rows: any[] = await (db as any)[f.model].findMany({ select: Object.fromEntries(f.cols.map((c) => [c, true])) });
-    for (const r of rows) for (const c of f.cols) if (isLegacy(r[c])) urls.add(r[c]);
+    for (const r of rows) for (const c of f.cols) if (isLegacy(r[c]) || (c === 'sampleFile' && isLegacySample(r[c]))) urls.add(r[c]);
   }
   for (const h of HTML) for (const c of h.cols) {
     const rows: any[] = await db.$queryRawUnsafe(`SELECT "${c}" AS v FROM "${h.table}" WHERE "${c}" ~* '(greentec\\.co\\.il|"/uploads)'`);
