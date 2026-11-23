@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { categoryChain, categoryListing, cardSelect } from '@/lib/catalog';
 import { shopPage, productPage, contentPage, ppScript } from '@/lib/pages';
 import { stripHtml } from '@/lib/format';
+import SupplierPage, { generateMetadata as supplierMeta } from '../supplier/[id]/page';
 
 export const dynamic = 'force-dynamic';
 const SITE = process.env.SITE_URL || 'https://www.greentec.co.il';
@@ -21,6 +22,14 @@ async function resolve(slug: string[]) {
     if (page) return { kind: 'page' as const, path, page };
     const article = await db.article.findFirst({ where: { url: u, status: true } });
     if (article) return { kind: 'article' as const, path, article };
+    // legacy custom artist URLs, e.g. /ישי-ריבו
+    const supplier = await db.supplier.findFirst({ where: { url: u } });
+    if (supplier) return { kind: 'supplier' as const, path, supplier };
+  }
+  // legacy article URL /articles/id/{id}
+  if (parts.length === 3 && parts[0] === 'articles' && parts[1] === 'id' && /^\d+$/.test(parts[2])) {
+    const article = await db.article.findFirst({ where: { id: +parts[2], status: true } });
+    if (article) return { kind: 'article' as const, path, article };
   }
   const red = await db.redirect.findFirst({ where: { OR: [{ from: path }, { from: encodeURI(path) }] } });
   if (red) return { kind: 'redirect' as const, path, to: red.to };
@@ -32,6 +41,7 @@ type P = { params: Promise<{ slug: string[] }>; searchParams: Promise<Record<str
 export async function generateMetadata({ params }: P): Promise<Metadata> {
   const r = await resolve((await params).slug);
   if (!r || r.kind === 'redirect') return {};
+  if (r.kind === 'supplier') { const m: any = await supplierMeta({ params: Promise.resolve({ id: String(r.supplier.id) }), searchParams: Promise.resolve({}) } as any); return { ...m, alternates: { canonical: SITE + r.path } }; }
   const x: any = r.kind === 'product' ? r.product : r.kind === 'category' ? r.category : r.kind === 'page' ? r.page : r.article;
   const name = x.name || x.title;
   const title = x.metaTitle || name;
@@ -49,6 +59,7 @@ export default async function Page({ params, searchParams }: P) {
   const r = await resolve((await params).slug);
   if (!r) notFound();
   if (r.kind === 'redirect') permanentRedirect(r.to);
+  if (r.kind === 'supplier') return SupplierPage({ params: Promise.resolve({ id: String(r.supplier.id) }), searchParams });
   const sp = await searchParams;
 
   if (r.kind === 'category') {

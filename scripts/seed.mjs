@@ -27,6 +27,7 @@ async function main() {
     await syncLegacyCatalog();
     await syncHiddenProducts();
     await syncHomeFlags();
+    await syncSupplierLinks();
     return;
   }
   const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
@@ -190,6 +191,27 @@ async function syncHomeFlags() {
   }
   await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
   console.log(`[seed] legacy homepage flags: ${home} products shown on the homepage`);
+}
+
+// One-time (v1): product ↔ manufacturer/artist links exactly as in the legacy admin (product_suppliers[]).
+// The first seed missed 83 links. Diff-based: existing links keep their pinned/sort.
+async function syncSupplierLinks() {
+  const FLAG = 'sync_supplier_links_v1';
+  if (await db.setting.findUnique({ where: { key: FLAG } })) return;
+  const adm = JSON.parse(gunzipSync(readFileSync(new URL('../data/legacy-admin-full.json.gz', import.meta.url))).toString('utf8'));
+  const sup = new Set((await db.supplier.findMany({ select: { id: true } })).map((x) => x.id));
+  const prod = new Set((await db.product.findMany({ select: { id: true } })).map((x) => x.id));
+  let added = 0, removed = 0;
+  for (const x of adm.products) {
+    if (!prod.has(x.id)) continue;
+    const want = (x.f?.['product_suppliers[]'] || []).map(Number).filter((n) => sup.has(n));
+    const have = await db.productSupplier.findMany({ where: { productId: x.id } });
+    const drop = have.filter((h) => !want.includes(h.supplierId)).map((h) => h.supplierId);
+    if (drop.length) { await db.productSupplier.deleteMany({ where: { productId: x.id, supplierId: { in: drop } } }); removed += drop.length; }
+    for (const s of want) if (!have.find((h) => h.supplierId === s)) { await db.productSupplier.create({ data: { productId: x.id, supplierId: s } }); added++; }
+  }
+  await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
+  console.log(`[seed] legacy supplier links: +${added} / -${removed}`);
 }
 
 async function ensureAdmin() {
