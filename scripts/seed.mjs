@@ -146,8 +146,9 @@ async function syncLegacyCatalog() {
 // One-time (v1): the 17 products that exist in the legacy admin as "לא מפורסם" (unpublished):
 // imported with status 0 (hidden), exact categories/suppliers/price/stock from the admin.
 async function syncHiddenProducts() {
-  const FLAG = 'sync_hidden_products_v2';
+  const FLAG = 'sync_hidden_products_v3';
   if (await db.setting.findUnique({ where: { key: FLAG } })) return;
+  await db.productCategory.deleteMany({ where: { categoryId: 0 } }); // legacy "-" placeholder, not a real category
   const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
   const hidden = data.products.filter((p) => p.status === 'hidden');
   const catIds = new Set((await db.category.findMany({ select: { id: true } })).map((c) => c.id));
