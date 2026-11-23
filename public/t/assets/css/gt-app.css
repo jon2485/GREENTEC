@@ -194,3 +194,15 @@ body:not(:has(.hero-carousel, .heros, .shop-hero)) .main-header .bg-left, body:n
   html.gt-menu-open .main-header { background-color: #141414 !important; }
   html.gt-menu-open .main-header .bg-left, html.gt-menu-open .main-header .bg-right { opacity: 0 !important; }
 }
+
+/* "סינון לפי יצרן" */
+.maker-widget .maker-find { width: 100%; border: 1px solid #ddd; border-radius: 980px; padding: 8px 14px; font-size: 15px; margin-bottom: 10px; background: #fff; }
+.maker-list { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto; overscroll-behavior: contain; }
+.maker-list li label { display: flex; align-items: center; gap: 10px; padding: 7px 2px; cursor: pointer; font-family: "Heebo", sans-serif; font-size: 15px; color: #2a2b2c; }
+.maker-list .maker-cb { width: 18px; height: 18px; accent-color: #8a9a10; flex: none; }
+.maker-list .mk-name { flex: 1; min-width: 0; }
+.maker-list .mk-count { font-size: 12px; color: #8a8a86; background: #f1f1ef; border-radius: 980px; padding: 1px 8px; }
+.maker-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
+.maker-chip { border: 0; border-radius: 980px; background: #2a2b2c; color: #fff; font-family: "Heebo", sans-serif; font-size: 14px; padding: 6px 14px; }
+.maker-chip span { color: #cadb2d; margin-inline-start: 4px; }
+.maker-chip.clear { background: transparent; color: #2a2b2c; text-decoration: underline; }

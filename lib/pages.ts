@@ -5,20 +5,28 @@ import { enc, money, priceOptions } from './format';
 type Crumb = { name: string; url?: string };
 export const crumbsHtml = (c: Crumb[]) => `<nav aria-label="breadcrumb" class="shop-crumbs"><a href="/">דף הבית</a>${c.map((x) => ' / ' + (x.url ? `<a href="${enc(x.url)}">${esc(x.name)}</a>` : `<span>${esc(x.name)}</span>`)).join('')}</nav>`;
 
+// "סינון לפי יצרן" – shown only when the page mixes 2+ manufacturers
+function makersWidget(makers: { id: number; name: string; count: number }[], sup: number[]) {
+  const on = new Set(sup);
+  return `<div class="shop-widget maker-widget"><h4 class="shop-wtitle">סינון לפי <span>יצרן</span></h4>${makers.length > 10 ? '<input type="search" class="maker-find" placeholder="חיפוש יצרן..." aria-label="חיפוש יצרן">' : ''}<ul class="maker-list">${makers.map((m) => `<li><label><input type="checkbox" class="maker-cb" value="${m.id}"${on.has(m.id) ? ' checked' : ''}><span class="mk-name">${esc(m.name)}</span><span class="mk-count">${m.count}</span></label></li>`).join('')}</ul></div>`;
+}
+
 export function shopPage(o: { kicker: string; title: string; crumbs: Crumb[]; cats: { name: string; url: string }[]; best: any[]; listing: any; intro?: string; baseUrl: string; query: Record<string, string> }) {
   const L = o.listing;
   const qs = (page: number) => { const u = new URLSearchParams(o.query); u.set('page', String(page)); return `${enc(o.baseUrl)}?${u}`; };
   const pager = L.pages > 1 ? `<nav class="shop-pages" aria-label="עמודים">${Array.from({ length: L.pages }, (_, i) => i + 1).filter((n) => n === 1 || n === L.pages || Math.abs(n - L.page) <= 2).map((n, i, a) => (i && n - a[i - 1] > 1 ? '<span>…</span>' : '') + `<a href="${qs(n)}"${n === L.page ? ' class="active"' : ''}>${n}</a>`).join('')}${L.page < L.pages ? `<a href="${qs(L.page + 1)}" aria-label="העמוד הבא">‹</a>` : ''}</nav>` : '';
   return `<section class="shop-page"><div class="shop-hero"><div class="container"><span class="shop-kicker">${esc(o.kicker)}</span><h1 class="shop-title">${esc(o.title)}</h1>${crumbsHtml(o.crumbs)}</div></div>
 <div class="container shop-wrap"><aside class="shop-side" id="shopSide">
+${L.makers && L.makers.length > 1 ? makersWidget(L.makers, L.sup || []) : ''}
 <div class="shop-widget"><h4 class="shop-wtitle">סינון לפי <span>מחיר</span></h4><div class="price-range"><input type="range" id="pMin" min="0" max="500" value="0" aria-label="מחיר מינימלי"><input type="range" id="pMax" min="0" max="500" value="500" aria-label="מחיר מקסימלי"></div><p class="price-out">מחיר: <strong id="pOut">₪0 – ₪500</strong></p><button type="button" class="btn btn-secondary-outline shop-filter-btn" id="pApply">סינון</button></div>
 ${o.cats.length ? `<div class="shop-widget"><h4 class="shop-wtitle">קטגוריות <span>מוצרים</span></h4><ul class="shop-cats">${o.cats.map((c) => `<li><a href="/${enc(c.url)}">${esc(c.name)}</a></li>`).join('')}</ul></div>` : ''}
 ${o.best.length ? `<div class="shop-widget"><h4 class="shop-wtitle">הנמכרים <span>ביותר</span></h4><ul class="shop-best">${o.best.map((p) => `<li><a href="${href(p)}"><img src="${esc(thumb(p.mainImage))}" alt=""><span>${esc(p.name)}</span></a></li>`).join('')}</ul></div>` : ''}
 <a href="/search?q=USB" class="shop-ad"><img src="/t/assets/images/n-img-3.webp" alt=""><span class="shop-ad-text">אוספי מוזיקה<br>ב־USB</span></a>
 </aside><div class="shop-main">
-<div class="shop-bar"><button type="button" class="btn btn-secondary-outline shop-side-toggle" id="sideToggle">סינון</button><label class="shop-ctl">הצג <select id="perPage"><option>12</option><option>24</option><option>48</option></select></label><label class="shop-ctl">מיון לפי <select id="sortBy"><option value="i">מומלצים</option><option value="new">חדשים ביותר</option><option value="az">א–ת</option><option value="za">ת–א</option><option value="lo">מחיר: מהנמוך לגבוה</option><option value="hi">מחיר: מהגבוה לנמוך</option></select></label><div class="shop-views" role="group" aria-label="תצוגה"><button type="button" class="active" data-view="grid" aria-label="תצוגת רשת">${I.grid}</button><button type="button" data-view="list" aria-label="תצוגת רשימה">${I.list}</button></div></div>
+<div class="shop-bar"><button type="button" class="btn btn-secondary-outline shop-side-toggle" id="sideToggle">סינון${(L.sup || []).length ? ` (${L.sup.length})` : ''}</button><label class="shop-ctl">הצג <select id="perPage"><option>12</option><option>24</option><option>48</option></select></label><label class="shop-ctl">מיון לפי <select id="sortBy"><option value="i">מומלצים</option><option value="new">חדשים ביותר</option><option value="az">א–ת</option><option value="za">ת–א</option><option value="lo">מחיר: מהנמוך לגבוה</option><option value="hi">מחיר: מהגבוה לנמוך</option></select></label><div class="shop-views" role="group" aria-label="תצוגה"><button type="button" class="active" data-view="grid" aria-label="תצוגת רשת">${I.grid}</button><button type="button" data-view="list" aria-label="תצוגת רשימה">${I.list}</button></div></div>
 ${o.intro ? `<div class="gt-content mb-4">${o.intro}</div>` : ''}
 ${L.bundles.length && L.page === 1 ? `<div class="shop-bundles"><h3 class="shop-sub">מארזים ואוספים <small>מוצגים לפני המוצרים הבודדים</small></h3><div class="bundle-row">${L.bundles.slice(0, 6).map(bundleCard).join('')}</div></div>` : ''}
+${(L.sup || []).length ? `<div class="maker-chips">${(L.makers || []).filter((m: any) => L.sup.includes(m.id)).map((m: any) => `<button type="button" class="maker-chip" data-unsup="${m.id}">${esc(m.name)} <span aria-hidden="true">✕</span></button>`).join('')}<button type="button" class="maker-chip clear" data-unsup="all">ניקוי הסינון</button></div>` : ''}
 <h3 class="shop-sub">${L.bundles.length ? 'מוצרים' : ''} <small>${L.total} מוצרים</small></h3>
 <div class="shop-grid" id="shopGrid">${L.items.map((p: any, i: number) => shopCard(p, i, p.pinned)).join('')}</div>
 ${L.items.length ? '' : '<p class="shop-empty">לא נמצאו מוצרים.</p>'}${pager}

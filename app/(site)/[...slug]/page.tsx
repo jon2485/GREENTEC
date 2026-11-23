@@ -1,7 +1,7 @@
 import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { db } from '@/lib/db';
-import { categoryChain, categoryListing, cardSelect } from '@/lib/catalog';
+import { categoryChain, categoryListing, cardSelect, parseSup } from '@/lib/catalog';
 import { shopPage, productPage, contentPage, ppScript } from '@/lib/pages';
 import { stripHtml } from '@/lib/format';
 import SupplierPage, { generateMetadata as supplierMeta } from '../supplier/[id]/page';
@@ -67,7 +67,7 @@ export default async function Page({ params, searchParams }: P) {
     const chain = await categoryChain(c.id);
     const kids = await db.category.findMany({ where: { parentId: c.id }, orderBy: { sort: 'asc' }, select: { name: true, url: true } });
     const sibs = kids.length ? kids : c.parentId ? await db.category.findMany({ where: { parentId: c.parentId }, orderBy: { sort: 'asc' }, select: { name: true, url: true } }) : [];
-    const listing = await categoryListing(c.id, { sort: sp.sort, min: sp.min ? +sp.min : undefined, max: sp.max ? +sp.max : undefined, page: sp.page ? +sp.page : 1, per: sp.per ? +sp.per : 24 });
+    const listing = await categoryListing(c.id, { sort: sp.sort, min: sp.min ? +sp.min : undefined, max: sp.max ? +sp.max : undefined, page: sp.page ? +sp.page : 1, per: sp.per ? +sp.per : 24, sup: parseSup(sp.sup) });
     const best = await db.product.findMany({ where: { status: 1, categories: { some: { categoryId: chain[0]?.id ?? c.id } }, NOT: { mainImage: '' } }, orderBy: [{ orderItems: { _count: 'desc' } }, { id: 'desc' }], take: 4, select: cardSelect });
     const html = shopPage({ kicker: chain[0]?.id === c.id ? 'חנות גרינטק' : chain[0]?.name || '', title: c.header || c.name, crumbs: chain.map((x, i) => ({ name: x.name, url: i < chain.length - 1 ? '/' + x.url : undefined })), cats: sibs, best, listing, intro: listing.page === 1 ? c.content : '', baseUrl: r.path, query: sp });
     return <div dangerouslySetInnerHTML={{ __html: html }} />;

@@ -80,4 +80,15 @@
     if (c) { e.preventDefault(); e.stopPropagation(); c.closest('.nav-item').classList.toggle('open'); return; }
     if (e.target.closest('#toggle-nav')) setTimeout(function () { var nav = document.getElementById('nav'); document.documentElement.classList.toggle('gt-menu-open', !!nav && !nav.classList.contains('nav-open')); }, 0);
   });
+
+  // manufacturer (יצרן) filter on category / search / artist pages
+  (function () {
+    var list = document.querySelector('.maker-list'); var chips = document.querySelector('.maker-chips');
+    if (!list && !chips) return;
+    function go(ids) { var u = new URL(location.href); if (ids.length) u.searchParams.set('sup', ids.join(',')); else u.searchParams.delete('sup'); u.searchParams.delete('page'); location.href = u.toString(); }
+    if (list) list.addEventListener('change', function () { go([].slice.call(list.querySelectorAll('.maker-cb:checked')).map(function (c) { return c.value; })); });
+    var f = document.querySelector('.maker-find');
+    if (f) f.addEventListener('input', function () { var v = f.value.trim().toLowerCase(); [].forEach.call(list.children, function (li) { li.hidden = v && li.textContent.toLowerCase().indexOf(v) < 0; }); });
+    if (chips) chips.addEventListener('click', function (e) { var b = e.target.closest('[data-unsup]'); if (!b) return; var cur = (new URL(location.href).searchParams.get('sup') || '').split(',').filter(Boolean); go(b.dataset.unsup === 'all' ? [] : cur.filter(function (x) { return x !== b.dataset.unsup; })); });
+  })();
 })();
