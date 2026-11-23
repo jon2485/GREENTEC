@@ -20,3 +20,10 @@
 /* Rounded buttons: the outline button's fill (::after) was square, so on hover/touch the button looked square */
 .btn-outline-primary, .btn-secondary-outline { overflow: hidden; isolation: isolate; }
 .btn-outline-primary::after, .btn-secondary-outline::after { border-radius: inherit !important; }
+
+/* Category / supplier / search pages: 4 products per row on desktop (wider content area) */
+@media (width >= 1200px) {
+  .shop-wrap { max-width: 1560px; }
+  .shop-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px 22px; }
+  .shop-grid.is-list { grid-template-columns: 1fr; }
+}
