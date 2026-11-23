@@ -9,8 +9,8 @@
 .gt-dl a.btn{border-radius:999px}
 .gt-test-banner{background:#2a2b2c;color:#cadb2d;text-align:center;font-size:13px;padding:4px}
 
-/* Header no longer overlaps the hero: solid header, slider starts below it */
-.main-header { background-color: #1b1c1d; box-shadow: 0 6px 24px rgba(0, 0, 0, .25); }
-.hero-carousel { margin-top: var(--gt-hdr, 150px); }
-.hero-carousel .heros { height: calc(100dvh - var(--gt-hdr, 150px)); min-height: 480px; }
-@media (width < 768px) { .hero-carousel .heros { height: 72dvh; min-height: 420px; } }
+/* Chanukah slide: transparent header as in the template, but the image starts below the header
+   (smaller, nothing hidden under the menu); the strip behind the header matches the image tone */
+.chan-cell .heros { background: linear-gradient(#0d2f33, #154a4f); }
+.chan-cell .chan-bg { top: var(--gt-hdr, 150px); }
+@media (width < 768px) { .chan-cell .chan-bg { top: calc(var(--gt-hdr, 120px) - 10px); } }
