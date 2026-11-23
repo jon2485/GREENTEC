@@ -27,3 +27,7 @@
   .shop-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px 22px; }
   .shop-grid.is-list { grid-template-columns: 1fr; }
 }
+
+/* Header turns dark once the page is scrolled (transparent only at the very top) */
+.main-header { transition: background-color 250ms ease, box-shadow 250ms ease, backdrop-filter 250ms ease; }
+html.gt-scrolled .main-header { background-color: rgba(26, 26, 26, 0.94); box-shadow: 0 6px 24px rgba(0, 0, 0, .28); backdrop-filter: blur(8px); }

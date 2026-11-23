@@ -1,6 +1,7 @@
 /* GREENTEC 2.0 – live behaviour on top of the template (cart, wishlist, search, shop controls) */
 (function () {
   function hdr() { var h = document.querySelector('.main-header'); if (h) document.documentElement.style.setProperty('--gt-hdr', h.offsetHeight + 'px'); }
+  function sc() { document.documentElement.classList.toggle('gt-scrolled', window.scrollY > 40); } sc(); window.addEventListener('scroll', sc, { passive: true });
   hdr(); window.addEventListener('load', function () { hdr(); window.dispatchEvent(new Event('resize')); }); window.addEventListener('resize', hdr);
   function badge(n) {
     var b = document.querySelector('.cart-button');
