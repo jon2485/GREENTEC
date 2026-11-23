@@ -9,8 +9,10 @@
 .gt-dl a.btn{border-radius:999px}
 .gt-test-banner{background:#2a2b2c;color:#cadb2d;text-align:center;font-size:13px;padding:4px}
 
-/* Chanukah slide: transparent header as in the template, but the image starts below the header
-   (smaller, nothing hidden under the menu); the strip behind the header matches the image tone */
-.chan-cell .heros { background: linear-gradient(#0d2f33, #154a4f); }
-.chan-cell .chan-bg { top: var(--gt-hdr, 150px); }
-@media (width < 768px) { .chan-cell .chan-bg { top: calc(var(--gt-hdr, 120px) - 10px); } }
+/* Chanukah slide: header stays transparent over the image (as in the template).
+   Behind the header a blurred copy of the same picture fills the space; the sharp picture
+   starts just below the header, so the candles never sit under the menu text. */
+.chan-cell .chan-bg::before { content: ""; position: absolute; inset: -30px; background: url("../images/hero-chanukah.webp") 22% 50% / cover no-repeat; filter: blur(22px) brightness(.75); }
+.chan-cell .chan-scene { top: var(--gt-hdr, 150px); }
+@media (width < 768px) { .chan-cell .chan-scene { top: calc(var(--gt-hdr, 120px) - 10px); } }
+@keyframes chanZoom { from { transform: scale(1.04); } to { transform: scale(1); } }
