@@ -9,15 +9,7 @@
 .gt-dl a.btn{border-radius:999px}
 .gt-test-banner{background:#2a2b2c;color:#cadb2d;text-align:center;font-size:13px;padding:4px}
 
-/* Chanukah slide: header stays transparent over the image (as in the template).
-   Behind the header a blurred copy of the same picture fills the space; the sharp picture
-   starts just below the header, so the candles never sit under the menu text. */
-.chan-cell .chan-bg::before { content: ""; position: absolute; inset: -30px; background: url("../images/hero-chanukah.webp") 22% 50% / cover no-repeat; filter: blur(22px) brightness(.75); }
-.chan-cell .chan-scene { top: calc(var(--gt-hdr, 150px) + 4vh); }
-/* desktop: the whole picture is always visible (no giant zoom on wide / ultrawide screens); the blurred copy fills the sides */
-@media (width >= 992px) { .chan-cell .chan-scene .chan-img { object-fit: contain !important; object-position: 30% 100% !important; } }
-@media (width < 768px) { .chan-cell .chan-scene { top: calc(var(--gt-hdr, 120px) - 10px); } }
-@keyframes chanZoom { from { transform: scale(1.04); } to { transform: scale(1); } }
+/* Chanukah slide: full-bleed picture over the whole hero (template default) */
 
 /* Rounded buttons: the outline button's fill (::after) was square, so on hover/touch the button looked square */
 .btn-outline-primary, .btn-secondary-outline { overflow: hidden; isolation: isolate; }
