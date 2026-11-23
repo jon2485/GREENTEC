@@ -25,6 +25,7 @@ async function main() {
     console.log(`[seed] ${count} products already present – skipping`);
     await ensureAdmin();
     await syncLegacyCatalog();
+    await syncHiddenProducts();
     return;
   }
   const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
@@ -40,10 +41,10 @@ async function main() {
 
   await db.supplier.createMany({ data: data.suppliers.map((s) => ({ id: s.id, name: s.name, logo: s.logo ? abs(s.logo) : '', content: s.content || '', url: s.url || '', ...seo(s) })), skipDuplicates: true });
 
-  const products = data.products.filter((p) => p.status === 200);
+  const products = data.products.filter((p) => p.status === 200 || p.status === '200' || p.status === 'hidden');
   await chunked(products, 400, (rows) => db.product.createMany({ data: rows.map((p) => ({
     id: p.id, name: p.name, urlPath: p.urlPath, content: p.content || '', shortContent: p.shortContent || '',
-    quantity: p.quantity, status: 1, price: num(p.price), digitalPrice: num(p.digitalPrice), physicalPrice: num(p.physicalPrice), bothPrice: num(p.bothPrice),
+    quantity: p.quantity, status: p.status === 'hidden' ? 0 : 1, sku: p.sku || '', price: num(p.price), digitalPrice: num(p.digitalPrice), physicalPrice: num(p.physicalPrice), bothPrice: num(p.bothPrice),
     purchaseModes: p.purchaseModes || 'none', mainImage: abs(p.images?.[0] || ''), sampleFile: p.sample ? abs(p.sample) : '',
     onlyDigital: p.purchaseModes === '1', metaTitle: p.title && p.title !== p.name ? p.title : '', metaDescription: p.metaDescription || '',
     ogImage: p.ogImage || '', showHome: false,
@@ -140,6 +141,32 @@ async function syncLegacyCatalog() {
   }
   await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
   console.log(`[seed] legacy catalog sync: +${added} / -${removed} category links, ${sets.length} sets`);
+}
+
+// One-time (v1): the 17 products that exist in the legacy admin as "לא מפורסם" (unpublished):
+// imported with status 0 (hidden), exact categories/suppliers/price/stock from the admin.
+async function syncHiddenProducts() {
+  const FLAG = 'sync_hidden_products_v1';
+  if (await db.setting.findUnique({ where: { key: FLAG } })) return;
+  const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
+  const hidden = data.products.filter((p) => p.status === 'hidden');
+  const catIds = new Set((await db.category.findMany({ select: { id: true } })).map((c) => c.id));
+  const supIds = new Set((await db.supplier.findMany({ select: { id: true } })).map((c) => c.id));
+  let n = 0;
+  for (const p of hidden) {
+    if (await db.product.findUnique({ where: { id: p.id } })) continue;
+    await db.product.create({ data: {
+      id: p.id, name: p.name, urlPath: p.urlPath, content: p.content || '', shortContent: p.shortContent || '', sku: p.sku || '',
+      quantity: p.quantity, status: 0, price: num(p.price), purchaseModes: 'none', mainImage: abs(p.images?.[0] || ''),
+      metaTitle: p.title && p.title !== p.name ? p.title : '', metaDescription: p.metaDescription || '',
+      images: { create: (p.images || []).map((u, i) => ({ url: abs(u), sort: i })) },
+      categories: { create: p.categoryIds.filter((c) => catIds.has(c)).map((c, i) => ({ categoryId: c, primary: i === 0 })) },
+      suppliers: { create: (p.supplierIds || []).filter((s) => supIds.has(s)).map((s) => ({ supplierId: s })) },
+    } });
+    n++;
+  }
+  await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
+  console.log(`[seed] hidden (unpublished) legacy products imported: ${n}`);
 }
 
 async function ensureAdmin() {
