@@ -64,3 +64,19 @@ a, button, .btn { -webkit-tap-highlight-color: transparent; }
   .album-cart.added { background: #cadb2d !important; }
   .album-badge { font-size: 12px !important; padding: 4px 9px !important; top: 8px !important; inset-inline-start: 8px !important; }
 }
+
+/* Phones – category / search / supplier cards: same clean look as the homepage cards.
+   Small see-through circles in the corners instead of big stacked circles + a full-width cart bar. */
+@media (width < 576px) {
+  .shop-icons { top: 8px !important; inset-inline: auto 8px !important; flex-direction: row !important; gap: 6px !important; transform: none !important; opacity: 1 !important; }
+  .shop-icon { width: 32px !important; height: 32px !important; background: rgba(255,255,255,.55) !important; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 1px 4px rgba(0,0,0,.12) !important; color: #2a2b2c !important; position: relative; }
+  .shop-icon.on { background: #2a2b2c !important; color: #cadb2d !important; }
+  .shop-icon svg { width: 16px; height: 16px; }
+  .shop-cart { inset-inline-start: auto !important; inset-inline-end: 8px !important; bottom: 8px !important; width: 34px !important; height: 34px !important; padding: 0 !important; border-radius: 50% !important; justify-content: center; gap: 0 !important; transform: none !important; background: rgba(255,255,255,.55) !important; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 1px 4px rgba(0,0,0,.12) !important; color: #2a2b2c !important; }
+  .shop-cart span { display: none !important; }
+  .shop-cart svg { width: 17px; height: 17px; }
+  .shop-cart.added { background: #cadb2d !important; }
+  .shop-icon::before, .shop-cart::before { content: ""; position: absolute; inset: -5px; border-radius: 50%; }
+  .shop-badge { font-size: 12px !important; padding: 3px 9px !important; top: 8px !important; inset-inline-start: 8px !important; }
+  .shop-pin { top: auto !important; bottom: 8px; inset-inline-end: auto !important; inset-inline-start: 8px; width: 28px; height: 28px; }
+}
