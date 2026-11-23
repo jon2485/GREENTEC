@@ -146,7 +146,7 @@ async function syncLegacyCatalog() {
 // One-time (v1): the 17 products that exist in the legacy admin as "לא מפורסם" (unpublished):
 // imported with status 0 (hidden), exact categories/suppliers/price/stock from the admin.
 async function syncHiddenProducts() {
-  const FLAG = 'sync_hidden_products_v1';
+  const FLAG = 'sync_hidden_products_v2';
   if (await db.setting.findUnique({ where: { key: FLAG } })) return;
   const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
   const hidden = data.products.filter((p) => p.status === 'hidden');
@@ -160,7 +160,7 @@ async function syncHiddenProducts() {
       quantity: p.quantity, status: 0, price: num(p.price), purchaseModes: 'none', mainImage: abs(p.images?.[0] || ''),
       metaTitle: p.title && p.title !== p.name ? p.title : '', metaDescription: p.metaDescription || '',
       images: { create: (p.images || []).map((u, i) => ({ url: abs(u), sort: i })) },
-      categories: { create: p.categoryIds.filter((c) => catIds.has(c)).map((c, i) => ({ categoryId: c, primary: i === 0 })) },
+      categories: { create: (p.categoryIds || []).filter((c) => catIds.has(c)).map((c, i) => ({ categoryId: c, primary: i === 0 })) },
       suppliers: { create: (p.supplierIds || []).filter((s) => supIds.has(s)).map((s) => ({ supplierId: s })) },
     } });
     n++;
