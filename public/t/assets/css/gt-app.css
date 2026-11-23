@@ -157,3 +157,10 @@ html.gt-scrolled .gt-utility { background: #0e0e0e; }
   .main-header .search-suggestion-item .category { font-size: 13px !important; color: #8a8a86 !important; }
   .main-header .search-suggestion-item:hover { background: #f4f6dc !important; }
 }
+
+/* Inner pages without a hero image (login, signup, cart, checkout, account, contact, 404…):
+   content starts below the fixed header, and the header is solid so it is clearly separated */
+.content-section { padding-top: calc(var(--gt-hdr, 150px) + 28px); padding-bottom: 80px; }
+@media (width < 768px) { .content-section { padding-inline: 4px; } .content-section > .container > .header-text:first-child { font-size: 40px; margin-bottom: 20px; } }
+body:not(:has(.hero-carousel, .heros, .shop-hero)) .main-header { background-color: #161616 !important; box-shadow: 0 1px 0 rgba(202, 219, 45, .35), 0 8px 22px rgba(0, 0, 0, .3) !important; }
+body:not(:has(.hero-carousel, .heros, .shop-hero)) .main-header .bg-left, body:not(:has(.hero-carousel, .heros, .shop-hero)) .main-header .bg-right { opacity: 0 !important; }
