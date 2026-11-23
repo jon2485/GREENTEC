@@ -8,3 +8,9 @@
 .gt-dl{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #eee}
 .gt-dl a.btn{border-radius:999px}
 .gt-test-banner{background:#2a2b2c;color:#cadb2d;text-align:center;font-size:13px;padding:4px}
+
+/* Header no longer overlaps the hero: solid header, slider starts below it */
+.main-header { background-color: #1b1c1d; box-shadow: 0 6px 24px rgba(0, 0, 0, .25); }
+.hero-carousel { margin-top: var(--gt-hdr, 150px); }
+.hero-carousel .heros { height: calc(100dvh - var(--gt-hdr, 150px)); min-height: 480px; }
+@media (width < 768px) { .hero-carousel .heros { height: 72dvh; min-height: 420px; } }
