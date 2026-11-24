@@ -65,6 +65,8 @@ export default async function Home() {
   html = html.replace(/\{\{\w+\}\}/g, '');
   // one H1 per page: the template titles every section with <h1>; all but the first (the hero) become <h2> (same class, same look)
   { let n = 0; html = html.replace(/<h1(\s[^>]*)?>([\s\S]*?)<\/h1>/g, (m, a, t) => (n++ === 0 ? m : `<h2${a || ''}>${t}</h2>`)); }
+  html = html.replace(/<img([^>]*?)\salt=""/g, '<img$1 alt="" role="presentation"').replace(/<img((?:(?!alt=)[^>])*)>/g, (m, a) => `<img${a} alt="">`);
+  html = html.replace(/(<img[^>]*src="[^"]*n-img-1[^"]*"[^>]*?)alt=""/, '$1alt="אוספי USB מוזיקה"').replace(/(<img[^>]*src="[^"]*n-img-2[^"]*"[^>]*?)alt=""/, '$1alt="אוספי USB לילדים"').replace(/(<img[^>]*src="[^"]*n-img-3[^"]*"[^>]*?)alt=""/, '$1alt="אוספי USB וידאו לצפייה"');
   html = ldScript(organization(), website()) + html;
   return (
     <>

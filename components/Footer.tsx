@@ -8,8 +8,8 @@ export default async function Footer() {
     db.supplier.findMany({ select: { id: true, name: true, url: true } }),
   ]);
   const norm = (t: string) => t.replace(/[\s"'׳״-]/g, '').replace(/יי/g, 'י');
-  const catUrl = (n: string) => { const c = cats.find((x) => x.name.trim() === n) || cats.find((x) => norm(x.name) === norm(n)); return c?.url ? '/' + encodeURI(c.url) : ''; };
-  const supUrl = (n: string) => { const c = sups.find((x) => x.name.trim() === n) || sups.find((x) => norm(x.name) === norm(n)); return c ? (c.url ? '/' + encodeURI(c.url) : `/ProductSuppliers/id/${c.id}`) : ''; };
+  const catUrl = (n: string) => { const c = cats.find((x) => x.name.trim() === n) || cats.find((x) => norm(x.name) === norm(n)) || cats.find((x) => x.url === n.replace(/\s+/g, '-')); return c?.url ? '/' + encodeURI(c.url) : ''; };
+  const supUrl = (n: string) => { const c = sups.find((x) => x.name.trim() === n) || sups.find((x) => norm(x.name) === norm(n)) || sups.find((x) => norm(x.name).includes(norm(n)) || (norm(n).length > 6 && norm(n).includes(norm(x.name)) && norm(x.name).length > 6)); return c ? (c.url ? '/' + encodeURI(c.url) : `/ProductSuppliers/id/${c.id}`) : ''; };
   // the template's social icons, in order: Facebook, YouTube, Twitter (X), WhatsApp – the shop's real profiles
   const social = [
     ['https://www.facebook.com/%D7%92%D7%A8%D7%99%D7%A0%D7%98%D7%A7-Greentec-277363225649630/', 'גרינטק בפייסבוק'],
@@ -30,11 +30,18 @@ export default async function Footer() {
     const url = map[label.trim()];
     if (url) return `<a href="/${encodeURI(url)}" class="contact-item">${ws}<span class="contact-value">${label}</span>`;
     const t = label.trim();
-    const internal = t === 'צור קשר' ? '/contact' : catUrl(t) || supUrl(t);
+    const internal = t === 'צור קשר' ? '/contact' : /כניסת אמנים/.test(t) ? '/account' : catUrl(t) || supUrl(t);
     if (internal) return `<a href="${internal}" class="contact-item">${ws}<span class="contact-value">${label}</span>`;
     if (label.includes('@')) return `<a href="mailto:${label.trim()}" class="contact-item">${ws}<span class="contact-value">${label}</span>`;
     if (/^[\d-]+$/.test(label.trim())) return `<a href="tel:${label.replace(/-/g, '')}" class="contact-item">${ws}<span class="contact-value">${label}</span>`;
     return m;
+  });
+  // contact rows with an icon: e-mail, phone, opening hours, free shipping
+  const ship = byTitle('שיטות משלוח')?.url;
+  html = html.replace(/<a href="#" class="contact-item">(\s*<svg[\s\S]*?<\/svg>\s*)<span class="contact-value([^"]*)">([^<]+)<\/span>/g, (m: string, icon: string, cls: string, label: string) => {
+    const t = label.trim();
+    const to = t.includes('@') ? `mailto:${t}` : /^[\d-]+$/.test(t) ? `tel:+972${t.replace(/-/g, '').replace(/^0/, '')}` : /משלוח/.test(t) && ship ? '/' + encodeURI(ship) : /בימים|שעות/.test(t) ? '/contact' : '';
+    return to ? `<a href="${to}" class="contact-item">${icon}<span class="contact-value${cls}">${label}</span>` : m;
   });
   return <div dangerouslySetInnerHTML={{ __html: html }} />;
 }
