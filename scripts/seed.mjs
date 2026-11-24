@@ -32,6 +32,7 @@ async function main() {
     await syncVariants();
     await syncPrices();
     await syncPrices2();
+    await restorePrices3();
     return;
   }
   const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
@@ -110,7 +111,7 @@ async function main() {
   }
   await ensureAdmin();
   await syncLegacyCatalog();
-  await syncHiddenProducts(); await syncHomeFlags(); await syncSupplierLinks(); await syncNames(); await syncVariants(); await syncPrices(); await syncPrices2();
+  await syncHiddenProducts(); await syncHomeFlags(); await syncSupplierLinks(); await syncNames(); await syncVariants(); await syncPrices(); await syncPrices2(); await restorePrices3();
   console.log('[seed] done:', products.length, 'products');
 }
 
@@ -290,7 +291,6 @@ async function syncPrices() {
 //   (e.g. 99.9 + 0.1 = 100) had become a download-only option → now one "album + download" option (shipped), with the
 //   legacy button title as its label. Digital albums with one button and no physical price keep the download option,
 //   at the sale price when there is one.
-// - two physical products whose stored price came from a crossed-out price on the page → legacy admin price.
 async function syncPrices2() {
   const FLAG = 'sync_prices_v2';
   if (await db.setting.findUnique({ where: { key: FLAG } })) return;
@@ -307,9 +307,17 @@ async function syncPrices2() {
       } else if (np != null) { const r = await db.product.updateMany({ where: { id }, data: { digitalPrice: np } }); sale += r.count; }
     }
   }
-  for (const id of [7917, 8135]) { const x = adm.products.find((y) => Number(y.id) === id); const v = num(x?.f?.['product[price]']); if (v != null) phys += (await db.product.updateMany({ where: { id, digitalPrice: null, bothPrice: null }, data: { price: v, newPrice: null } })).count; }
   await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
   console.log(`[seed] legacy prices v2: ${both} one-button album+download, ${sale} sale prices, ${phys} physical prices`);
+}
+
+// One-time (v3): the owner asked to keep the prices of these two products as they were (65 / 70) – undo v2's change.
+async function restorePrices3() {
+  const FLAG = 'restore_prices_v3';
+  if (await db.setting.findUnique({ where: { key: FLAG } })) return;
+  for (const [id, price] of [[7917, 65], [8135, 70]]) await db.product.updateMany({ where: { id }, data: { price, newPrice: null } });
+  await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
+  console.log('[seed] prices restored: 7917=65, 8135=70');
 }
 
 async function ensureAdmin() {

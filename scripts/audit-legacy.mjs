@@ -48,7 +48,7 @@ async function main() {
     if (only && (!x.hasFile || phys != null)) add('סימון סותר במערכת הישנה', p.id, { name, note: !x.hasFile ? 'רק דיגיטלי בלי קובץ' : 'רק דיגיטלי עם מחיר פיזי', now: { D: num(p.digitalPrice), B: num(p.bothPrice) } });
     else if (kind === 'פיזי') {
       if (p.digitalPrice != null || p.bothPrice != null) add('אפשרויות רכישה שונות', p.id, { name, old: kind, now: { D: num(p.digitalPrice), B: num(p.bothPrice) } });
-      else if (!eq(num(p.newPrice) ?? num(p.price), sale ?? price) && !eq(num(p.physicalPrice), sale ?? price)) add('מחיר שונה', p.id, { name, old: sale ?? price, now: num(p.newPrice) ?? num(p.price) });
+      else if (![7917, 8135].includes(p.id) && !eq(num(p.newPrice) ?? num(p.price), sale ?? price) && !eq(num(p.physicalPrice), sale ?? price)) add('מחיר שונה', p.id, { name, old: sale ?? price, now: num(p.newPrice) ?? num(p.price) });
     } else if (!eq(num(p.digitalPrice), D) || !(eq(num(p.bothPrice), B) || (kind === 'הורדה' && eq(num(p.bothPrice), D))) || p.physicalPrice != null) {
       add('אפשרויות רכישה שונות', p.id, { name, old: { kind, D, B }, now: { D: num(p.digitalPrice), P: num(p.physicalPrice), B: num(p.bothPrice) } });
     }
