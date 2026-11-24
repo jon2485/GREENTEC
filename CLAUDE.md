@@ -97,3 +97,10 @@ See **docs/MIGRATION.md** (owner request 2026-11-23): import everything from the
 - No `aggregateRating`: the legacy site printed invented ratings (against Google's rules) – do not add ratings without real reviews.
 - `app/sitemap.ts` (all public URLs + product images), `app/robots.ts`, `/feeds/google-shopping.xml` (physical products for Google Merchant Center), `/search/results` → `/search` (legacy), non-www → www in `middleware.ts` (production only).
 - At go-live: remove STAGING=1, set SITE_URL=https://www.greentec.co.il, submit the sitemap in Search Console (the legacy verification code `RLskCWeT87U2JNdwUPnndsr8gFA6ychYZJnLaUPVUn4` goes in Setting `google_site_verification`), add the feed in Merchant Center.
+
+## 8. Purchase buttons = the live legacy pages (2026-11-25)
+
+- Every legacy product page was scraped (4,500 URLs, Setting `legacy_buttons`) and applied through the temporary `/api/migrate/buttons`: one button per option, exactly the legacy text and price ("הורדת האלבום - ₪50", "רכישת האלבום + הורדה - ₪25", "הוספה לסל - ₪70"). Legacy modes: `product_digital_downloads=0` → `digitalPrice` (download only), `=1` → `bothPrice` (album + download, shipped), quantity form → physical (`price`/`newPrice`), `product_link_price` → `buyLabels.link` (extra linked edition, e.g. "אלבום USB - 65 ₪", mode `link`, shipped).
+- `Product.buyLabels` = `{digital?, both?, physical?, link?: {label, price}, order: [...]}`; `lib/format.ts priceOptions()` reads it. Crossed-out price = `price` when `newPrice` is set and higher than what is charged.
+- Verified page-by-page against the legacy site (3,878 products). `scripts/audit-legacy.mjs` compares against `legacy_buttons` on every start.
+- TODO with the other migration routes: delete `app/api/migrate/buttons`.
