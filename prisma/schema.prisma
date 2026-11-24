@@ -33,6 +33,7 @@ model Product {
   physicalPrice   Decimal?  @db.Decimal(10, 2) // עותק פיזי בלבד
   bothPrice       Decimal?  @db.Decimal(10, 2) // פיזי + הורדה
   purchaseModes   String    @default("none") // legacy: none | 0 | 1 | 0;1
+  buyLabels       Json?     // legacy button texts per option + order, e.g. {"both":"רכישת האלבום + הורדה","digital":"הורדת האלבום","order":["both","digital"]}
   // מאפייני מוצר
   weight          Decimal?  @db.Decimal(10, 3)
   checkoutProduct Boolean   @default(false) // מוצר קופה

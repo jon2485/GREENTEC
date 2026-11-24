@@ -426,3 +426,4 @@ a.gt-ann-item::after { content: "‹"; color: #cadb2d; font-weight: 700; margin-
 .shop-actions .sa-cart { box-shadow: 0 6px 12px rgba(0, 0, 0, .08) !important; }
 .btn.btn-primary:not(.hero-btn .btn) { min-height: 48px; padding-inline: 26px; }
 .cs-cform button { box-shadow: none !important; }
+.qv-qty[hidden] { display: none !important; }

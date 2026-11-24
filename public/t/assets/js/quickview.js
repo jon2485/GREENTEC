@@ -57,9 +57,10 @@
     box.querySelector('.qv-chips').innerHTML = opts.map((o, i) => `<button type="button" class="qv-chip${i ? '' : ' active'}" data-mode="${o.key}" data-price="${o.price}">${o.label}</button>`).join('');
     box.dataset.mode = opts[0] ? opts[0].key : 'physical';
     if (opts[0]) $('qvPrice').textContent = '₪' + opts[0].price;
+    box.dataset.label = opts[0] ? opts[0].label : 'הוספה לסל';
     $('qvMore').href = d.href || '/';
     $('qvQty').value = 1;
-    $('qvAdd').querySelector('span').textContent = 'הוספה לסל';
+    $('qvAdd').querySelector('span').textContent = opts[0] ? opts[0].label + ' - ₪' + opts[0].price : 'הוספה לסל';
     box.hidden = false;
     requestAnimationFrame(() => box.classList.add('show'));
     document.documentElement.style.overflow = 'hidden';
@@ -80,10 +81,10 @@
     const th = e.target.closest('.qv-thumbs button');
     if (th) { $('qvImg').src = th.dataset.src; box.querySelectorAll('.qv-thumbs button').forEach((b) => b.classList.toggle('active', b === th)); }
     const ch = e.target.closest('.qv-chip');
-    if (ch) { box.querySelectorAll('.qv-chip').forEach((b) => b.classList.toggle('active', b === ch)); box.dataset.mode = ch.dataset.mode; $('qvPrice').textContent = '₪' + ch.dataset.price; }
+    if (ch) { box.querySelectorAll('.qv-chip').forEach((b) => b.classList.toggle('active', b === ch)); box.dataset.mode = ch.dataset.mode; $('qvPrice').textContent = '₪' + ch.dataset.price; $('qvAdd').querySelector('span').textContent = ch.textContent + ' - ₪' + ch.dataset.price; }
     const q = e.target.closest('[data-q]');
     if (q) { const i = $('qvQty'); i.value = Math.max(1, (+i.value || 1) + +q.dataset.q); }
-    if (e.target.closest('#qvAdd')) { window.gtAdd && window.gtAdd(box.dataset.id, box.dataset.mode, +$('qvQty').value || 1, { href: box.dataset.href || '' }).then(function () { $('qvAdd').querySelector('span').textContent = 'נוסף לסל ✓'; }).catch(function () {}); }
+    if (e.target.closest('#qvAdd')) { window.gtAdd && window.gtAdd(box.dataset.id, box.dataset.mode, +$('qvQty').value || 1, { href: box.dataset.href || '' }).then(function () { const sp = $('qvAdd').querySelector('span'), t = sp.textContent; sp.textContent = 'נוסף לסל ✓'; setTimeout(function () { sp.textContent = t; }, 2200); }).catch(function () {}); }
     if (e.target.closest('.qv-share a')) e.preventDefault();
   });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !box.hidden) close(); });

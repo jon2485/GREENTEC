@@ -1,6 +1,6 @@
 import { I } from './tpl';
 import { esc, shopCard, bundleCard, thumb, href } from './render';
-import { enc, money, priceOptions } from './format';
+import { buyText, enc, money, oldPrice, priceOptions } from './format';
 import { parseVariants, optLabel } from './variants';
 import { decodeEntities } from './seo';
 
@@ -83,7 +83,7 @@ export function productPage(o: { p: any; crumbs: Crumb[]; kicker: string; catNam
   const { p } = o; const opts = priceOptions(p);
   const share = encodeURIComponent(o.siteUrl + p.urlPath);
   const optIcon = (k: string) => (k === 'digital' ? I.optDigital : I.optBoth);
-  const optsHtml = opts.length > 1 ? `<fieldset class="pp-opts"><legend>בחרו איך לקבל את ${p.digitalPrice != null ? 'האלבום' : 'המוצר'}</legend>${opts.map((x, i) => `<label class="pp-opt"><input type="radio" name="buy" value="${x.price}" data-mode="${x.key}" data-note="${esc(x.label)}"${i ? '' : ' checked'}><span class="pp-opt-ic">${optIcon(x.key)}</span><span class="pp-opt-txt"><strong>${esc(x.label)}</strong><small>${esc(x.note)}</small></span><span class="pp-opt-price">${money(x.price)}</span></label>`).join('')}</fieldset>` : '';
+  const optsHtml = opts.length > 1 ? `<fieldset class="pp-opts"><legend>בחרו איך לקבל את ${p.digitalPrice != null ? 'האלבום' : 'המוצר'}</legend>${opts.map((x, i) => `<label class="pp-opt"><input type="radio" name="buy" value="${x.price}" data-mode="${x.key}" data-note="${esc(x.label)}" data-label="${esc(x.label)}"${i ? '' : ' checked'}><span class="pp-opt-ic">${optIcon(x.key)}</span><span class="pp-opt-txt"><strong>${esc(x.label)}</strong><small>${esc(x.note)}</small></span><span class="pp-opt-price">${money(x.price)}</span></label>`).join('')}</fieldset>` : '';
   const isAttr = /shop_attributes/.test(p.content || '');
   const desc = cleanDesc(isAttr ? p.shortContent : (p.content || p.shortContent));
   const extra = isAttr ? attrRows(p.content) : [];
@@ -96,9 +96,9 @@ ${p.images.length > 1 ? `<div class="qv-thumbs pp-thumbs">${p.images.map((im: an
 ${p.sampleFile ? `<audio class="pp-sample" controls preload="none" src="${esc(p.sampleFile)}"></audio>` : ''}</div>
 <div class="pp-info"><h1 class="pp-title">${esc(p.name)}</h1>
 ${o.suppliers.length ? `<div class="pp-by">${o.suppliers.map((s) => `<a href="${s.url}">${esc(s.name)} <span>(${s.count} מוצרים)</span></a>`).join('')}</div>` : ''}
-<p class="pp-price"><span id="ppPrice">${opts[0] ? money(opts[0].price) : ''}</span> <small id="ppPriceNote">${esc(opts[0]?.label || '')}</small></p>
+<p class="pp-price">${(() => { const op = opts[0] ? oldPrice(p, opts[0].price) : null; return `<del id="ppOld" data-old="${p.newPrice != null && p.price != null ? Number(p.price) : ''}"${op ? '' : ' hidden'}>${op ? money(op) : ''}</del> `; })()}<span id="ppPrice">${opts[0] ? money(opts[0].price) : ''}</span> <small id="ppPriceNote">${esc(opts[0] && !(opts.length === 1 && opts[0].key === 'physical') ? opts[0].label : '')}</small></p>
 ${short ? `<p class="pp-desc">${esc(short)}${full.length > 220 ? ' <a href="#t1" class="pp-more" data-open-tab="t1">לתיאור המלא</a>' : ''}</p>` : ''}${optsHtml}${vars}
-${soldOut ? '<p class="gt-flash err">המוצר אזל מהמלאי</p>' : `<div class="pp-buy"><div class="qv-qty"><button type="button" aria-label="פחות" data-pq="-1">−</button><input id="ppQty" type="number" min="1" value="1" aria-label="כמות"><button type="button" aria-label="יותר" data-pq="1">+</button></div><button type="button" class="qv-add" id="ppAdd" data-id="${p.id}" data-mode="${opts[0]?.key || 'physical'}">${I.ppAdd}<span>הוספה לסל</span></button><button type="button" class="pp-wish" id="ppWish" data-wish="${p.id}" aria-label="הוספה לרשימת המשאלות">${I.ppWish}</button></div>`}
+${soldOut ? '<p class="gt-flash err">המוצר אזל מהמלאי</p>' : `<div class="pp-buy"><div class="qv-qty" id="ppQtyBox"${opts[0]?.key === 'digital' ? ' hidden' : ''}><button type="button" aria-label="פחות" data-pq="-1">−</button><input id="ppQty" type="number" min="1" value="1" aria-label="כמות"><button type="button" aria-label="יותר" data-pq="1">+</button></div><button type="button" class="qv-add" id="ppAdd" data-id="${p.id}" data-mode="${opts[0]?.key || 'physical'}" data-label="${esc(opts[0]?.label || 'הוספה לסל')}">${I.ppAdd}<span>${esc(buyText(opts[0]))}</span></button><button type="button" class="pp-wish" id="ppWish" data-wish="${p.id}" aria-label="הוספה לרשימת המשאלות">${I.ppWish}</button></div>`}
 <p class="pp-ship">${I.ship}<span>משלוח חינם מעל ₪150 בישראל, בדואר רשום</span></p>
 <ul class="pp-meta"><li><span>מק״ט:</span> ${esc(p.sku || p.id)}</li>${o.catName ? `<li><span>קטגוריה:</span> <a href="${enc(o.catUrl)}">${esc(o.catName)}</a></li>` : ''}${p.releaseYear ? `<li><span>שנת הוצאה:</span> ${p.releaseYear}</li>` : ''}</ul>
 <div class="qv-share pp-share"><span class="qv-label">שיתוף:</span><a href="https://wa.me/?text=${share}" target="_blank" rel="noopener" aria-label="שיתוף בוואטסאפ">${I.wa}</a><a href="https://www.facebook.com/sharer/sharer.php?u=${share}" target="_blank" rel="noopener" aria-label="שיתוף בפייסבוק">${I.fb}</a><a href="mailto:?subject=${encodeURIComponent(p.name)}&body=${share}" aria-label="שליחה במייל">${I.mail}</a></div>
@@ -114,7 +114,10 @@ ${o.related.length ? `<div class="pp-related"><h2 class="pp-h2">מוצרים <sp
 
 export const ppScript = `{
   const price=document.getElementById('ppPrice'), note=document.getElementById('ppPriceNote'), add=document.getElementById('ppAdd');
-  document.querySelectorAll('.pp-opt input').forEach(r=>r.addEventListener('change',()=>{price.textContent='₪'+r.value;note.textContent=r.dataset.note;if(add)add.dataset.mode=r.dataset.mode;if(typeof refresh==='function'&&r.dataset.mode!=='digital')setTimeout(refresh);}));
+  const fmt=v=>'₪'+(Number.isInteger(+v)?(+v).toLocaleString('he-IL'):(+v).toLocaleString('he-IL',{minimumFractionDigits:2,maximumFractionDigits:2}));
+  const oldEl=document.getElementById('ppOld');
+  const setBuy=v=>{price.textContent=fmt(v);if(add){add.querySelector('span').textContent=add.dataset.label+' - '+fmt(v);}if(oldEl){const o=+oldEl.dataset.old||0;oldEl.hidden=!(o>+v+0.001);oldEl.textContent=o?fmt(o):'';}};
+  document.querySelectorAll('.pp-opt input').forEach(r=>r.addEventListener('change',()=>{note.textContent=r.dataset.note;if(add){add.dataset.mode=r.dataset.mode;add.dataset.label=r.dataset.label;}const qb=document.getElementById('ppQtyBox');if(qb){qb.hidden=r.dataset.mode==='digital';if(qb.hidden)document.getElementById('ppQty').value=1;}setBuy(r.value);if(typeof refresh==='function'&&r.dataset.mode!=='digital')setTimeout(refresh);}));
   document.querySelectorAll('[data-pq]').forEach(b=>b.addEventListener('click',()=>{const i=document.getElementById('ppQty');i.value=Math.max(1,(+i.value||1)+(+b.dataset.pq));}));
   const vb=document.getElementById('ppVars'), vmsg=document.getElementById('ppVmsg');
   let V=null; try{V=vb?JSON.parse(vb.dataset.vars):null}catch(e){}
@@ -128,7 +131,7 @@ export const ppScript = `{
     const add2=sel.reduce((a,s)=>a+(+(s.dataset.price||0)),0);
     return {ok:!missing.length,missing,key:ids.length?key:'',pr,price:((c&&c.price>0)?+c.price:basePrice())+add2,qty:c&&c.qty!=null?c.qty:null,out:!!c&&c.qty!=null&&c.qty<=0,known:!ids.length||!full||!!c};};
   const vst=document.getElementById('ppVstock');
-  const refresh=()=>{if(!vb)return;const s=pick();price.textContent='₪'+(Math.round(s.price*100)/100);vmsg.hidden=true;vst.hidden=true;
+  const refresh=()=>{if(!vb)return;const s=pick();setBuy(Math.round(s.price*100)/100);vmsg.hidden=true;vst.hidden=true;
     const gs=[...vb.querySelectorAll('.vg[data-gi]')];const cur=gs.map(g=>{const b=g.querySelector('.on[data-o]');return b?+b.dataset.o:0});
     const fullK=Object.keys(V.combos).some(k=>k.split('.').filter(Boolean).length===V.groups.length);
     gs.forEach((g,gi)=>{const b=g.querySelector('.on[data-o]');const t=g.querySelector('.vg-sel');t.textContent=b?b.dataset.label:t.dataset.ph;t.classList.toggle('chosen',!!b);
@@ -139,7 +142,7 @@ export const ppScript = `{
   if(vb){vb.addEventListener('click',e=>{const b=e.target.closest('[data-o]');if(!b||b.disabled)return;b.parentNode.querySelectorAll('[data-o]').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b)});refresh();});vb.addEventListener('change',refresh);refresh();}
   document.querySelectorAll('[data-open-tab]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const t=document.querySelector('.pp-tablist [data-t="'+a.dataset.openTab+'"]');if(t){t.click();t.scrollIntoView({behavior:'smooth',block:'start'});}}));
   if(add) add.addEventListener('click',()=>{const s=pick();if(!s.ok){vmsg.textContent='נא לבחור '+s.missing.join(' ו')+' לפני ההוספה לסל';vmsg.hidden=false;vb.scrollIntoView({behavior:'smooth',block:'center'});return;}if(s.out||!s.known){vmsg.textContent='האפשרות שבחרת אינה במלאי כרגע';vmsg.hidden=false;return;}
-    window.gtAdd(add.dataset.id,add.dataset.mode,+document.getElementById('ppQty').value||1,{v:s.key,pr:s.pr}).then(()=>{add.querySelector('span').textContent='נוסף לסל ✓';setTimeout(()=>add.querySelector('span').textContent='הוספה לסל',2200);}).catch(()=>{});});
+    window.gtAdd(add.dataset.id,add.dataset.mode,+document.getElementById('ppQty').value||1,{v:s.key,pr:s.pr}).then(()=>{const sp=add.querySelector('span'),t=sp.textContent;sp.textContent='נוסף לסל ✓';setTimeout(()=>sp.textContent=t,2200);}).catch(()=>{});});
   const tabs=document.querySelectorAll('.pp-tablist button');
   tabs.forEach(t=>t.addEventListener('click',()=>{tabs.forEach(x=>{x.classList.toggle('active',x===t);x.setAttribute('aria-selected',x===t)});document.querySelectorAll('.pp-pane').forEach(p=>p.classList.toggle('active',p.id===t.dataset.t));}));
   const main=document.getElementById('ppMain'), img=document.getElementById('ppImg');
