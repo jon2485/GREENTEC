@@ -10,7 +10,7 @@ import { json, preflight, tokenOk, tokenFrom, readBody } from '@/lib/migrate';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 export const OPTIONS = preflight;
-const KEEP_PRICE = new Set([7917, 8135]);
+const KEEP_PRICE = new Set<number>([]); // 7917/8135: the legacy page sells the CD (60) and a linked USB edition (65/70)
 const num = (t: string) => { const m = String(t || '').replace(/,/g, '').match(/(\d+(?:\.\d+)?)/); return m ? Number(m[1]) : null; };
 const KEY: Record<string, 'digital' | 'both' | 'physical'> = { '0': 'digital', '1': 'both', q: 'physical' };
 const eq = (a: any, b: any) => (a == null && b == null) || (a != null && b != null && Math.abs(Number(a) - Number(b)) < 0.005);
@@ -54,8 +54,10 @@ export async function POST(req: Request) {
       if (del != null && del > Q.price) { set('price', del); set('newPrice', Q.price); }
       else if (!eq(p.newPrice ?? p.price, Q.price)) { set('price', Q.price); set('newPrice', null); }
     }
-    const labels: any = { order: opts.map((o) => o.key) };
+    const order: string[] = all.map((x) => (String(x[0]) === '?' ? 'link' : KEY[String(x[0])])).filter(Boolean);
+    const labels: any = { order };
     for (const o of opts) labels[o.key] = o.label;
+    if (linked.length) { const t = String(linked[0][1]); const i = t.lastIndexOf(' - '); labels.link = { label: (i > 0 ? t.slice(0, i) : t).trim(), price: num(i > 0 ? t.slice(i + 3) : '') }; }
     set('buyLabels', labels);
     if (Object.keys(data).length) {
       out.changed++;

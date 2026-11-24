@@ -24,7 +24,7 @@ async function main() {
   // The buy buttons as the live legacy pages showed them (scraped 2026-11-25, Setting "legacy_buttons") are the reference
   // for purchase options, labels, prices and stock; the admin-export rule below is used only where no scrape exists.
   let live = {}; try { live = JSON.parse((await db.setting.findUnique({ where: { key: 'legacy_buttons' } }))?.value || '{}'); } catch {}
-  const KEEP = new Set([7917, 8135]);
+  const KEEP = new Set([]);
   const pnum = (t) => { const m = String(t || '').replace(/,/g, '').match(/(\d+(?:\.\d+)?)/); return m ? Number(m[1]) : null; };
   const catIds = new Set((await db.category.findMany({ select: { id: true } })).map((c) => c.id));
   const supIds = new Set((await db.supplier.findMany({ select: { id: true } })).map((c) => c.id));
@@ -51,6 +51,8 @@ async function main() {
         if (!eq(num(p.digitalPrice), D?.price ?? null) || !eq(num(p.bothPrice), B?.price ?? null)) add('אפשרויות רכישה שונות מהאתר החי', p.id, { name, old: btn.map((x) => `${x.label} ${x.price}`), now: { D: num(p.digitalPrice), B: num(p.bothPrice) } });
         else if (Q && !D && !B && !Q.v && !p.hasVariants && !KEEP.has(p.id) && !eq(num(p.newPrice) ?? num(p.price), Q.price)) add('מחיר שונה מהאתר החי', p.id, { name, old: Q.price, now: num(p.newPrice) ?? num(p.price) });
         const L = p.buyLabels || {};
+        const lk = (lv.b || []).find((x) => String(x[0]) === '?');
+        if (lk && !(L.link && String(lk[1]).startsWith(L.link.label))) add('כפתור מהדורה נוספת חסר', p.id, { name, old: lk[1], now: L.link || null });
         if (btn.some((x) => (L[x.k] || '') !== x.label)) add('כיתוב כפתור שונה מהאתר החי', p.id, { name, old: btn.map((x) => x.label), now: L });
         if (Q && p.quantity === 0 && !p.hasVariants) add('מלאי שונה מהאתר החי', p.id, { name, old: 'זמין', now: 0 });
       }
@@ -68,7 +70,7 @@ async function main() {
       if (only && (!x.hasFile || phys != null)) add('סימון סותר במערכת הישנה', p.id, { name, note: !x.hasFile ? 'רק דיגיטלי בלי קובץ' : 'רק דיגיטלי עם מחיר פיזי', now: { D: num(p.digitalPrice), B: num(p.bothPrice) } });
       else if (kind === 'פיזי') {
         if (p.digitalPrice != null || p.bothPrice != null) add('אפשרויות רכישה שונות', p.id, { name, old: kind, now: { D: num(p.digitalPrice), B: num(p.bothPrice) } });
-        else if (![7917, 8135].includes(p.id) && !eq(num(p.newPrice) ?? num(p.price), sale ?? price) && !eq(num(p.physicalPrice), sale ?? price)) add('מחיר שונה', p.id, { name, old: sale ?? price, now: num(p.newPrice) ?? num(p.price) });
+        else if (!eq(num(p.newPrice) ?? num(p.price), sale ?? price) && !eq(num(p.physicalPrice), sale ?? price)) add('מחיר שונה', p.id, { name, old: sale ?? price, now: num(p.newPrice) ?? num(p.price) });
       } else if (!eq(num(p.digitalPrice), D) || !(eq(num(p.bothPrice), B) || (kind === 'הורדה' && eq(num(p.bothPrice), D))) || p.physicalPrice != null) {
         add('אפשרויות רכישה שונות', p.id, { name, old: { kind, D, B }, now: { D: num(p.digitalPrice), P: num(p.physicalPrice), B: num(p.bothPrice) } });
       }

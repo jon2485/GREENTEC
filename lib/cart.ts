@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-export type CartLine = { id: number; mode: 'digital' | 'physical' | 'both'; qty: number; v?: string; pr?: string };
+export type CartLine = { id: number; mode: 'digital' | 'physical' | 'both' | 'link'; qty: number; v?: string; pr?: string };
 export const sameLine = (a: { id: number; mode: string; v?: string; pr?: string }, b: { id: number; mode: string; v?: string; pr?: string }) => a.id === b.id && a.mode === b.mode && (a.v || '') === (b.v || '') && (a.pr || '') === (b.pr || '');
 export async function getCart(): Promise<CartLine[]> {
   try { return JSON.parse((await cookies()).get('gt_cart')?.value || '[]'); } catch { return []; }
