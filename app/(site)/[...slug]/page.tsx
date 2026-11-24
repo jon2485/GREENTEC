@@ -3,11 +3,12 @@ import type { Metadata } from 'next';
 import { db } from '@/lib/db';
 import { categoryChain, categoryListing, cardSelect, parseSup } from '@/lib/catalog';
 import { shopPage, productPage, contentPage, ppScript } from '@/lib/pages';
-import { stripHtml } from '@/lib/format';
+import { abs, absPath, metaFrom, listingSeo, ldScript, breadcrumbs, itemList, productLD, articleLD, demoteH1, plainText } from '@/lib/seo';
+import { priceOptions } from '@/lib/format';
 import SupplierPage, { generateMetadata as supplierMeta } from '../supplier/[id]/page';
 
 export const dynamic = 'force-dynamic';
-const SITE = process.env.SITE_URL || 'https://www.greentec.co.il';
+const SITE = (process.env.SITE_URL || 'https://www.greentec.co.il').replace(/\/$/, '');
 
 async function resolve(slug: string[]) {
   const parts = slug.map((s) => decodeURIComponent(s));
@@ -38,20 +39,35 @@ async function resolve(slug: string[]) {
 
 type P = { params: Promise<{ slug: string[] }>; searchParams: Promise<Record<string, string>> };
 
-export async function generateMetadata({ params }: P): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: P): Promise<Metadata> {
   const r = await resolve((await params).slug);
   if (!r || r.kind === 'redirect') return {};
-  if (r.kind === 'supplier') { const m: any = await supplierMeta({ params: Promise.resolve({ id: String(r.supplier.id) }), searchParams: Promise.resolve({}) } as any); return { ...m, alternates: { canonical: SITE + r.path } }; }
+  const sp = await searchParams;
+  if (r.kind === 'supplier') {
+    const m: any = await supplierMeta({ params: Promise.resolve({ id: String(r.supplier.id) }), searchParams: Promise.resolve(sp) } as any);
+    return m;
+  }
   const x: any = r.kind === 'product' ? r.product : r.kind === 'category' ? r.category : r.kind === 'page' ? r.page : r.article;
   const name = x.name || x.title;
+  // legacy title / description / keywords stay exactly as they were; only empty ones get a generated fallback
   const title = x.metaTitle || name;
-  const description = x.metaDescription || stripHtml(x.shortContent || x.content || '').slice(0, 160);
-  const img = x.ogImage || x.mainImage;
+  const isAttr = r.kind === 'product' && /shop_attributes/.test(x.content || '');
+  const description = x.metaDescription || metaFrom(r.kind === 'product' ? (isAttr ? x.shortContent : x.shortContent || x.content) : x.shortContent || x.content || '') || undefined;
+  const img = abs(x.ogImage || x.mainImage || x.image || '');
+  const L = r.kind === 'category' ? listingSeo(r.path, sp, Infinity) : null;
+  const canonical = L ? L.canonical : SITE + r.path;
+  const legacyRobots = x.robots && x.robots !== 'all' ? x.robots : undefined;
   return {
     title, description, keywords: x.metaKeywords || undefined,
-    alternates: { canonical: SITE + r.path },
-    robots: x.robots && x.robots !== 'all' ? x.robots : undefined,
-    openGraph: { title: x.ogTitle || title, description: x.ogDescription || description, images: img ? [img] : undefined, url: SITE + r.path, type: r.kind === 'product' ? 'website' : 'article' },
+    alternates: { canonical },
+    robots: L?.noindex ? { index: false, follow: true } : legacyRobots,
+    openGraph: {
+      title: x.ogTitle || title, description: x.ogDescription || description, url: canonical, siteName: 'גרינטק', locale: 'he_IL',
+      images: img ? [{ url: img, alt: plainText(name) }] : undefined,
+      // products get og:type=product (+ price) from the page itself, as the legacy site had
+      ...(r.kind === 'product' ? {} : { type: r.kind === 'article' ? 'article' : 'website' }),
+    },
+    twitter: { card: img ? 'summary_large_image' : 'summary', site: '@Greentec8' },
   };
 }
 
@@ -69,8 +85,10 @@ export default async function Page({ params, searchParams }: P) {
     const sibs = kids.length ? kids : c.parentId ? await db.category.findMany({ where: { parentId: c.parentId }, orderBy: { sort: 'asc' }, select: { name: true, url: true } }) : [];
     const listing = await categoryListing(c.id, { sort: sp.sort, min: sp.min ? +sp.min : undefined, max: sp.max ? +sp.max : undefined, page: sp.page ? +sp.page : 1, per: sp.per ? +sp.per : 24, sup: parseSup(sp.sup) });
     const best = await db.product.findMany({ where: { status: 1, categories: { some: { categoryId: chain[0]?.id ?? c.id } }, NOT: { mainImage: '' } }, orderBy: [{ orderItems: { _count: 'desc' } }, { id: 'desc' }], take: 4, select: cardSelect });
-    const html = shopPage({ kicker: chain[0]?.id === c.id ? 'חנות גרינטק' : chain[0]?.name || '', title: c.header || c.name, crumbs: chain.map((x, i) => ({ name: x.name, url: i < chain.length - 1 ? '/' + x.url : undefined })), cats: sibs, best, listing, intro: listing.page === 1 ? c.content : '', baseUrl: r.path, query: sp });
-    return <div dangerouslySetInnerHTML={{ __html: html }} />;
+    const html = shopPage({ kicker: chain[0]?.id === c.id ? 'חנות גרינטק' : chain[0]?.name || '', title: c.header || c.name, crumbs: chain.map((x, i) => ({ name: x.name, url: i < chain.length - 1 ? '/' + x.url : undefined })), cats: sibs, best, listing, intro: listing.page === 1 ? demoteH1(c.content) : '', baseUrl: r.path, query: sp });
+    const L = listingSeo(r.path, sp, listing.pages);
+    const seo = ldScript(breadcrumbs(chain.map((x) => ({ name: x.name, url: '/' + x.url }))), itemList(c.header || c.name, L.canonical, [...listing.bundles, ...listing.items], (L.page - 1) * listing.per));
+    return (<>{L.prev ? <link rel="prev" href={L.prev} /> : null}{L.next ? <link rel="next" href={L.next} /> : null}<div dangerouslySetInnerHTML={{ __html: seo + html }} /></>);
   }
 
   if (r.kind === 'product') {
@@ -92,10 +110,24 @@ export default async function Page({ params, searchParams }: P) {
       delivery: blocks.find((b) => b.id === 5)?.content || '', returns: blocks.find((b) => b.id === 6)?.content || '',
     });
     await db.productStat.upsert({ where: { productId: p.id }, create: { productId: p.id, views: 1 }, update: { views: { increment: 1 } } }).catch(() => {});
-    const ld = { '@context': 'https://schema.org', '@type': 'Product', name: p.name, image: p.mainImage, sku: String(p.id), url: SITE + p.urlPath, offers: { '@type': 'Offer', priceCurrency: 'ILS', price: Number(p.digitalPrice ?? p.bothPrice ?? p.price ?? 0), availability: 'https://schema.org/InStock' } };
-    return (<><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} /><div dangerouslySetInnerHTML={{ __html: html }} /><script dangerouslySetInnerHTML={{ __html: ppScript }} /></>);
+    const url = absPath(p.urlPath);
+    const isAttr = /shop_attributes/.test(p.content || '');
+    const sup = p.suppliers[0];
+    const seo = ldScript(
+      productLD(p, { url, category: deepest?.category.name, brand: sup?.supplier.name, brandUrl: sup ? (sup.supplier.url ? '/' + sup.supplier.url : `/ProductSuppliers/id/${sup.supplierId}`) : undefined, description: metaFrom(isAttr ? p.shortContent : p.shortContent || p.content, 4900) }),
+      breadcrumbs([...chain.map((x) => ({ name: x.name, url: '/' + x.url })), { name: p.name }]),
+    );
+    const opts = priceOptions(p); const low = opts.length ? Math.min(...opts.map((o) => o.price)) : null;
+    return (<>
+      <meta property="og:type" content="product" />
+      {low != null ? <meta property="product:price:amount" content={String(low)} /> : null}
+      {low != null ? <meta property="product:price:currency" content="ILS" /> : null}
+      <meta property="product:availability" content={p.quantity == null || p.quantity > 0 || opts.some((o) => o.key === 'digital') ? 'in stock' : 'out of stock'} />
+      <div dangerouslySetInnerHTML={{ __html: seo + html }} /><script dangerouslySetInnerHTML={{ __html: ppScript }} /></>);
   }
 
   const x: any = r.kind === 'page' ? r.page : r.article;
-  return <div dangerouslySetInnerHTML={{ __html: contentPage({ title: x.header || x.title, html: x.content, crumbs: [...(r.kind === 'article' ? [{ name: 'מאמרים', url: '/articles' }] : []), { name: x.title }], kicker: r.kind === 'article' ? 'מאמרים' : 'גרינטק' }) }} />;
+  const crumbs = [...(r.kind === 'article' ? [{ name: 'מאמרים', url: '/articles' }] : []), { name: x.title }];
+  const seo = ldScript(breadcrumbs(crumbs), r.kind === 'article' ? articleLD(x, SITE + r.path) : null);
+  return <div dangerouslySetInnerHTML={{ __html: seo + contentPage({ title: x.header || x.title, html: demoteH1(x.content), crumbs, kicker: r.kind === 'article' ? 'מאמרים' : 'גרינטק' }) }} />;
 }

@@ -34,6 +34,6 @@ export function shopCard(p: any, i = 0, pinned = false) {
 }
 export function bundleCard(p: any) {
   const n = p._count?.bundleItems;
-  return `<a href="${href(p)}" class="bundle-card"><img src="${esc(thumb(p.mainImage))}" alt=""><span class="b-info"><span class="b-kind">${n ? `מארז · ${n} פריטים` : 'מארז'}</span><span class="b-name">${esc(p.name)}</span><span class="b-price">${esc(fromPrice(p))}</span></span></a>`;
+  return `<a href="${href(p)}" class="bundle-card"><img src="${esc(thumb(p.mainImage))}" alt="${esc(p.name)}" loading="lazy"><span class="b-info"><span class="b-kind">${n ? `מארז · ${n} פריטים` : 'מארז'}</span><span class="b-name">${esc(p.name)}</span><span class="b-price">${esc(fromPrice(p))}</span></span></a>`;
 }
 export { money };

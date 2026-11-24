@@ -9,8 +9,12 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: { default: 'גרינטק – מוזיקה יהודית, סרטים ותוכן יהודי', template: '%s' },
   robots: process.env.STAGING === '1' ? { index: false, follow: false } : undefined,
-  icons: { icon: '/t/assets/images/logo-v.png' },
+  icons: { icon: '/t/assets/images/logo-v.png', apple: '/t/assets/images/logo.png' },
+  applicationName: 'גרינטק',
+  openGraph: { siteName: 'גרינטק', locale: 'he_IL', type: 'website' },
+  formatDetection: { telephone: false },
 };
+export const viewport = { themeColor: '#161616', width: 'device-width', initialScale: 1 };
 
 const V = (process.env.RAILWAY_GIT_COMMIT_SHA || process.env.BUILD_ID || String(Date.now())).slice(0, 8);
 

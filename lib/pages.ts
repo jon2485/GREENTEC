@@ -21,8 +21,8 @@ export function shopPage(o: { kicker: string; title: string; crumbs: Crumb[]; ca
 ${L.makers && L.makers.length > 1 ? makersWidget(L.makers, L.sup || []) : ''}
 <div class="shop-widget"><h4 class="shop-wtitle">סינון לפי <span>מחיר</span></h4><div class="price-range"><input type="range" id="pMin" min="0" max="500" value="0" aria-label="מחיר מינימלי"><input type="range" id="pMax" min="0" max="500" value="500" aria-label="מחיר מקסימלי"></div><p class="price-out">מחיר: <strong id="pOut">₪0 – ₪500</strong></p><button type="button" class="btn btn-secondary-outline shop-filter-btn" id="pApply">סינון</button></div>
 ${o.cats.length ? `<div class="shop-widget"><h4 class="shop-wtitle">קטגוריות <span>מוצרים</span></h4><ul class="shop-cats">${o.cats.map((c) => `<li><a href="/${enc(c.url)}">${esc(c.name)}</a></li>`).join('')}</ul></div>` : ''}
-${o.best.length ? `<div class="shop-widget"><h4 class="shop-wtitle">הנמכרים <span>ביותר</span></h4><ul class="shop-best">${o.best.map((p) => `<li><a href="${href(p)}"><img src="${esc(thumb(p.mainImage))}" alt=""><span>${esc(p.name)}</span></a></li>`).join('')}</ul></div>` : ''}
-<a href="/search?q=USB" class="shop-ad"><img src="/t/assets/images/n-img-3.webp" alt=""><span class="shop-ad-text">אוספי מוזיקה<br>ב־USB</span></a>
+${o.best.length ? `<div class="shop-widget"><h4 class="shop-wtitle">הנמכרים <span>ביותר</span></h4><ul class="shop-best">${o.best.map((p) => `<li><a href="${href(p)}"><img src="${esc(thumb(p.mainImage))}" alt="${esc(p.name)}" loading="lazy"><span>${esc(p.name)}</span></a></li>`).join('')}</ul></div>` : ''}
+<a href="/search?q=USB" class="shop-ad"><img src="/t/assets/images/n-img-3.webp" alt="אוספי מוזיקה ב־USB" loading="lazy"><span class="shop-ad-text">אוספי מוזיקה<br>ב־USB</span></a>
 </aside><div class="shop-main">
 <div class="shop-bar"><button type="button" class="btn btn-secondary-outline shop-side-toggle" id="sideToggle">סינון${(L.sup || []).length ? ` (${L.sup.length})` : ''}</button><label class="shop-ctl">הצג <select id="perPage"><option>12</option><option>24</option><option>48</option></select></label><label class="shop-ctl">מיון לפי <select id="sortBy"><option value="i">מומלצים</option><option value="new">חדשים ביותר</option><option value="az">א–ת</option><option value="za">ת–א</option><option value="lo">מחיר: מהנמוך לגבוה</option><option value="hi">מחיר: מהגבוה לנמוך</option></select></label><div class="shop-views" role="group" aria-label="תצוגה"><button type="button" class="active" data-view="grid" aria-label="תצוגת רשת">${I.grid}</button><button type="button" data-view="list" aria-label="תצוגת רשימה">${I.list}</button></div></div>
 ${o.intro ? `<div class="gt-content mb-4">${o.intro}</div>` : ''}
@@ -43,6 +43,7 @@ const plain = (h: string) => decodeEnt(String(h || '').replace(/<br\s*\/?>/gi, '
 export function cleanDesc(h: string) {
   let x = String(h || '');
   x = x.replace(/<(script|style)[\s\S]*?<\/\1>/gi, '');
+  x = x.replace(/<h1(\s[^>]*)?>/gi, '<h2$1>').replace(/<\/h1>/gi, '</h2>'); // the page's only H1 is the product name
   x = x.replace(/<\/?(font|span|o:p)[^>]*>/gi, '');
   x = x.replace(/\s(style|class|lang|dir|face|size|color|width|height|align)="[^"]*"/gi, (m, a) => (a.toLowerCase() === 'align' && /center/.test(m) ? ' class="tc"' : ''));
   x = x.replace(/<(p|div|h[1-6])([^>]*)>\s*(?:&nbsp;|\s|<br\s*\/?>)*\s*<\/\1>/gi, '');
@@ -90,8 +91,8 @@ export function productPage(o: { p: any; crumbs: Crumb[]; kicker: string; catNam
   const vars = variantsHtml(p);
   const soldOut = p.quantity === 0 && !opts.some((x) => x.key === 'digital');
   return `<section class="shop-page pp"><div class="shop-hero"><div class="container"><span class="shop-kicker">${esc(o.kicker)}</span><p class="shop-title">${esc(o.catName)}</p>${crumbsHtml(o.crumbs)}</div></div>
-<div class="container pp-wrap"><div class="pp-top"><div class="pp-gallery"><div class="pp-main" id="ppMain">${p.id >= 8700 ? '<span class="shop-badge">חדש</span>' : ''}<img src="${esc(p.mainImage || '/t/assets/images/logo.png')}" alt="${esc(p.name)}" id="ppImg"></div>
-${p.images.length > 1 ? `<div class="qv-thumbs pp-thumbs">${p.images.map((im: any, i: number) => `<button type="button" class="${i ? '' : 'active'}" data-src="${esc(im.url)}"><img src="${esc(thumb(im.url))}" alt=""></button>`).join('')}</div>` : ''}
+<div class="container pp-wrap"><div class="pp-top"><div class="pp-gallery"><div class="pp-main" id="ppMain">${p.id >= 8700 ? '<span class="shop-badge">חדש</span>' : ''}<img src="${esc(p.mainImage || '/t/assets/images/logo.png')}" alt="${esc(p.name)}" id="ppImg" fetchpriority="high" decoding="async"></div>
+${p.images.length > 1 ? `<div class="qv-thumbs pp-thumbs">${p.images.map((im: any, i: number) => `<button type="button" class="${i ? '' : 'active'}" data-src="${esc(im.url)}" aria-label="תמונה ${i + 1}"><img src="${esc(thumb(im.url))}" alt="${esc(p.name)} – תמונה ${i + 1}" loading="lazy"></button>`).join('')}</div>` : ''}
 ${p.sampleFile ? `<audio class="pp-sample" controls preload="none" src="${esc(p.sampleFile)}"></audio>` : ''}</div>
 <div class="pp-info"><h1 class="pp-title">${esc(p.name)}</h1>
 ${o.suppliers.length ? `<div class="pp-by">${o.suppliers.map((s) => `<a href="${s.url}">${esc(s.name)} <span>(${s.count} מוצרים)</span></a>`).join('')}</div>` : ''}

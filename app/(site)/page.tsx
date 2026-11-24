@@ -3,9 +3,19 @@ import { T } from '@/lib/tpl';
 import { latestIn } from '@/lib/catalog';
 import { albumCard, movieTile, carouselCell, articleCell } from '@/lib/render';
 import { getHomeDesign, applySection, heroCells } from '@/lib/homeDesign';
+import { ldScript, organization, website, SITE, LOGO } from '@/lib/seo';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'גרינטק – מוזיקה יהודית, סרטים, יודאיקה ותוכן יהודי', alternates: { canonical: '/' } };
+// title / description / keywords exactly as on the legacy homepage
+const DESC = 'גרינטק - מוזיקה ותוכן יהודי, חנות אינטרנטית למיטב התכנים לקהל הדתי, החסידי והחרדי. מוזיקה יהודית, מוזיקה חסידית ומגוון פריטים נוספים!';
+export const metadata = {
+  title: 'גרינטק - מוזיקה ותוכן יהודי',
+  description: DESC,
+  keywords: 'Greentec , גרינטק , גרינטק - מוזיקה ותוכן יהודי , מוזיקה יהודית , מוזיקה חסידית , תוכן יהודי',
+  alternates: { canonical: SITE + '/' },
+  openGraph: { title: 'גרינטק - מוזיקה ותוכן יהודי', description: DESC, url: SITE + '/', type: 'website', siteName: 'גרינטק', locale: 'he_IL', images: [{ url: LOGO, alt: 'גרינטק - מוזיקה ותוכן יהודי' }] },
+  twitter: { card: 'summary', site: '@Greentec8' },
+};
 
 export default async function Home() {
   const design = await getHomeDesign();
@@ -53,6 +63,9 @@ export default async function Home() {
   }
   html = keep('{{ARTICLES}}', articles, articleCell, html);
   html = html.replace(/\{\{\w+\}\}/g, '');
+  // one H1 per page: the template titles every section with <h1>; all but the first (the hero) become <h2> (same class, same look)
+  { let n = 0; html = html.replace(/<h1(\s[^>]*)?>([\s\S]*?)<\/h1>/g, (m, a, t) => (n++ === 0 ? m : `<h2${a || ''}>${t}</h2>`)); }
+  html = ldScript(organization(), website()) + html;
   return (
     <>
       <div dangerouslySetInnerHTML={{ __html: html }} />
