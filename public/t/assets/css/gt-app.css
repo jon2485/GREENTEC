@@ -439,3 +439,41 @@ a.gt-ann-item::after { content: "‹"; color: #cadb2d; font-weight: 700; margin-
   .gz-new { padding: 16px; border-radius: 18px; }
 }
 @media (width >= 992px) { .gz-tiles { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); } }
+
+/* Games store – colour & life (template lines kept: dark + lime, rounded cards) */
+.gz-c-shabbat { --c: #8a9a10; --cs: #f1f5d4; }
+.gz-c-dolls { --c: #e0566b; --cs: #ffe6ea; }
+.gz-c-puzzles { --c: #e08a00; --cs: #fff1d9; }
+.gz-c-stories { --c: #7a5cf0; --cs: #eee9ff; }
+.gz-c-letters { --c: #1c8fd8; --cs: #e2f3ff; }
+.gz-c-learning { --c: #0f9f75; --cs: #dcf7ec; }
+.gz-c-activity { --c: #d8559c; --cs: #ffe5f3; }
+.gz-c-more { --c: #55554f; --cs: #ececea; }
+.gz-c-new { --c: #8a9a10; --cs: #f1f5d4; }
+.gz-tile[class*="gz-c-"] .gz-ic, .gz-shelf[class*="gz-c-"] .gz-ic { background: var(--cs); color: var(--c); }
+.gz-tile[class*="gz-c-"] { border-bottom: 4px solid var(--c); }
+.gz-tile[class*="gz-c-"]:hover { background: linear-gradient(180deg, #fff 55%, var(--cs)); }
+.gz-tile[class*="gz-c-"]:hover .gz-ic { transform: rotate(-8deg) scale(1.08); }
+.gz-ic { transition: transform .25s cubic-bezier(.3,1.6,.5,1); }
+.gz-shelf[class*="gz-c-"] .gz-count { background: var(--cs); color: var(--c); }
+.gz-shelf[class*="gz-c-"] .gz-shelf-head h2 { position: relative; display: inline-block; }
+.gz-shelf[class*="gz-c-"] .gz-shelf-head h2::after { content: ""; position: absolute; inset-inline: 0; bottom: -4px; height: 4px; border-radius: 4px; background: var(--c); opacity: .35; }
+.gz-shelf:not(.gz-new) { padding: 22px; border-radius: 24px; background: linear-gradient(180deg, var(--cs, #fff), rgba(255,255,255,0) 70%); }
+.gz-shelf .shop-card .shop-price { color: var(--c, #8a9a10); }
+/* floating shapes in the hero */
+.gz-float span { position: absolute; display: block; width: 58px; filter: drop-shadow(0 8px 14px rgba(0,0,0,.35)); animation: gzFloat 7s ease-in-out infinite; }
+.gz-float svg { width: 100%; height: auto; display: block; }
+.gz-float .f1 { top: 22%; inset-inline-start: 7%; transform: rotate(-14deg); }
+.gz-float .f2 { top: 62%; inset-inline-start: 14%; width: 50px; animation-delay: -2s; }
+.gz-float .f3 { top: 18%; inset-inline-end: 9%; width: 52px; animation-delay: -4s; }
+.gz-float .f4 { top: 64%; inset-inline-end: 6%; width: 46px; animation-delay: -1s; }
+.gz-float .f5 { top: 40%; inset-inline-end: 21%; width: 34px; animation-delay: -3s; opacity: .85; }
+.gz-float .f6 { top: 44%; inset-inline-start: 24%; width: 30px; animation-delay: -5s; opacity: .85; }
+@keyframes gzFloat { 0%, 100% { translate: 0 0; rotate: 0deg; } 50% { translate: 0 -14px; rotate: 8deg; } }
+@media (width < 768px) {
+  .gz-float span { width: 36px; } .gz-float .f5, .gz-float .f6 { display: none; }
+  .gz-float .f1 { top: 16%; inset-inline-start: 4%; } .gz-float .f2 { top: 70%; inset-inline-start: 3%; width: 30px; }
+  .gz-float .f3 { top: 14%; inset-inline-end: 5%; width: 32px; } .gz-float .f4 { top: 72%; inset-inline-end: 4%; width: 28px; }
+  .gz-shelf:not(.gz-new) { padding: 16px 14px; border-radius: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { .gz-float span { animation: none; } }

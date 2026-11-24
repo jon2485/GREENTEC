@@ -44,17 +44,24 @@ export async function gamesPage(c: { id: number; name: string; header?: string |
   for (const x of all) shelves.find((s) => s.test(x.p, x.src))!.items.push(x);
   const used = shelves.filter((s) => s.items.length);
   const fresh = all.filter((x) => x.src === 'משחקים').slice(0, 8);
-  const tiles = used.map((s) => `<a href="#g-${s.key}" class="gz-tile"><span class="gz-ic">${s.icon}</span><span class="gz-tt">${esc(s.title)}</span><span class="gz-n">${s.items.length} פריטים</span></a>`).join('');
+  const tiles = used.map((s) => `<a href="#g-${s.key}" class="gz-tile gz-c-${s.key}"><span class="gz-ic">${s.icon}</span><span class="gz-tt">${esc(s.title)}</span><span class="gz-n">${s.items.length} פריטים</span></a>`).join('');
   const row = (items: any[]) => `<div class="gz-row">${items.map((x, i) => shopCard(x.p, i, x.pinned)).join('')}</div>`;
-  const sections = used.map((s) => `<section class="gz-shelf" id="g-${s.key}" aria-labelledby="g-${s.key}-t"><div class="gz-shelf-head"><span class="gz-ic sm">${s.icon}</span><div><h2 id="g-${s.key}-t">${esc(s.title)}</h2><p>${esc(s.sub)}</p></div><span class="gz-count">${s.items.length}</span></div>${row(s.items)}</section>`).join('');
+  const sections = used.map((s) => `<section class="gz-shelf gz-c-${s.key}" id="g-${s.key}" aria-labelledby="g-${s.key}-t"><div class="gz-shelf-head"><span class="gz-ic sm">${s.icon}</span><div><h2 id="g-${s.key}-t">${esc(s.title)}</h2><p>${esc(s.sub)}</p></div><span class="gz-count">${s.items.length}</span></div>${row(s.items)}</section>`).join('');
   const title = c.header || c.name;
   return `<section class="gz">
 <div class="gz-hero"><div class="container"><span class="gz-kicker">חנות גרינטק</span><h1 class="gz-title">${esc(title)}</h1><p class="gz-lead">משחקים, צעצועים ופעילויות ברוח יהודית – לשבת, לחגים, ללימוד ולכיף של כל המשפחה.</p>${crumbsHtml(crumbs)}
 <div class="gz-stats"><span><b>${all.length}</b> פריטים</span><span><b>${used.length}</b> קטגוריות</span><span>משלוח עד הבית</span></div></div>
-<svg class="gz-deco" viewBox="0 0 400 300" aria-hidden="true"><g fill="none" stroke="#cadb2d" stroke-width="3" opacity=".55"><rect x="40" y="40" width="70" height="70" rx="14" transform="rotate(-12 75 75)"/><circle cx="92" cy="64" r="5" fill="#cadb2d"/><circle cx="62" cy="92" r="5" fill="#cadb2d"/><path d="M220 60l22 38h-44z" transform="rotate(14 220 80)"/><path d="M300 150h28v28h-28zM328 164h22a10 10 0 1 1 0 0"/><path d="M120 200c20-30 60-30 80 0s60 30 80 0"/></g></svg></div>
+<div class="gz-float" aria-hidden="true">
+<span class="f1"><svg viewBox="0 0 60 60"><rect x="6" y="6" width="48" height="48" rx="12" fill="#cadb2d"/><circle cx="20" cy="20" r="5" fill="#1d1d1f"/><circle cx="40" cy="40" r="5" fill="#1d1d1f"/><circle cx="30" cy="30" r="5" fill="#1d1d1f"/></svg></span>
+<span class="f2"><svg viewBox="0 0 60 60"><path d="M10 10h16v7a5 5 0 1 0 10 0v-7h14v16h-7a5 5 0 1 0 0 10h7v14H34v-7a5 5 0 1 0-10 0v7H10z" fill="#ffb547"/></svg></span>
+<span class="f3"><svg viewBox="0 0 60 60"><path d="m30 4 7.6 16.4L56 22l-13.6 12 4 18L30 42.6 13.6 52l4-18L4 22l18.4-1.6z" fill="#ff7a8a"/></svg></span>
+<span class="f4"><svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="24" fill="#6ec6ff"/><path d="M14 30h32M30 14v32" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".7"/></svg></span>
+<span class="f5"><svg viewBox="0 0 60 60"><path d="M30 6 54 50H6z" fill="#b69cff"/></svg></span>
+<span class="f6"><svg viewBox="0 0 60 60"><path d="M22 8h16v14h14v16H38v14H22V38H8V22h14z" fill="#5fd3a5"/></svg></span>
+</div></div>
 <div class="container gz-body">
 <nav class="gz-tiles" aria-label="קטגוריות משחקים">${tiles}</nav>
-${fresh.length > 3 ? `<section class="gz-shelf gz-new" aria-labelledby="g-new-t"><div class="gz-shelf-head"><span class="gz-ic sm">${ic('<path d="m24 6 5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z"/>')}</span><div><h2 id="g-new-t">חדשים במשחקים</h2><p>המשחקים האחרונים שהגיעו לחנות</p></div></div>${row(fresh)}</section>` : ''}
+${fresh.length > 3 ? `<section class="gz-shelf gz-new gz-c-new" aria-labelledby="g-new-t"><div class="gz-shelf-head"><span class="gz-ic sm">${ic('<path d="m24 6 5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z"/>')}</span><div><h2 id="g-new-t">חדשים במשחקים</h2><p>המשחקים האחרונים שהגיעו לחנות</p></div></div>${row(fresh)}</section>` : ''}
 ${sections}
 ${c.content ? `<div class="gz-about gt-content">${c.content}</div>` : ''}
 <p class="gz-all"><a href="${enc('/' + GAMES_URL)}?view=all" rel="nofollow">לכל ${all.length} הפריטים ברשימה אחת ›</a></p>
