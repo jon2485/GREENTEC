@@ -20,11 +20,14 @@ export async function POST(req: Request) {
   if (!tokenOk(tokenFrom(req, body))) return json(req, { error: 'unauthorized' }, 401);
   const items: any[] = Array.isArray(body.items) ? body.items : [];
   const dry = !!body.dry;
-  const out: any = { received: items.length, notFound: [], noButtons: [], unknownMode: [], changed: 0, fields: {}, samples: [] };
+  const out: any = { received: items.length, notFound: [], noButtons: [], unknownMode: [], linked: [], changed: 0, fields: {}, samples: [] };
   for (const it of items) {
     const p = await db.product.findUnique({ where: { urlPath: String(it.p) }, select: { id: true, name: true, price: true, newPrice: true, digitalPrice: true, bothPrice: true, physicalPrice: true, buyLabels: true, hasVariants: true } });
     if (!p) { out.notFound.push(it.p); continue; }
-    const btns: any[] = Array.isArray(it.b) ? it.b : [];
+    const all: any[] = Array.isArray(it.b) ? it.b : [];
+    // "product_link_price" forms (an extra button that sells a linked edition, e.g. "… USB - 70 ₪") have no mode: reported, not applied.
+    const linked = all.filter((x) => String(x[0]) === '?'); if (linked.length) out.linked.push({ id: p.id, name: p.name, b: linked.map((x) => x[1]) });
+    const btns = all.filter((x) => String(x[0]) !== '?');
     if (!btns.length) { out.noButtons.push({ id: p.id, name: p.name, text: String(it.none || '').slice(0, 80) }); continue; }
     const opts: { key: 'digital' | 'both' | 'physical'; label: string; price: number | null; vars: number }[] = [];
     let bad = false;
