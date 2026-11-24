@@ -5,6 +5,7 @@ import { categoryChain, categoryListing, cardSelect, parseSup } from '@/lib/cata
 import { shopPage, productPage, contentPage, ppScript } from '@/lib/pages';
 import { abs, absPath, metaFrom, listingSeo, ldScript, breadcrumbs, itemList, productLD, articleLD, demoteH1, plainText } from '@/lib/seo';
 import { priceOptions } from '@/lib/format';
+import { gamesPage, GAMES_URL } from '@/lib/games';
 import SupplierPage, { generateMetadata as supplierMeta } from '../supplier/[id]/page';
 
 export const dynamic = 'force-dynamic';
@@ -81,6 +82,11 @@ export default async function Page({ params, searchParams }: P) {
   if (r.kind === 'category') {
     const c = r.category;
     const chain = await categoryChain(c.id);
+    // the designed games store (same URL / SEO as the legacy category); ?view=all, sorting, filters or paging → the regular list
+    if (c.url === GAMES_URL && !sp.view && !sp.page && !sp.sort && !sp.min && !sp.max && !sp.sup) {
+      const html = await gamesPage({ ...c, content: demoteH1(c.content) }, chain.map((x, i) => ({ name: x.name, url: i < chain.length - 1 ? '/' + x.url : undefined })));
+      return <div dangerouslySetInnerHTML={{ __html: ldScript(breadcrumbs(chain.map((x) => ({ name: x.name, url: '/' + x.url })))) + html }} />;
+    }
     const kids = await db.category.findMany({ where: { parentId: c.id }, orderBy: { sort: 'asc' }, select: { name: true, url: true } });
     const sibs = kids.length ? kids : c.parentId ? await db.category.findMany({ where: { parentId: c.parentId }, orderBy: { sort: 'asc' }, select: { name: true, url: true } }) : [];
     const listing = await categoryListing(c.id, { sort: sp.sort, min: sp.min ? +sp.min : undefined, max: sp.max ? +sp.max : undefined, page: sp.page ? +sp.page : 1, per: sp.per ? +sp.per : 24, sup: parseSup(sp.sup) });

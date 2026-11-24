@@ -393,3 +393,48 @@ a.gt-ann-item::after { content: "‹"; color: #cadb2d; font-weight: 700; margin-
 .pp-main img { width: 100%; height: 100%; max-width: none !important; max-height: none !important; object-fit: contain; padding: 40px; box-sizing: border-box; box-shadow: none !important; filter: drop-shadow(0 14px 26px rgba(0,0,0,.22)); }
 @media (width < 576px) { .pp-main img { padding: 22px; } }
 .qv-main img { object-fit: contain !important; }
+
+/* ---- Games store (/משחקים) ---- */
+.gz { font-family: "Heebo", sans-serif; color: #1d1d1f; }
+.gz-hero { position: relative; overflow: hidden; text-align: center; color: #fff; padding: calc(var(--gt-hdr, 140px) + 46px) 0 64px;
+  background: radial-gradient(60% 80% at 85% 10%, rgba(202,219,45,.22), transparent 60%), radial-gradient(50% 70% at 10% 90%, rgba(202,219,45,.14), transparent 60%), linear-gradient(160deg, #141414, #1f2410 70%, #141414); }
+.gz-hero .container { position: relative; z-index: 1; }
+.gz-kicker { display: inline-block; font-size: 15px; font-weight: 600; color: #121010; background: #cadb2d; border-radius: 980px; padding: 4px 14px; margin-bottom: 14px; }
+.gz-title { font-size: 46px; font-weight: 800; color: #fff; margin: 0 0 10px; letter-spacing: -.5px; }
+.gz-lead { max-width: 620px; margin: 0 auto 16px; font-size: 18px; line-height: 1.6; color: #d9d9d4; }
+.gz-hero .shop-crumbs { margin-bottom: 22px; }
+.gz-stats { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.gz-stats span { font-size: 14px; color: #e8e8e4; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); border-radius: 980px; padding: 6px 14px; }
+.gz-stats b { color: #cadb2d; font-weight: 800; }
+.gz-deco { position: absolute; inset-inline-start: -40px; bottom: -30px; width: 420px; opacity: .9; pointer-events: none; }
+@media (width >= 992px) { .gz-title { font-size: 64px; } .gz-hero { padding-bottom: 84px; } }
+.gz-body { max-width: 1320px; padding-top: 0; padding-bottom: 70px; }
+.gz-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: -34px 0 40px; position: relative; z-index: 2; }
+.gz-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px; background: #fff; border-radius: 18px; color: #1d1d1f; text-decoration: none; box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.08); transition: transform .2s, box-shadow .2s; }
+.gz-tile:hover { transform: translateY(-3px); box-shadow: 0 2px 4px rgba(0,0,0,.06), 0 14px 32px rgba(0,0,0,.12); color: #1d1d1f; }
+.gz-ic { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 14px; background: #f1f5d4; color: #4d5c00; }
+.gz-ic svg { width: 28px; height: 28px; }
+.gz-ic.sm { width: 42px; height: 42px; border-radius: 12px; flex: none; } .gz-ic.sm svg { width: 24px; height: 24px; }
+.gz-tt { font-weight: 700; font-size: 15.5px; line-height: 1.3; }
+.gz-n { font-size: 13px; color: #8a8a86; }
+.gz-shelf { margin-bottom: 44px; scroll-margin-top: calc(var(--gt-hdr, 140px) + 16px); }
+.gz-shelf-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.gz-shelf-head h2 { font-family: "Heebo", sans-serif; font-size: 24px; font-weight: 800; margin: 0; line-height: 1.2; }
+.gz-shelf-head p { margin: 2px 0 0; font-size: 14px; color: #6b6b67; }
+.gz-count { margin-inline-start: auto; font-size: 13px; font-weight: 700; color: #4d5c00; background: #f1f5d4; border-radius: 980px; padding: 3px 12px; }
+.gz-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; }
+.gz-new { background: #fff; border-radius: 24px; padding: 22px; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 6px 24px rgba(0,0,0,.05); }
+.gz-about { max-width: 860px; margin: 20px auto 10px; font-size: 16px; line-height: 1.75; color: #3a3a38; }
+.gz-all { text-align: center; margin-top: 10px; } .gz-all a { color: #4d5c00; font-weight: 600; }
+@media (width < 992px) { .gz-row { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (width < 768px) {
+  .gz-title { font-size: 38px; } .gz-lead { font-size: 16px; } .gz-deco { width: 260px; opacity: .6; }
+  .gz-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: -26px; }
+  .gz-tile { padding: 14px; border-radius: 16px; } .gz-ic { width: 42px; height: 42px; } .gz-ic svg { width: 24px; height: 24px; }
+  /* shelves scroll sideways on phones, like app stores */
+  .gz-row { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: -14px; padding: 2px 14px 10px; scrollbar-width: none; }
+  .gz-row::-webkit-scrollbar { display: none; }
+  .gz-row > .shop-card { flex: 0 0 46%; scroll-snap-align: start; }
+  .gz-shelf-head h2 { font-size: 20px; }
+  .gz-new { padding: 16px; border-radius: 18px; }
+}
