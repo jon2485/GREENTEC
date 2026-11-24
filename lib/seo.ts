@@ -16,7 +16,8 @@ export const SOCIAL = [
 export const abs = (u?: string | null) => (!u ? '' : /^https?:\/\//.test(u) ? u : SITE + (u.startsWith('/') ? '' : '/') + u);
 export const absPath = (path: string) => SITE + enc(path.startsWith('/') ? path : '/' + path);
 
-export const decodeEntities = (t: string) => String(t || '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+const NAMED: Record<string, string> = { ndash: '–', mdash: '—', rsquo: '’', lsquo: '‘', rdquo: '”', ldquo: '“', bdquo: '„', hellip: '…', laquo: '«', raquo: '»', bull: '•', middot: '·', copy: '©', reg: '®', trade: '™', shy: '', zwnj: '', zwj: '', lrm: '', rlm: '', times: '×', deg: '°', frac12: '½', euro: '€', shekel: '₪' };
+export const decodeEntities = (t: string) => String(t || '').replace(/&([a-z]+\d*);/gi, (m, n) => (n.toLowerCase() in NAMED ? NAMED[n.toLowerCase()] : m)).replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>')
   .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n)).replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16))).replace(/&amp;/g, '&');
 export const plainText = (h: string) => decodeEntities(String(h || '').replace(/<br\s*\/?>/gi, ' ').replace(/<\/(p|div|li|h\d)>/gi, ' ').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
 // a meta description from free text: ~155 chars, cut at a word boundary

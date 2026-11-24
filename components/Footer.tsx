@@ -30,7 +30,7 @@ export default async function Footer() {
     const url = map[label.trim()];
     if (url) return `<a href="/${encodeURI(url)}" class="contact-item">${ws}<span class="contact-value">${label}</span>`;
     const t = label.trim();
-    const internal = t === 'צור קשר' ? '/contact' : /כניסת אמנים/.test(t) ? '/account' : catUrl(t) || supUrl(t);
+    const internal = t === 'צור קשר' ? '/contact' : /כניסת אמנים/.test(t) ? '/account' : catUrl(t) || supUrl(t) || (map[t] === undefined && !/^[\d-]+$/.test(t) && !t.includes('@') ? `/search?q=${encodeURIComponent(t)}` : '');
     if (internal) return `<a href="${internal}" class="contact-item">${ws}<span class="contact-value">${label}</span>`;
     if (label.includes('@')) return `<a href="mailto:${label.trim()}" class="contact-item">${ws}<span class="contact-value">${label}</span>`;
     if (/^[\d-]+$/.test(label.trim())) return `<a href="tel:${label.replace(/-/g, '')}" class="contact-item">${ws}<span class="contact-value">${label}</span>`;
