@@ -55,7 +55,7 @@ export function productLD(p: any, o: { url: string; category?: string; brand?: s
   const imgs = [p.mainImage, ...(p.images || []).map((x: any) => x.url)].filter(Boolean).map(abs);
   const opts = priceOptions(p);
   const inStock = p.quantity == null || p.quantity > 0;
-  const seller = { '@id': SITE + '/#org' };
+  const seller = { '@type': 'Organization', name: BRAND, url: SITE + '/' };
   const v = parseVariants(p.variantsJson);
   const offer = (price: number, key: string) => ({
     '@type': 'Offer', price: price.toFixed(2), priceCurrency: 'ILS', priceValidUntil: nextYearEnd(), url: o.url, seller, itemCondition: 'https://schema.org/NewCondition',
