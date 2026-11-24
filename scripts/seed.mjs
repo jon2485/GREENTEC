@@ -33,6 +33,7 @@ async function main() {
     await syncPrices();
     await syncPrices2();
     await restorePrices3();
+    await syncStockLive();
     return;
   }
   const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
@@ -111,7 +112,7 @@ async function main() {
   }
   await ensureAdmin();
   await syncLegacyCatalog();
-  await syncHiddenProducts(); await syncHomeFlags(); await syncSupplierLinks(); await syncNames(); await syncVariants(); await syncPrices(); await syncPrices2(); await restorePrices3();
+  await syncHiddenProducts(); await syncHomeFlags(); await syncSupplierLinks(); await syncNames(); await syncVariants(); await syncPrices(); await syncPrices2(); await restorePrices3(); await syncStockLive();
   console.log('[seed] done:', products.length, 'products');
 }
 
@@ -318,6 +319,17 @@ async function restorePrices3() {
   for (const [id, price] of [[7917, 65], [8135, 70]]) await db.product.updateMany({ where: { id }, data: { price, newPrice: null } });
   await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
   console.log('[seed] prices restored: 7917=65, 8135=70');
+}
+
+// One-time (v1): stock as the live legacy pages showed it on 2026-11-25 (the admin export was older):
+// "בגן של דודו" 1/2/3/5 are on sale (1 in stock); "Mali 3" and "אוצר עתיקא קדישא" show "לא זמין במלאי".
+async function syncStockLive() {
+  const FLAG = 'stock_live_v1';
+  if (await db.setting.findUnique({ where: { key: FLAG } })) return;
+  await db.product.updateMany({ where: { id: { in: [644, 645, 646, 648] } }, data: { quantity: 1 } });
+  await db.product.updateMany({ where: { id: { in: [2533, 8023] } }, data: { quantity: 0 } });
+  await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
+  console.log('[seed] stock synced with the live legacy pages (6 products)');
 }
 
 async function ensureAdmin() {

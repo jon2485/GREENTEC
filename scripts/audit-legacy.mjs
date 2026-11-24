@@ -17,10 +17,15 @@ async function main() {
   try { adm = JSON.parse(gunzipSync(readFileSync(new URL('../data/legacy-admin-full.json.gz', import.meta.url))).toString('utf8')); } catch { return; }
   const rows = await db.product.findMany({
     select: { id: true, name: true, urlPath: true, status: true, quantity: true, price: true, newPrice: true, digitalPrice: true, physicalPrice: true, bothPrice: true,
-      onlyDigital: true, digitalFile: true, metaTitle: true, metaDescription: true,
+      onlyDigital: true, digitalFile: true, metaTitle: true, metaDescription: true, buyLabels: true, hasVariants: true,
       categories: { select: { categoryId: true } }, suppliers: { select: { supplierId: true } }, _count: { select: { images: true } } },
   });
   const byId = new Map(rows.map((r) => [r.id, r]));
+  // The buy buttons as the live legacy pages showed them (scraped 2026-11-25, Setting "legacy_buttons") are the reference
+  // for purchase options, labels, prices and stock; the admin-export rule below is used only where no scrape exists.
+  let live = {}; try { live = JSON.parse((await db.setting.findUnique({ where: { key: 'legacy_buttons' } }))?.value || '{}'); } catch {}
+  const KEEP = new Set([7917, 8135]);
+  const pnum = (t) => { const m = String(t || '').replace(/,/g, '').match(/(\d+(?:\.\d+)?)/); return m ? Number(m[1]) : null; };
   const catIds = new Set((await db.category.findMany({ select: { id: true } })).map((c) => c.id));
   const supIds = new Set((await db.supplier.findMany({ select: { id: true } })).map((c) => c.id));
   const issues = {}; const add = (k, id, info) => (issues[k] ||= []).push({ id, ...info });
@@ -35,22 +40,38 @@ async function main() {
     if ((p.status === 1 ? 1 : 0) !== st) add('סטטוס פרסום שונה', p.id, { name, old: st, now: p.status });
     const url = dec(f['custom_url[url]']);
     if (url && seg(p.urlPath) !== url) add('כתובת שונה', p.id, { name, old: url, now: p.urlPath });
-    // purchase options by the legacy rule
-    const price = num(f['product[price]']); const sale = num(f['product[new_price]']); const phys = num(f['digital_downloads[physical_price]']);
-    const only = f['digital_downloads[only_digital]'] === '1';
-    let D = null, B = null, kind;
-    const one = f['digital_downloads[one_button]'] === '1';
-    if (one && !only && (phys != null || !x.hasFile)) { B = price != null ? Math.round(((sale ?? price) + (phys ?? 0)) * 100) / 100 : null; kind = 'כפתור אחד: אלבום + הורדה'; }
-    else if (only && phys == null) { D = sale ?? price; kind = 'הורדה בלבד'; }
-    else if (phys != null) { D = sale ?? price; B = price != null ? Math.round((price + phys) * 100) / 100 : null; kind = 'הורדה + אלבום עם הורדה'; }
-    else if (x.hasFile) { D = sale ?? price; kind = 'הורדה'; }
-    else kind = 'פיזי';
-    if (only && (!x.hasFile || phys != null)) add('סימון סותר במערכת הישנה', p.id, { name, note: !x.hasFile ? 'רק דיגיטלי בלי קובץ' : 'רק דיגיטלי עם מחיר פיזי', now: { D: num(p.digitalPrice), B: num(p.bothPrice) } });
-    else if (kind === 'פיזי') {
-      if (p.digitalPrice != null || p.bothPrice != null) add('אפשרויות רכישה שונות', p.id, { name, old: kind, now: { D: num(p.digitalPrice), B: num(p.bothPrice) } });
-      else if (![7917, 8135].includes(p.id) && !eq(num(p.newPrice) ?? num(p.price), sale ?? price) && !eq(num(p.physicalPrice), sale ?? price)) add('מחיר שונה', p.id, { name, old: sale ?? price, now: num(p.newPrice) ?? num(p.price) });
-    } else if (!eq(num(p.digitalPrice), D) || !(eq(num(p.bothPrice), B) || (kind === 'הורדה' && eq(num(p.bothPrice), D))) || p.physicalPrice != null) {
-      add('אפשרויות רכישה שונות', p.id, { name, old: { kind, D, B }, now: { D: num(p.digitalPrice), P: num(p.physicalPrice), B: num(p.bothPrice) } });
+    const lv = live[p.urlPath];
+    if (lv) {
+      const btn = (lv.b || []).filter((x) => String(x[0]) !== '?').map(([m, t, v]) => { const i = String(t).lastIndexOf(' - '); return { k: { 0: 'digital', 1: 'both', q: 'physical' }[m], label: (i > 0 ? t.slice(0, i) : t).trim(), price: pnum(i > 0 ? t.slice(i + 3) : ''), v: Number(v) || 0 }; });
+      if (!btn.length) {
+        if (/לא זמין במלאי/.test(lv.none || '') && !(p.quantity === 0 && p.digitalPrice == null) && !p.hasVariants) add('מלאי שונה מהאתר החי', p.id, { name, old: 'לא זמין במלאי', now: p.quantity });
+      } else {
+        const g = (k) => btn.find((x) => x.k === k);
+        const D = g('digital'), B = g('both'), Q = g('physical');
+        if (!eq(num(p.digitalPrice), D?.price ?? null) || !eq(num(p.bothPrice), B?.price ?? null)) add('אפשרויות רכישה שונות מהאתר החי', p.id, { name, old: btn.map((x) => `${x.label} ${x.price}`), now: { D: num(p.digitalPrice), B: num(p.bothPrice) } });
+        else if (Q && !D && !B && !Q.v && !p.hasVariants && !KEEP.has(p.id) && !eq(num(p.newPrice) ?? num(p.price), Q.price)) add('מחיר שונה מהאתר החי', p.id, { name, old: Q.price, now: num(p.newPrice) ?? num(p.price) });
+        const L = p.buyLabels || {};
+        if (btn.some((x) => (L[x.k] || '') !== x.label)) add('כיתוב כפתור שונה מהאתר החי', p.id, { name, old: btn.map((x) => x.label), now: L });
+        if (Q && p.quantity === 0 && !p.hasVariants) add('מלאי שונה מהאתר החי', p.id, { name, old: 'זמין', now: 0 });
+      }
+    } else {
+      // purchase options by the legacy rule
+      const price = num(f['product[price]']); const sale = num(f['product[new_price]']); const phys = num(f['digital_downloads[physical_price]']);
+      const only = f['digital_downloads[only_digital]'] === '1';
+      let D = null, B = null, kind;
+      const one = f['digital_downloads[one_button]'] === '1';
+      if (one && !only && (phys != null || !x.hasFile)) { B = price != null ? Math.round(((sale ?? price) + (phys ?? 0)) * 100) / 100 : null; kind = 'כפתור אחד: אלבום + הורדה'; }
+      else if (only && phys == null) { D = sale ?? price; kind = 'הורדה בלבד'; }
+      else if (phys != null) { D = sale ?? price; B = price != null ? Math.round((price + phys) * 100) / 100 : null; kind = 'הורדה + אלבום עם הורדה'; }
+      else if (x.hasFile) { D = sale ?? price; kind = 'הורדה'; }
+      else kind = 'פיזי';
+      if (only && (!x.hasFile || phys != null)) add('סימון סותר במערכת הישנה', p.id, { name, note: !x.hasFile ? 'רק דיגיטלי בלי קובץ' : 'רק דיגיטלי עם מחיר פיזי', now: { D: num(p.digitalPrice), B: num(p.bothPrice) } });
+      else if (kind === 'פיזי') {
+        if (p.digitalPrice != null || p.bothPrice != null) add('אפשרויות רכישה שונות', p.id, { name, old: kind, now: { D: num(p.digitalPrice), B: num(p.bothPrice) } });
+        else if (![7917, 8135].includes(p.id) && !eq(num(p.newPrice) ?? num(p.price), sale ?? price) && !eq(num(p.physicalPrice), sale ?? price)) add('מחיר שונה', p.id, { name, old: sale ?? price, now: num(p.newPrice) ?? num(p.price) });
+      } else if (!eq(num(p.digitalPrice), D) || !(eq(num(p.bothPrice), B) || (kind === 'הורדה' && eq(num(p.bothPrice), D))) || p.physicalPrice != null) {
+        add('אפשרויות רכישה שונות', p.id, { name, old: { kind, D, B }, now: { D: num(p.digitalPrice), P: num(p.physicalPrice), B: num(p.bothPrice) } });
+      }
     }
     const sups = (f['product_suppliers[]'] || []).map(Number).filter((n) => supIds.has(n));
     if (!setEq(sups, p.suppliers.map((s) => s.supplierId))) add('ספקים שונים', p.id, { name, old: sups, now: p.suppliers.map((s) => s.supplierId) });
@@ -65,7 +86,7 @@ async function main() {
     const md = dec(f['seo[g_meta_description]']);
     if (md && dec(p.metaDescription) !== md) add('תיאור SEO שונה', p.id, { name, old: md.slice(0, 80), now: dec(p.metaDescription).slice(0, 80) });
     if ((x.imgs || []).length && !p._count.images) add('בלי תמונות', p.id, { name });
-    if (x.hasFile && p.digitalPrice != null && !p.digitalFile) add('מוצר דיגיטלי בלי קובץ בשרת', p.id, { name });
+    if (x.hasFile && (p.digitalPrice != null || p.bothPrice != null) && !p.digitalFile) add('מוצר דיגיטלי בלי קובץ בשרת', p.id, { name });
   }
   // names cut at a double quote (חב"ד, כ"ץ, זצ"ל …) in suppliers / categories / products
   const cut = /(^|\s)(חב|כ|זצ|שליט|אדמו|רמב|ר|הר|בע|תפ|ע|ז|יו)$/;
