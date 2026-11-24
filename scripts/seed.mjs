@@ -30,6 +30,7 @@ async function main() {
     await syncSupplierLinks();
     await syncNames();
     await syncVariants();
+    await syncPrices();
     return;
   }
   const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
@@ -108,7 +109,7 @@ async function main() {
   }
   await ensureAdmin();
   await syncLegacyCatalog();
-  await syncHiddenProducts(); await syncHomeFlags(); await syncSupplierLinks(); await syncNames(); await syncVariants();
+  await syncHiddenProducts(); await syncHomeFlags(); await syncSupplierLinks(); await syncNames(); await syncVariants(); await syncPrices();
   console.log('[seed] done:', products.length, 'products');
 }
 
@@ -249,6 +250,38 @@ async function syncVariants() {
   }
   await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
   console.log(`[seed] legacy variations: ${n} products`);
+}
+
+// One-time (v1): purchase options exactly as the legacy admin defines them.
+// - "רק דיגיטלי" (digital_downloads[only_digital]=1) with a file and no physical price → download only at product[price].
+//   The storefront scrape had turned 337 of these into "רכישת האלבום" (album + download) – wrong label, shipping charged.
+// - products that ended up with no price option at all get the legacy rule (price = download, price + physical = both).
+// Also restores supplier names that the scrape cut at a double quote (חב"ד, כ"ץ, "הרפו").
+async function syncPrices() {
+  const FLAG = 'sync_prices_v1';
+  if (await db.setting.findUnique({ where: { key: FLAG } })) return;
+  const adm = JSON.parse(gunzipSync(readFileSync(new URL('../data/legacy-admin-full.json.gz', import.meta.url))).toString('utf8'));
+  const num = (v) => (v === '' || v == null || isNaN(Number(v)) ? null : Number(v));
+  let digital = 0, filled = 0;
+  for (const x of adm.products) {
+    const f = x.f || {}; const id = Number(x.id);
+    const p = await db.product.findUnique({ where: { id }, select: { digitalPrice: true, physicalPrice: true, bothPrice: true } });
+    if (!p) continue;
+    const only = f['digital_downloads[only_digital]'] === '1'; const phys = num(f['digital_downloads[physical_price]']);
+    const price = num(f['product[new_price]']) ?? num(f['product[price]']);
+    if (only && x.hasFile && phys == null && p.digitalPrice == null && p.bothPrice != null) {
+      await db.product.update({ where: { id }, data: { digitalPrice: p.bothPrice, bothPrice: null, physicalPrice: null, onlyDigital: true } }); digital++;
+    } else if (p.digitalPrice == null && p.physicalPrice == null && p.bothPrice == null && price != null && (x.hasFile || phys != null)) {
+      const data = { digitalPrice: price };
+      if (phys != null && !only) data.bothPrice = Math.round((num(f['product[price]']) + phys) * 100) / 100;
+      await db.product.update({ where: { id }, data }); filled++;
+    }
+  }
+  const names = { 232: 'שלמה כ"ץ', 524: 'יהודה כ"ץ', 542: 'ניגוני חסידי חב"ד', 554: 'דוד "הרפו" אברמזון' };
+  for (const [id, name] of Object.entries(names)) await db.supplier.updateMany({ where: { id: Number(id) }, data: { name } });
+  await db.category.updateMany({ where: { id: 190 }, data: { name: 'מזכרות ארץ ישראל ומנורות' } });
+  await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
+  console.log(`[seed] legacy prices: ${digital} digital-only fixed, ${filled} filled; supplier names restored`);
 }
 
 async function ensureAdmin() {
