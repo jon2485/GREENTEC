@@ -477,3 +477,8 @@ a.gt-ann-item::after { content: "‹"; color: #cadb2d; font-weight: 700; margin-
   .gz-shelf:not(.gz-new) { padding: 16px 14px; border-radius: 20px; }
 }
 @media (prefers-reduced-motion: reduce) { .gz-float span { animation: none; } }
+.gz-hero { background: radial-gradient(45% 70% at 88% 12%, rgba(202,219,45,.30), transparent 60%), radial-gradient(40% 60% at 6% 80%, rgba(110,198,255,.22), transparent 60%), radial-gradient(35% 55% at 55% 110%, rgba(182,156,255,.24), transparent 60%), radial-gradient(30% 45% at 30% 0%, rgba(255,122,138,.16), transparent 60%), linear-gradient(160deg, #141414, #1d2010 70%, #141414) !important; }
+.gz-stats span:nth-child(1) b { color: #ffb547; } .gz-stats span:nth-child(2) b { color: #6ec6ff; }
+.gz-shelf[class*="gz-c-"] .shop-actions .sa-cart { background: var(--c) !important; }
+.gz-shelf[class*="gz-c-"] .shop-card { box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 6px 18px color-mix(in srgb, var(--c) 14%, transparent); }
+.gz-shelf[class*="gz-c-"] .gz-count { background: var(--c); color: #fff; }
