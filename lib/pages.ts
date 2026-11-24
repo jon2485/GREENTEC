@@ -2,6 +2,7 @@ import { I } from './tpl';
 import { esc, shopCard, bundleCard, thumb, href } from './render';
 import { enc, money, priceOptions } from './format';
 import { parseVariants, optLabel } from './variants';
+import { decodeEntities } from './seo';
 
 type Crumb = { name: string; url?: string };
 export const crumbsHtml = (c: Crumb[]) => `<nav aria-label="breadcrumb" class="shop-crumbs"><a href="/">דף הבית</a>${c.map((x) => ' / ' + (x.url ? `<a href="${enc(x.url)}">${esc(x.name)}</a>` : `<span>${esc(x.name)}</span>`)).join('')}</nav>`;
@@ -36,8 +37,7 @@ ${L.items.length ? '' : '<p class="shop-empty">לא נמצאו מוצרים.</p>
 
 
 // ---- product description helpers (legacy HTML from the UPME editor) ----
-export const decodeEnt = (t: string) => String(t || '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-  .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n)).replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16))).replace(/&amp;/g, '&');
+export const decodeEnt = decodeEntities;
 const plain = (h: string) => decodeEnt(String(h || '').replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
 // clean the editor's markup: no inline fonts/colours/margins, no empty paragraphs – keeps bold, lists, links, line breaks, alignment
 export function cleanDesc(h: string) {
