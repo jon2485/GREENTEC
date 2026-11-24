@@ -413,14 +413,16 @@ a.gt-ann-item::after { content: "‹"; color: #cadb2d; font-weight: 700; margin-
 
 /* ---- Add-to-cart & checkout buttons = the slider's green pill (.heros .btn-primary): solid #cadb2d, white text,
    fully rounded, soft shadow, darker green on hover/press ---- */
-.qv-add, .pp-buy .qv-add, .cs-go, .cart-sticky .cs-go, .shop-actions .sa-cart, .shop-cart {
+.qv-add, .pp-buy .qv-add, .cs-go, .cart-sticky .cs-go, .shop-actions .sa-cart, .shop-cart, .btn.btn-primary, .cs-cform button {
   background: #cadb2d !important; color: #fff !important; border: 1px solid #cadb2d !important; border-radius: 980px !important;
-  font-weight: 600; box-shadow: 0 10px 15px rgba(0, 0, 0, .1) !important; filter: none !important;
+  font-weight: 500 !important; box-shadow: 0 10px 15px rgba(0, 0, 0, .1) !important; filter: none !important;
   transition: background-color 150ms cubic-bezier(.4,0,.2,1), border-color 150ms cubic-bezier(.4,0,.2,1), transform 120ms ease !important;
 }
 .qv-add svg, .cs-go svg, .sa-cart svg, .shop-cart svg { color: #fff; stroke: currentColor; opacity: 1; }
-@media (hover: hover) { .qv-add:hover, .cs-go:hover, .shop-actions .sa-cart:hover, .shop-cart:hover { background: #84cc16 !important; border-color: #84cc16 !important; } }
-.qv-add:active, .cs-go:active, .shop-actions .sa-cart:active, .shop-cart:active, .shop-actions .sa-cart.added, .shop-cart.added { background: #84cc16 !important; border-color: #84cc16 !important; color: #fff !important; }
+@media (hover: hover) { .btn.btn-primary:hover, .cs-cform button:hover, .qv-add:hover, .cs-go:hover, .shop-actions .sa-cart:hover, .shop-cart:hover { background: #84cc16 !important; border-color: #84cc16 !important; } }
+.btn.btn-primary:active, .btn.btn-primary:focus-within, .cs-cform button:active, .qv-add:active, .cs-go:active, .shop-actions .sa-cart:active, .shop-cart:active, .shop-actions .sa-cart.added, .shop-cart.added { background: #84cc16 !important; border-color: #84cc16 !important; color: #fff !important; }
 .qv-add:active, .cs-go:active, .shop-actions .sa-cart:active { transform: scale(.97); }
 .qv-add[disabled], .qv-add.is-disabled { background: #e3e3df !important; border-color: #e3e3df !important; color: #8a8a86 !important; box-shadow: none !important; }
 .shop-actions .sa-cart { box-shadow: 0 6px 12px rgba(0, 0, 0, .08) !important; }
+.btn.btn-primary { min-height: 48px; padding-inline: 26px; }
+.cs-cform button { box-shadow: none !important; }
