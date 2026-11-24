@@ -31,6 +31,7 @@ async function main() {
     await syncNames();
     await syncVariants();
     await syncPrices();
+    await syncPrices2();
     return;
   }
   const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
@@ -109,7 +110,7 @@ async function main() {
   }
   await ensureAdmin();
   await syncLegacyCatalog();
-  await syncHiddenProducts(); await syncHomeFlags(); await syncSupplierLinks(); await syncNames(); await syncVariants(); await syncPrices();
+  await syncHiddenProducts(); await syncHomeFlags(); await syncSupplierLinks(); await syncNames(); await syncVariants(); await syncPrices(); await syncPrices2();
   console.log('[seed] done:', products.length, 'products');
 }
 
@@ -282,6 +283,33 @@ async function syncPrices() {
   await db.category.updateMany({ where: { id: 190 }, data: { name: 'מזכרות ארץ ישראל ומנורות' } });
   await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
   console.log(`[seed] legacy prices: ${digital} digital-only fixed, ${filled} filled; supplier names restored`);
+}
+
+// One-time (v2), found by scripts/audit-legacy.mjs:
+// - "כפתור אחד" products (USB collections etc.) whose single button was album + download at price + physical price
+//   (e.g. 99.9 + 0.1 = 100) had become a download-only option → now one "album + download" option (shipped), with the
+//   legacy button title as its label. Digital albums with one button and no physical price keep the download option,
+//   at the sale price when there is one.
+// - two physical products whose stored price came from a crossed-out price on the page → legacy admin price.
+async function syncPrices2() {
+  const FLAG = 'sync_prices_v2';
+  if (await db.setting.findUnique({ where: { key: FLAG } })) return;
+  const adm = JSON.parse(gunzipSync(readFileSync(new URL('../data/legacy-admin-full.json.gz', import.meta.url))).toString('utf8'));
+  const num = (v) => (v === '' || v == null || isNaN(Number(v)) ? null : Number(v));
+  let both = 0, sale = 0, phys = 0;
+  for (const x of adm.products) {
+    const f = x.f || {}; const id = Number(x.id);
+    const price = num(f['product[price]']); const np = num(f['product[new_price]']); const ph = num(f['digital_downloads[physical_price]']);
+    if (price == null) continue;
+    if (f['digital_downloads[one_button]'] === '1' && f['digital_downloads[only_digital]'] !== '1') {
+      if (ph != null || !x.hasFile) {
+        const r = await db.product.updateMany({ where: { id }, data: { bothPrice: Math.round(((np ?? price) + (ph ?? 0)) * 100) / 100, digitalPrice: null, physicalPrice: null, onlyDigital: false } }); both += r.count;
+      } else if (np != null) { const r = await db.product.updateMany({ where: { id }, data: { digitalPrice: np } }); sale += r.count; }
+    }
+  }
+  for (const id of [7917, 8135]) { const x = adm.products.find((y) => Number(y.id) === id); const v = num(x?.f?.['product[price]']); if (v != null) phys += (await db.product.updateMany({ where: { id, digitalPrice: null, bothPrice: null }, data: { price: v, newPrice: null } })).count; }
+  await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
+  console.log(`[seed] legacy prices v2: ${both} one-button album+download, ${sale} sale prices, ${phys} physical prices`);
 }
 
 async function ensureAdmin() {

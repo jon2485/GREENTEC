@@ -7,7 +7,7 @@ export function priceOptions(p: any) {
   const o: { key: 'digital' | 'physical' | 'both'; label: string; note: string; price: number }[] = [];
   if (p.digitalPrice != null) o.push({ key: 'digital', label: 'הורדת האלבום', note: 'הורדה מיידית אחרי התשלום', price: Number(p.digitalPrice) });
   if (p.physicalPrice != null) o.push({ key: 'physical', label: 'עותק פיזי', note: 'משלוח עד הבית', price: Number(p.physicalPrice) });
-  if (p.bothPrice != null) o.push({ key: 'both', label: o.length ? 'רכישת האלבום + הורדה' : 'רכישת האלבום', note: 'עותק במשלוח עד הבית, וההורדה מיד', price: Number(p.bothPrice) });
+  if (p.bothPrice != null) o.push({ key: 'both', label: p.oneButtonTitle ? String(p.oneButtonTitle).replace(/^ל(?=רכישת|הורדת)/, '') : o.length ? 'רכישת האלבום + הורדה' : 'רכישת האלבום', note: 'עותק במשלוח עד הבית, וההורדה מיד', price: Number(p.bothPrice) });
   if (!o.length && p.price != null) o.push({ key: 'physical', label: 'רכישה', note: '', price: Number(p.newPrice ?? p.price) });
   return o;
 }

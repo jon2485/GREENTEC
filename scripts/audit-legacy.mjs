@@ -39,7 +39,9 @@ async function main() {
     const price = num(f['product[price]']); const sale = num(f['product[new_price]']); const phys = num(f['digital_downloads[physical_price]']);
     const only = f['digital_downloads[only_digital]'] === '1';
     let D = null, B = null, kind;
-    if (only && phys == null) { D = sale ?? price; kind = 'הורדה בלבד'; }
+    const one = f['digital_downloads[one_button]'] === '1';
+    if (one && !only && (phys != null || !x.hasFile)) { B = price != null ? Math.round(((sale ?? price) + (phys ?? 0)) * 100) / 100 : null; kind = 'כפתור אחד: אלבום + הורדה'; }
+    else if (only && phys == null) { D = sale ?? price; kind = 'הורדה בלבד'; }
     else if (phys != null) { D = sale ?? price; B = price != null ? Math.round((price + phys) * 100) / 100 : null; kind = 'הורדה + אלבום עם הורדה'; }
     else if (x.hasFile) { D = sale ?? price; kind = 'הורדה'; }
     else kind = 'פיזי';
@@ -47,7 +49,7 @@ async function main() {
     else if (kind === 'פיזי') {
       if (p.digitalPrice != null || p.bothPrice != null) add('אפשרויות רכישה שונות', p.id, { name, old: kind, now: { D: num(p.digitalPrice), B: num(p.bothPrice) } });
       else if (!eq(num(p.newPrice) ?? num(p.price), sale ?? price) && !eq(num(p.physicalPrice), sale ?? price)) add('מחיר שונה', p.id, { name, old: sale ?? price, now: num(p.newPrice) ?? num(p.price) });
-    } else if (!eq(num(p.digitalPrice), D) || !eq(num(p.bothPrice), B) || p.physicalPrice != null) {
+    } else if (!eq(num(p.digitalPrice), D) || !(eq(num(p.bothPrice), B) || (kind === 'הורדה' && eq(num(p.bothPrice), D))) || p.physicalPrice != null) {
       add('אפשרויות רכישה שונות', p.id, { name, old: { kind, D, B }, now: { D: num(p.digitalPrice), P: num(p.physicalPrice), B: num(p.bothPrice) } });
     }
     const sups = (f['product_suppliers[]'] || []).map(Number).filter((n) => supIds.has(n));
@@ -63,7 +65,7 @@ async function main() {
     const md = dec(f['seo[g_meta_description]']);
     if (md && dec(p.metaDescription) !== md) add('תיאור SEO שונה', p.id, { name, old: md.slice(0, 80), now: dec(p.metaDescription).slice(0, 80) });
     if ((x.imgs || []).length && !p._count.images) add('בלי תמונות', p.id, { name });
-    if (x.hasFile && kind !== 'פיזי' && !p.digitalFile) add('מוצר דיגיטלי בלי קובץ בשרת', p.id, { name });
+    if (x.hasFile && p.digitalPrice != null && !p.digitalFile) add('מוצר דיגיטלי בלי קובץ בשרת', p.id, { name });
   }
   // names cut at a double quote (חב"ד, כ"ץ, זצ"ל …) in suppliers / categories / products
   const cut = /(^|\s)(חב|כ|זצ|שליט|אדמו|רמב|ר|הר|בע|תפ|ע|ז|יו)$/;
