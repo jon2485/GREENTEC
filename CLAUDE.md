@@ -89,3 +89,11 @@ See **docs/MIGRATION.md** (owner request 2026-11-23): import everything from the
 - Storefront HTML is generated server‑side as strings that copy the template markup (`lib/render.ts`, `lib/pages.ts`) and are rendered with `dangerouslySetInnerHTML`. Use plain `<a>` links (full page loads), so the template's jQuery/Flickity scripts re‑initialize.
 - Client behaviour lives in `public/t/assets/js/gt-site.js` (cart, wishlist, live search, shop toolbar) and `quickview.js` (reads `data-qv-*`, including `data-qv-opts`).
 - Commit messages in English; replies to the owner in Hebrew.
+
+## 7. SEO (2026-11-24)
+
+- `lib/seo.ts`: JSON-LD builders (OnlineStore, WebSite+SearchAction, Product/AggregateOffer, BreadcrumbList, CollectionPage/ItemList, Article), `listingSeo()` (canonical: page N self-canonical, sort → plain page, filters min/max/sup → noindex,follow), `demoteH1()` (one H1 per page), entity decoding.
+- Legacy title / meta description / keywords / canonical / H1 / content are never changed; only empty descriptions get a generated fallback. A 150-product sample matched the live site 150/150 (title, canonical, H1, description where present).
+- No `aggregateRating`: the legacy site printed invented ratings (against Google's rules) – do not add ratings without real reviews.
+- `app/sitemap.ts` (all public URLs + product images), `app/robots.ts`, `/feeds/google-shopping.xml` (physical products for Google Merchant Center), `/search/results` → `/search` (legacy), non-www → www in `middleware.ts` (production only).
+- At go-live: remove STAGING=1, set SITE_URL=https://www.greentec.co.il, submit the sitemap in Search Console (the legacy verification code `RLskCWeT87U2JNdwUPnndsr8gFA6ychYZJnLaUPVUn4` goes in Setting `google_site_verification`), add the feed in Merchant Center.
