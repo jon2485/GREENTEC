@@ -395,7 +395,7 @@ a.gt-ann-item::after { content: "‹"; color: #cadb2d; font-weight: 700; margin-
 .qv-main img { object-fit: contain !important; }
 
 /* ---- Games store (/משחקים) ---- */
-.gz { font-family: "Heebo", sans-serif; color: #1d1d1f; }
+.gz { font-family: "Heebo", sans-serif; color: #1d1d1f; overflow-x: clip; }
 .gz-hero { position: relative; overflow: hidden; text-align: center; color: #fff; padding: calc(var(--gt-hdr, 140px) + 46px) 0 64px;
   background: radial-gradient(60% 80% at 85% 10%, rgba(202,219,45,.22), transparent 60%), radial-gradient(50% 70% at 10% 90%, rgba(202,219,45,.14), transparent 60%), linear-gradient(160deg, #141414, #1f2410 70%, #141414); }
 .gz-hero .container { position: relative; z-index: 1; }
@@ -432,9 +432,10 @@ a.gt-ann-item::after { content: "‹"; color: #cadb2d; font-weight: 700; margin-
   .gz-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: -26px; }
   .gz-tile { padding: 14px; border-radius: 16px; } .gz-ic { width: 42px; height: 42px; } .gz-ic svg { width: 24px; height: 24px; }
   /* shelves scroll sideways on phones, like app stores */
-  .gz-row { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: -14px; padding: 2px 14px 10px; scrollbar-width: none; }
+  .gz-row { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: calc(var(--bs-gutter-x, 1.5rem) * -.5); padding: 2px calc(var(--bs-gutter-x, 1.5rem) * .5) 10px; scroll-padding-inline: calc(var(--bs-gutter-x, 1.5rem) * .5); scrollbar-width: none; }
   .gz-row::-webkit-scrollbar { display: none; }
   .gz-row > .shop-card { flex: 0 0 46%; scroll-snap-align: start; }
   .gz-shelf-head h2 { font-size: 20px; }
   .gz-new { padding: 16px; border-radius: 18px; }
 }
+@media (width >= 992px) { .gz-tiles { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); } }
