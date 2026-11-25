@@ -9,9 +9,10 @@ Criteria used by the first-shot acceptance test (see docs/OPEN_MODEL_EVALUATION.
 identity_before, identity_after, body_motion, acting, lipsync, hebrew, continuity,
 art_lines, art_colors, art_proportions, art_face, art_style, edit_sound, content_fit
 """
-import csv, io, json, statistics as stats
+import csv, io, json, statistics as stats, sys
 from collections import defaultdict
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # embedded Python (._pth) does not add the script folder
 from _common import utf8_stdio
 
 utf8_stdio()

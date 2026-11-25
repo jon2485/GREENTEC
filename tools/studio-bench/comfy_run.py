@@ -16,6 +16,7 @@ Exit code 0 only when ComfyUI reports success and at least one output file was s
 """
 import argparse, json, mimetypes, re, sys, time, urllib.error, urllib.parse, urllib.request, uuid
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # embedded Python (._pth) does not add the script folder
 from _common import LOCAL, is_local_http, redact, utf8_stdio
 
 utf8_stdio()

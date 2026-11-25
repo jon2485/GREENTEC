@@ -16,6 +16,7 @@ a running ComfyUI). The baseline before the run is recorded so the delta can be 
 """
 import argparse, datetime as dt, hashlib, json, os, re, signal, subprocess, sys, threading, time, uuid
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # embedded Python (._pth) does not add the script folder
 from _common import HERE, utf8_stdio, redact, rel, find_exe, resolve_cmd
 
 RUNS = HERE / 'results' / 'runs.jsonl'
