@@ -25,7 +25,7 @@ export default async function Cart({ searchParams }: { searchParams: Promise<Rec
   <a href="${href(i.product)}" class="ci-img"><img src="${esc(thumb(i.product.mainImage))}" alt="" loading="lazy"></a>
   <div class="ci-body">
     <div class="ci-top"><a href="${href(i.product)}" class="ci-name">${esc(i.product.name)}</a><button type="button" class="ci-del" ${data(i)} aria-label="הסרה מהסל: ${esc(i.product.name)}">${ic.trash}</button></div>
-    <p class="ci-opt">${i.mode === 'digital' ? ic.dl : ''}${esc(i.label)}</p>${i.stockProblem ? `<p class="cs-err">${esc(i.stockProblem)} – נא לעדכן את הכמות</p>` : ''}
+    <p class="ci-opt">${i.mode === 'digital' ? ic.dl : ''}${esc(i.label)}</p>${i.stockProblem ? `<p class="cs-err">${esc(i.stockProblem)} – נא להסיר מהסל</p>` : ''}
     <div class="ci-bottom">
       ${i.mode === 'digital' ? '<span class="ci-one">הורדה דיגיטלית · יחידה אחת</span>' : `<div class="ci-qty" role="group" aria-label="כמות"><button type="button" ${data(i)} data-set="${i.qty - 1}" aria-label="הפחתת כמות"${i.qty <= 1 ? ' data-last="1"' : ''}>${i.qty <= 1 ? ic.trash : ic.minus}</button><output aria-live="polite">${i.qty}</output><button type="button" ${data(i)} data-set="${i.qty + 1}" aria-label="הוספת כמות">${ic.plus}</button></div>`}
       <div class="ci-price">${i.qty > 1 ? `<small>${money(i.unit)} × ${i.qty}</small>` : ''}<strong>${money(i.total)}</strong></div>

@@ -2,8 +2,8 @@
 // A chosen size/colour has its own stock (variantsJson combos); otherwise the product's quantity applies.
 export function availFor(p: { quantity: number | null }, mode: string, choiceStock: number | null, hasGroups: boolean): number | null {
   if (mode === 'digital' || mode === 'link') return null;
-  if (choiceStock != null) return Math.max(0, choiceStock);
-  if (hasGroups) return null;
-  return p.quantity == null ? null : Math.max(0, p.quantity);
+  // No quantity = unlimited; a quantity above 0 = in stock; 0 = out of stock (the number itself is not a purchase limit)
+  const n = choiceStock != null ? choiceStock : hasGroups ? null : p.quantity;
+  return n == null || n > 0 ? null : 0;
 }
-export const stockMsg = (avail: number) => (avail <= 0 ? 'המוצר אזל מהמלאי' : avail === 1 ? 'נותרה יחידה אחת בלבד במלאי' : `נותרו ${avail} יחידות בלבד במלאי`);
+export const stockMsg = (_avail?: number) => 'המוצר אזל מהמלאי';

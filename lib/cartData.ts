@@ -17,7 +17,7 @@ export async function cartView(lines?: CartLine[], couponCode?: string, shipping
     const label = ch.label ? (opts.length > 1 ? o.label + ' · ' : '') + ch.label : o.label;
     const vars = parseVariants((p as any).variantsJson);
     const avail = availFor(p as any, o.key, ch.stock ?? null, !!vars?.groups.length);
-    return { ...l, mode: o.key, product: p, label, variant: ch.label, unit: ch.unit, total: ch.unit * l.qty, avail, stockProblem: avail != null && l.qty > avail ? stockMsg(avail) : '' };
+    return { ...l, mode: o.key, product: p, label, variant: ch.label, unit: ch.unit, total: ch.unit * l.qty, avail, stockProblem: avail === 0 ? stockMsg(0) : '' };
   }).filter(Boolean) as any[];
   const subtotal = items.reduce((a, i) => a + i.total, 0);
   const needsShipping = items.some((i) => i.mode !== 'digital');
