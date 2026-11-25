@@ -114,7 +114,7 @@ try {
     $smi = Find-Exe 'nvidia-smi'
     if (-not $smi) { Fail-Or-Note 'nvidia-smi not found' }
     else {
-      $drv = [double](Get-SmiValues $smi 'driver_version')[0]
+      $drv = [double]((Get-SmiValues $smi 'driver_version')[0])
       if ($drv -lt [double]$M.driver.min_version) { Fail-Or-Note "NVIDIA driver $drv < $($M.driver.min_version): update the driver first (INSTALL_PLAN_P1.md, P1.1). Nothing was changed." }
       else { Say "driver $drv OK (>= $($M.driver.min_version))" 'Green' }
     }
@@ -202,8 +202,8 @@ try {
 
   if (-not $Execute) {
     $after = @(Get-TreeSnapshot $Root @($ResultsDir))
-    $diff = @(Compare-Object -ReferenceObject $before -DifferenceObject $after)
-    if ($diff.Count -or ($rootExisted -ne (Test-Path -LiteralPath $Root))) { Say "DRY RUN CHANGED FILES UNDER $Root - this is a bug, please report it:" 'Red'; $diff | ForEach-Object { Say "  $($_.SideIndicator) $($_.InputObject)" 'Red' }; $exitCode = 3 }
+    $diff = Compare-Snapshots $before $after
+    if ($diff.Count -or ($rootExisted -ne (Test-Path -LiteralPath $Root))) { Say "DRY RUN CHANGED FILES UNDER $Root - this is a bug, please report it:" 'Red'; $diff | ForEach-Object { Say "  $_" 'Red' }; $exitCode = 3 }
     else { Say ("dry run verified: {0} file(s) under {1} unchanged; only this log was written: {2}" -f $before.Count, $Root, $log) 'Green' }
     if ($script:Blockers) { Say "$($script:Blockers) blocker(s) must be solved before -Execute" 'Red'; if ($exitCode -eq 0) { $exitCode = 2 } }
   }

@@ -64,11 +64,23 @@ function Get-TreeSnapshot([string]$Root, [string[]]$Exclude) {
   } | ForEach-Object { '{0}|{1}|{2}' -f $_.FullName.Substring($rootFull.Length), $_.Length, $_.LastWriteTimeUtc.Ticks } | Sort-Object
 }
 
+function Compare-Snapshots([string[]]$Before, [string[]]$After) {
+  # returns lines that differ ('-' = gone, '+' = new); works with empty lists (Compare-Object does not in PS 5.1)
+  $b = New-Object 'System.Collections.Generic.HashSet[string]'; foreach ($x in @($Before)) { if ($x) { [void]$b.Add($x) } }
+  $a = New-Object 'System.Collections.Generic.HashSet[string]'; foreach ($x in @($After)) { if ($x) { [void]$a.Add($x) } }
+  $out = @()
+  foreach ($x in $b) { if (-not $a.Contains($x)) { $out += "- $x" } }
+  foreach ($x in $a) { if (-not $b.Contains($x)) { $out += "+ $x" } }
+  return ,$out
+}
+
 function Get-Sha256Lower([string]$File) { (Get-FileHash -LiteralPath $File -Algorithm SHA256).Hash.ToLowerInvariant() }
 
 function Get-SmiValues([string]$Smi, [string]$Query) {
   $line = & $Smi "--query-gpu=$Query" '--format=csv,noheader,nounits' | Select-Object -First 1
-  return @($line -split ',\s*')
+  # the leading comma keeps a one-element result an ARRAY (PowerShell would unroll it to a string,
+  # and [0] would then return the first character - '5' of '573.42')
+  return ,@([string]$line -split ',\s*')
 }
 
 function Test-CustomNodes([string]$Dir, [string[]]$AllowedNames) {

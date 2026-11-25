@@ -73,6 +73,10 @@ $cnd = Join-Path $tmp 'cn'; New-Item -ItemType Directory -Force $cnd | Out-Null;
 Check 'custom node allow-list flags extras' ((Test-CustomNodes $cnd @('ok.py')) -contains 'evil.py')
 Check 'Assert-Inside blocks escape' ($(try { Assert-Inside (Join-Path $tmp '..\x') $tmp; $false } catch { $true }))
 Check 'Find-Exe finds mock' ((Find-Exe 'nvidia-smi') -like "$mockDir*")
+$env:MOCK_DRV = '573.42'
+Check 'Get-SmiValues: single value stays an array (driver 573.42, not 53)' ([double]((Get-SmiValues (Find-Exe 'nvidia-smi') 'driver_version')[0]) -eq 573.42)
+Check 'Compare-Snapshots: empty vs empty' ((Compare-Snapshots @() @()).Count -eq 0)
+Check 'Compare-Snapshots: detects new file' ((Compare-Snapshots @() @('a|1|2')).Count -eq 1)
 
 # ---------- precheck ----------
 $rep = Join-Path $tmp 'reports'
@@ -105,6 +109,8 @@ $snapBefore = Get-TreeSnapshot $gt @()
 $logsBefore = @(Get-ChildItem (Join-Path $inst 'results') -Filter 'p1_install-*-dryrun.log' -ErrorAction SilentlyContinue).Count
 $r = Run-Ps (Join-Path $inst 'p1_install.ps1') @('-Stage', 'ComfyUI', '-Root', $gt, '-NoNetwork')
 Check 'dry run ComfyUI, new driver: WOULD download + extract' (($r.out -match 'WOULD download') -and ($r.out -match 'WOULD extract'))
+Check 'dry run ComfyUI, new driver: driver 621.14 accepted' ($r.out -match 'driver 621.14 OK')
+Check 'dry run ComfyUI, new driver: verified unchanged, no STOPPED' (($r.out -match 'dry run verified') -and ($r.out -notmatch 'STOPPED'))
 Check 'dry run ComfyUI: no DO lines' ($r.out -notmatch '\bDO    ')
 Check 'dry run ComfyUI: files under root unchanged' ((Compare-Object $snapBefore (Get-TreeSnapshot $gt @()) | Measure-Object).Count -eq 0)
 Check 'dry run ComfyUI: exactly one new log' (@(Get-ChildItem (Join-Path $inst 'results') -Filter 'p1_install-*-dryrun.log' -ErrorAction SilentlyContinue).Count -eq $logsBefore + 1)
