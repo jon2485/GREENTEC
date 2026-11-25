@@ -1,0 +1,87 @@
+{
+  "_about": "Priority list for the first real shot. status: candidate | license_cleared | hardware_testing | experimental | approved | rejected. Nothing here is approved. download_gb = size of the official ComfyUI template's model files (Comfy-Org workflow_templates index.json 'size', read 2026-11-25); shared files (umt5, clip_vision_h, Wan VAE) are counted again in each template. license: verified = read from the official LICENSE file; unverified = Hugging Face model card not yet read by a person.",
+  "candidates": [
+    {
+      "priority": 1, "key": "qwen-image-edit-2511-int8", "role": "character sheet: angles, expressions, locked features",
+      "status": "candidate", "comfy_template": "image_qwen_image_edit_2511_int8", "download_gb": 31.0,
+      "alt_template": {"name": "image_qwen_image_edit_2511", "note": "fp8mixed model", "download_gb": 51.3},
+      "files": [
+        {"file": "qwen_image_edit_2511_int8_convrot.safetensors", "repo": "Comfy-Org/Qwen-Image-Edit_ComfyUI", "license": "Apache-2.0 (Qwen-Image LICENSE, verified); repackage card unverified"},
+        {"file": "qwen_2.5_vl_7b_fp8_scaled.safetensors", "repo": "Comfy-Org/HunyuanVideo_1.5_repackaged", "license": "Qwen2.5-VL code Apache-2.0 (verified); 7B weights card unverified"},
+        {"file": "qwen_image_vae.safetensors", "repo": "Comfy-Org/Qwen-Image_ComfyUI", "license": "unverified (expected Apache-2.0)"},
+        {"file": "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors", "repo": "lightx2v/Qwen-Image-Edit-2511-Lightning", "license": "LightX2V code Apache-2.0 (verified); LoRA weights card unverified", "optional": true}
+      ],
+      "vram_published": null, "risks": ["side-view artifacts (QwenLM/Qwen-Image#254)", "collapse after repeated edits (#274)"]
+    },
+    {
+      "priority": 2, "key": "wan-animate-2-distill-int8", "role": "character animation from a driving video (end-to-end, no pose extractor)",
+      "status": "candidate", "comfy_template": "video_wan_animate2_distilled", "download_gb": 24.9,
+      "alt_template": {"name": "video_wan_animate2", "note": "base model + lightx2v LoRA", "download_gb": 25.7},
+      "files": [
+        {"file": "wan_animate_2_distill_int8_convrot.safetensors", "repo": "Comfy-Org/Wan-Animate-2", "license": "code Apache-2.0 (verified); weights card unverified"},
+        {"file": "umt5_xxl_fp8_e4m3fn_scaled.safetensors", "repo": "Comfy-Org/Wan-Animate-2", "license": "UMT5 (Google T5 code Apache-2.0, verified); weights card unverified"},
+        {"file": "clip_vision_h.safetensors", "repo": "Comfy-Org/Wan-Animate-2", "license": "OpenCLIP code MIT (verified); ViT-H weights card unverified"},
+        {"file": "Wan2_1_VAE_bf16.safetensors", "repo": "Comfy-Org/Wan-Animate-2", "license": "Wan2.1 Apache-2.0 (verified)"}
+      ],
+      "custom_nodes": [],
+      "vram_published": "8x A800 at 720P, 2x A800 at 480P (official repo defaults); no single-GPU figure",
+      "risks": ["highest memory risk – measure first", "weights license on HF unverified"]
+    },
+    {
+      "priority": 3, "key": "wan22-animate-14b-fp8", "role": "character animation / replacement (pose-driven)",
+      "status": "candidate", "comfy_template": "video_wan2_2_14B_animate", "download_gb": 27.4,
+      "files": [
+        {"file": "Wan2_2-Animate-14B_fp8_e4m3fn_scaled_KJ.safetensors", "repo": "Kijai/WanVideo_comfy_fp8_scaled", "license": "Wan2.2 Apache-2.0 (verified); repackage card unverified"},
+        {"file": "WanAnimate_relight_lora_fp16.safetensors", "repo": "Kijai/WanVideo_comfy", "license": "unverified"},
+        {"file": "lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors", "repo": "Kijai/WanVideo_comfy", "license": "LightX2V code Apache-2.0 (verified); weights unverified"},
+        {"file": "umt5_xxl_fp8_e4m3fn_scaled.safetensors", "license": "see priority 2"},
+        {"file": "clip_vision_h.safetensors", "license": "see priority 2"},
+        {"file": "wan_2.1_vae.safetensors", "license": "Apache-2.0 (verified)"}
+      ],
+      "custom_nodes": [
+        {"name": "comfyui_controlnet_aux (DWPreprocessor)", "license": "Apache-2.0 (verified); DWPose code Apache-2.0, YOLOX code Apache-2.0 (verified); downloaded ONNX weights unverified"},
+        {"name": "ComfyUI-segment-anything-2", "license": "Apache-2.0 (verified); SAM2 Apache-2.0 (verified)"},
+        {"name": "comfyui-kjnodes", "license": "GPL-3.0 (verified) – internal use only, do not redistribute"}
+      ],
+      "note": "The ComfyUI template uses DWPose + SAM2, not the official repo's YOLOv10 (AGPL-3.0) / FLUX.1-Kontext-dev (non-commercial) preprocessing. Do not use the official repo preprocessing.",
+      "vram_published": null, "risks": ["mask extraction single-person only (official guide)", "stated scope 'humanoid characters'"]
+    },
+    {
+      "priority": 4, "key": "wan22-ti2v-5b", "role": "light fallback: image-to-video, animatic",
+      "status": "candidate", "comfy_template": "video_wan2_2_5B_ti2v", "download_gb": 18.1,
+      "files": [
+        {"file": "wan2.2_ti2v_5B_fp16.safetensors", "license": "Apache-2.0 (verified)"},
+        {"file": "umt5_xxl_fp8_e4m3fn_scaled.safetensors", "license": "see priority 2"},
+        {"file": "wan2.2_vae.safetensors", "license": "Apache-2.0 (verified)"}
+      ],
+      "vram_published": "22.8 GB, 720p, RTX 4090, with offload (official README figure)"
+    },
+    {
+      "priority": 5, "key": "ltx-2.5-i2v-int8", "role": "cinematic shots, audio+video, dubbing",
+      "status": "candidate", "blocked_by": "owner must confirm annual revenue < USD 10M (LTX-2.x Community License) and accept §6 watermark / §20 non-compete terms",
+      "comfy_template": "video_ltx2_5_i2v", "download_gb": 56.9,
+      "files": [
+        {"file": "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors", "license": "LTX-2.x Community License (verified)"},
+        {"file": "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors", "license": "Gemma 4 Apache-2.0 (secondary) – verify card"},
+        {"file": "gemma4_e2b_it_int8_convrot.safetensors", "license": "Gemma 4 Apache-2.0 (secondary) – verify card"},
+        {"file": "ltx-2.5 video/audio VAE + latent upscaler", "license": "LTX-2.x Community License (verified)"}
+      ],
+      "vram_published": "32GB+ VRAM (ComfyUI-LTXVideo README)"
+    },
+    {
+      "priority": 6, "key": "hebrew-tts-tbd", "role": "Hebrew speech",
+      "status": "candidate",
+      "options": [
+        {"key": "chatterbox-multilingual", "license": "code MIT (verified); weights MIT (secondary)", "hebrew": "official (verified)", "maintenance": "retired Aug 2026 (verified) – needs internal pinned fork", "download_gb": null, "vram_published": "~3.5 GB (NVIDIA plugin card, secondary)"},
+        {"key": "omnivoice", "license": "code Apache-2.0 (verified); weights conflicting reports – unverified", "hebrew": "listed, 13.4 h (verified)"}
+      ],
+      "nikud": [{"key": "dicta-menaked", "license": "CC BY 4.0 vs CC BY-SA (conflict) – unverified"}, {"key": "phonikud", "license": "code CC BY 4.0 (verified); weights unverified"}]
+    }
+  ],
+  "controlled_animation_tools": [
+    {"key": "blender-grease-pencil", "license": "GPL (verified: blender COPYING)", "use": "2D rig / cut-out / cleanup of generative frames"},
+    {"key": "opentoonz", "license": "BSD-3-Clause (verified)", "use": "2D cut-out and frame-by-frame animation"},
+    {"key": "ffmpeg", "license": "LGPL default; GPL with --enable-gpl (verified)", "use": "assembly, audio mux"}
+  ],
+  "deferred": ["LLMs (Qwen3.5/3.6-35B-A3B, Gemma 4, DictaLM 3.0) – not needed for the first shot", "lip-sync models (MultiTalk/InfiniteTalk) – after a Hebrew voice is chosen", "HunyuanVideo-1.5 – rejected for production (output territory clause)"]
+}
