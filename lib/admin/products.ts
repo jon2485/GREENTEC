@@ -279,10 +279,18 @@ export async function setRelsSave(id: number, f: FormData) {
 
 // ---------- A12 מלאי / A13 מלאי וריאציות / A14 סל מחזור / A15 מחיר גורף ----------
 export async function inventory(sp: Record<string, string>) {
-  const where: any = { quantity: { not: null }, status: { gte: 0 } }; if (sp.q) where.name = { contains: sp.q, mode: 'insensitive' };
-  const rows = await db.product.findMany({ where, orderBy: { id: 'desc' }, take: 1000 });
-  return card(`מלאי (${rows.length})`, `<form class="d-flex gap-2 mb-3" action="/admin"><input type="hidden" name="am" value="products"><input type="hidden" name="ac" value="inventory"><input class="form-control form-control-sm" style="max-width:260px" name="q" value="${esc(sp.q || '')}" placeholder="חיפוש"><button class="btn btn-sm btn-primary">חיפוש</button></form>` +
-    table(['ID', 'שם', 'מחיר', 'כמות'], rows.map((p) => [String(p.id), `<a href="${A('products', 'edit', { id: p.id })}">${esc(p.name)}</a>`, fromPrice(p), `<input type="number" class="form-control form-control-sm adm-inline" style="width:90px" value="${p.quantity}" data-inline="${AJ('products', 'inline', p.id)}" data-field="quantity">`])));
+  // quantity: empty = unlimited, > 0 = in stock, 0 = out of stock
+  const f = sp.f === 'out' || sp.f === 'in' ? sp.f : '';
+  const base: any = { status: { gte: 0 } }; if (sp.q) base.name = { contains: sp.q, mode: 'insensitive' };
+  const [nOut, nIn, nUnl] = await Promise.all([
+    db.product.count({ where: { ...base, quantity: { lte: 0 } } }), db.product.count({ where: { ...base, quantity: { gt: 0 } } }), db.product.count({ where: { ...base, quantity: null } }),
+  ]);
+  const where: any = { ...base, quantity: f === 'out' ? { lte: 0 } : f === 'in' ? { gt: 0 } : { not: null } };
+  const rows = await db.product.findMany({ where, orderBy: f ? { id: 'desc' } : [{ quantity: 'asc' }, { id: 'desc' }], take: 1000 });
+  const chip = (k: string, label: string, n: number, cls: string) => `<a class="btn btn-sm ${f === k ? cls : 'btn-light'}" href="${A('products', 'inventory', {})}&f=${k}${sp.q ? '&q=' + encodeURIComponent(sp.q) : ''}">${label} (${n})</a>`;
+  const chips = `<div class="d-flex flex-wrap gap-2 mb-3">${chip('', 'מלאי מנוהל', nOut + nIn, 'btn-primary')}${chip('out', 'אזל מהמלאי', nOut, 'btn-danger')}${chip('in', 'במלאי', nIn, 'btn-success')}<span class="btn btn-sm btn-light disabled">ללא הגבלה (בלי כמות): ${nUnl}</span></div>`;
+  return card(`מלאי (${rows.length})`, chips + `<form class="d-flex gap-2 mb-3" action="/admin"><input type="hidden" name="am" value="products"><input type="hidden" name="ac" value="inventory">${f ? `<input type="hidden" name="f" value="${f}">` : ''}<input class="form-control form-control-sm" style="max-width:260px" name="q" value="${esc(sp.q || '')}" placeholder="חיפוש"><button class="btn btn-sm btn-primary">חיפוש</button></form>` +
+    table(['ID', 'שם', 'מחיר', 'מצב', 'כמות'], rows.map((p) => [String(p.id), `<a href="${A('products', 'edit', { id: p.id })}">${esc(p.name)}</a>`, fromPrice(p), (p.quantity ?? 0) <= 0 ? '<span class="badge bg-danger">אזל</span>' : '<span class="badge bg-success">במלאי</span>', `<input type="number" class="form-control form-control-sm adm-inline" style="width:90px" value="${p.quantity}" data-inline="${AJ('products', 'inline', p.id)}" data-field="quantity">`])));
 }
 export async function inventoryV() {
   const rows = await db.product.findMany({ where: { variations: { some: {} } }, include: { variations: true }, orderBy: { id: 'desc' } });
