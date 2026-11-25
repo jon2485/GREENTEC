@@ -71,7 +71,7 @@
 **לפני ההרצה:** סוגרים את Topaz וכל רינדור. ב‑PowerShell רגיל (לא כמנהל), מדביקים:
 
 ```powershell
-$commit = '__COMMIT__'
+$commit = 'b7c1e80bba7dbe6123647ba1b3299db7a0f168f8'
 $base = "https://raw.githubusercontent.com/jon2485/greentec/$commit/tools/studio-bench"
 $dst = 'C:\GREENTEC\studio-bench'
 New-Item -ItemType Directory -Force "$dst\install", "$dst\workflows" | Out-Null
@@ -90,9 +90,9 @@ foreach ($l in Get-Content "$dst\SHA256SUMS.txt") {
 
 **בודקים שני דברים:**
 - `bad files: 0`.
-- ערך ה‑`SHA256SUMS` שמודפס זהה לערך ששלחתי בצ'אט.
+- ערך ה‑`SHA256SUMS` שמודפס זהה ל‑**`CE65ED8A2D17764AC093FC37DFB7BC0A3AA0501403DC6A4CC6FF5C0C6A53AC34`**.
 
-הקבצים יורדים מ‑commit קבוע ולא מענף, כך שהתוכן לא יכול להשתנות בלי שהחתימה תשתנה. אם אחד משני הדברים לא מתקיים, לא מריצים.
+הקבצים יורדים מ‑commit קבוע ‏`b7c1e80` ולא מענף. הכלים ב‑commit הזה זהים, בייט לבייט, לאלה שעברו את בדיקות ה‑CI ב‑`c97bfe6`, כך שהתוכן לא יכול להשתנות בלי שהחתימה תשתנה. אם אחד משני הדברים לא מתקיים, לא מריצים.
 
 **אחר כך:**
 
