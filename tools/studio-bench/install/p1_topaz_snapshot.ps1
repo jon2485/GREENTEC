@@ -15,9 +15,11 @@ param(
   [double]$JobSeconds = 0,
   [string]$OutputFile = '',
   [string]$Notes = '',
-  [string]$ReportDir = (Join-Path $PSScriptRoot 'results')
+  [string]$ReportDir = ''
 )
 $ErrorActionPreference = 'Stop'
+# NOTE: in Windows PowerShell 5.1 $PSScriptRoot is empty inside param() defaults, so defaults are resolved here.
+if (-not $ReportDir) { $ReportDir = Join-Path $PSScriptRoot 'results' }
 . (Join-Path $PSScriptRoot 'p1_lib.ps1')
 $smi = Find-Exe 'nvidia-smi'
 $drv = if ($smi) { (Get-SmiValues $smi 'driver_version')[0] } else { 'nvidia-smi not found' }

@@ -23,10 +23,12 @@ Layers (none of them changes the firewall or any system setting):
 param(
   [int]$Port = 8188,
   [switch]$WatchOnly,
-  [string]$ManifestPath = (Join-Path $PSScriptRoot 'p1_manifest.json'),
+  [string]$ManifestPath = '',
   [string]$Root = ''
 )
 $ErrorActionPreference = 'Stop'
+# NOTE: in Windows PowerShell 5.1 $PSScriptRoot is empty inside param() defaults, so defaults are resolved here.
+if (-not $ManifestPath) { $ManifestPath = Join-Path $PSScriptRoot 'p1_manifest.json' }
 . (Join-Path $PSScriptRoot 'p1_lib.ps1')
 $M = Read-Manifest $ManifestPath
 if (-not $Root) { $Root = $M.root }

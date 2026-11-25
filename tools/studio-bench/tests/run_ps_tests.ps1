@@ -107,7 +107,7 @@ $r = Run-Ps (Join-Path $inst 'p1_install.ps1') @('-Stage', 'ComfyUI', '-Root', $
 Check 'dry run ComfyUI, new driver: WOULD download + extract' (($r.out -match 'WOULD download') -and ($r.out -match 'WOULD extract'))
 Check 'dry run ComfyUI: no DO lines' ($r.out -notmatch '\bDO    ')
 Check 'dry run ComfyUI: files under root unchanged' ((Compare-Object $snapBefore (Get-TreeSnapshot $gt @()) | Measure-Object).Count -eq 0)
-Check 'dry run ComfyUI: exactly one new log' (@(Get-ChildItem (Join-Path $inst 'results') -Filter 'p1_install-*-dryrun.log').Count -eq $logsBefore + 1)
+Check 'dry run ComfyUI: exactly one new log' (@(Get-ChildItem (Join-Path $inst 'results') -Filter 'p1_install-*-dryrun.log' -ErrorAction SilentlyContinue).Count -eq $logsBefore + 1)
 $r = Run-Ps (Join-Path $inst 'p1_install.ps1') @('-Stage', 'Models', '-Root', $gt, '-NoNetwork')
 Check 'dry run Models: blocker (ComfyUI missing), nothing written' (($r.code -eq 2) -and ((Compare-Object $snapBefore (Get-TreeSnapshot $gt @()) | Measure-Object).Count -eq 0)) "exit $($r.code)"
 

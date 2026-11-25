@@ -12,10 +12,13 @@ or redirected to a host that is not allowed.
 #>
 [CmdletBinding()]
 param(
-  [string]$ManifestPath = (Join-Path $PSScriptRoot 'p1_manifest.json'),
-  [string]$ReportDir = (Join-Path $PSScriptRoot 'results')
+  [string]$ManifestPath = '',
+  [string]$ReportDir = ''
 )
 $ErrorActionPreference = 'Stop'
+# NOTE: in Windows PowerShell 5.1 $PSScriptRoot is empty inside param() defaults, so defaults are resolved here.
+if (-not $ManifestPath) { $ManifestPath = Join-Path $PSScriptRoot 'p1_manifest.json' }
+if (-not $ReportDir) { $ReportDir = Join-Path $PSScriptRoot 'results' }
 . (Join-Path $PSScriptRoot 'p1_lib.ps1')
 $M = Read-Manifest $ManifestPath
 $allowed = @($M.allowed_download_hosts)

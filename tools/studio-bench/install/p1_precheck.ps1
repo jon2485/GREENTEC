@@ -13,12 +13,15 @@ Exit code: 0 = no blocking item, 2 = at least one FAIL.
 #>
 [CmdletBinding()]
 param(
-  [string]$ManifestPath = (Join-Path $PSScriptRoot 'p1_manifest.json'),
+  [string]$ManifestPath = '',
   [string]$Root = '',
-  [string]$ReportDir = (Join-Path $PSScriptRoot 'results'),
+  [string]$ReportDir = '',
   [int]$IdleSeconds = 15
 )
 $ErrorActionPreference = 'Stop'
+# NOTE: in Windows PowerShell 5.1 $PSScriptRoot is empty inside param() defaults, so defaults are resolved here.
+if (-not $ManifestPath) { $ManifestPath = Join-Path $PSScriptRoot 'p1_manifest.json' }
+if (-not $ReportDir) { $ReportDir = Join-Path $PSScriptRoot 'results' }
 . (Join-Path $PSScriptRoot 'p1_lib.ps1')
 $M = Read-Manifest $ManifestPath
 if (-not $Root) { $Root = $M.root }
