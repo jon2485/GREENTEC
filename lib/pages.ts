@@ -125,7 +125,7 @@ export const ppScript = `{
   let V=null; try{V=vb?JSON.parse(vb.dataset.vars):null}catch(e){}
   const basePrice=()=>{const r=document.querySelector('.pp-opt input:checked');return r?+r.value:+(price.dataset.base||String(price.textContent).replace(/[^\\d.]/g,''))};
   if(price&&!price.dataset.base)price.dataset.base=String(price.textContent).replace(/[^\\d.]/g,'');
-  const pick=()=>{if(!vb)return {ok:true};const ids=[...vb.querySelectorAll('.vg[data-gi]')].map(g=>{const b=g.querySelector('.on[data-o]');return b?+b.dataset.o:0});
+  const pick=()=>{if(!vb)return {ok:true,known:true,out:false,key:'',pr:''};const ids=[...vb.querySelectorAll('.vg[data-gi]')].map(g=>{const b=g.querySelector('.on[data-o]');return b?+b.dataset.o:0});
     const missing=V.groups.filter((g,i)=>!ids[i]).map(g=>g.name);const key=ids.length?'.'+[...ids].sort((a,b)=>a-b).join('.')+'.':'';const c=V.combos[key];
     const full=Object.keys(V.combos).some(k=>k.split('.').filter(Boolean).length===V.groups.length);
     const sel=[...vb.querySelectorAll('input[data-prop]:checked')];
