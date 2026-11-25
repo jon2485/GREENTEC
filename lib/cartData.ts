@@ -2,6 +2,7 @@ import { db } from './db';
 import { getCart, type CartLine } from './cart';
 import { priceOptions } from './format';
 import { parseVariants, resolveChoice } from './variants';
+import { availFor, stockMsg } from './stock';
 
 export async function cartView(lines?: CartLine[], couponCode?: string, shippingId?: number) {
   lines = lines ?? (await getCart());
@@ -14,7 +15,9 @@ export async function cartView(lines?: CartLine[], couponCode?: string, shipping
     const ch = o.key === 'digital' ? { unit: o.price, label: '', stock: null } : resolveChoice(parseVariants((p as any).variantsJson), o.price, l.v, l.pr);
     if (!ch) return null;
     const label = ch.label ? (opts.length > 1 ? o.label + ' · ' : '') + ch.label : o.label;
-    return { ...l, mode: o.key, product: p, label, variant: ch.label, unit: ch.unit, total: ch.unit * l.qty };
+    const vars = parseVariants((p as any).variantsJson);
+    const avail = availFor(p as any, o.key, ch.stock ?? null, !!vars?.groups.length);
+    return { ...l, mode: o.key, product: p, label, variant: ch.label, unit: ch.unit, total: ch.unit * l.qty, avail, stockProblem: avail != null && l.qty > avail ? stockMsg(avail) : '' };
   }).filter(Boolean) as any[];
   const subtotal = items.reduce((a, i) => a + i.total, 0);
   const needsShipping = items.some((i) => i.mode !== 'digital');
@@ -32,5 +35,5 @@ export async function cartView(lines?: CartLine[], couponCode?: string, shipping
     else if (coupon.kind === 'free_shipping') { discount = shipping; }
   }
   const total = Math.max(0, subtotal + shipping - discount);
-  return { items, subtotal, shipping, discount, total, needsShipping, methods, method, coupon, couponError, count: items.reduce((a, i) => a + i.qty, 0) };
+  return { items, stockProblem: items.some((i: any) => i.stockProblem), subtotal, shipping, discount, total, needsShipping, methods, method, coupon, couponError, count: items.reduce((a, i) => a + i.qty, 0) };
 }

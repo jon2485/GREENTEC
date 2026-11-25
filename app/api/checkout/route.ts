@@ -9,6 +9,7 @@ export async function POST(req: Request) {
   const f = await req.formData(); const g = (k: string) => String(f.get(k) || '').trim();
   const v = await cartView(undefined, g('coupon') || undefined, +g('shipping') || undefined);
   if (!v.items.length) return NextResponse.redirect(new URL('/cart', req.url), 303);
+  if (v.stockProblem) return NextResponse.redirect(new URL('/cart?stock=1', req.url), 303);
   if (!g('firstName') || !g('email') || !g('phone') || (v.needsShipping && (!g('address') || !g('city')))) return NextResponse.redirect(new URL('/checkout?err=1', req.url), 303);
   const order = await db.order.create({ data: {
     userId: u.id, paymentMethod: +g('paymentMethod') || 5, paymentStatus: 'pending', userStatusId: 1,

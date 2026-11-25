@@ -3,6 +3,7 @@ import { getCart, saveCart, sameLine } from '@/lib/cart';
 import { db } from '@/lib/db';
 import { priceOptions } from '@/lib/format';
 import { parseVariants, resolveChoice } from '@/lib/variants';
+import { availFor, stockMsg } from '@/lib/stock';
 
 const count = (l: any[]) => l.reduce((a, x) => a + x.qty, 0);
 export async function GET() { const l = await getCart(); return NextResponse.json({ lines: l, count: count(l) }); }
@@ -26,6 +27,18 @@ export async function POST(req: Request) {
   const me = { id: p.id, mode: m, v: vk, pr: prs };
   const ex = lines.find((l) => sameLine(l, me));
   const q = Math.max(0, Math.min(99, Math.floor(+qty || 1)));
+  // stock: a sold-out item can't be added, and the cart can't hold more than what is in stock
+  {
+    const vars = parseVariants(p.variantsJson); const hasG = !!vars?.groups.length;
+    const o = priceOptions(p).find((x) => x.key === m) || priceOptions(p)[0];
+    const ch = m === 'digital' ? null : resolveChoice(vars, o?.price || 0, vk, prs);
+    const avail = availFor(p, m, ch?.stock ?? null, hasG);
+    if (avail != null && q > 0) {
+      const inCart = hasG ? (ex?.qty || 0) : lines.filter((l) => l.id === p.id && (l.mode === 'physical' || l.mode === 'both')).reduce((a, l) => a + l.qty, 0);
+      const want = set ? q : inCart + q;
+      if (avail <= 0 || want > avail) return NextResponse.json({ error: 'stock', message: avail <= 0 ? stockMsg(0) : stockMsg(avail) + (inCart ? ` (יש כבר ${inCart} בסל)` : '') }, { status: 409 });
+    }
+  }
   if (ex) ex.qty = set ? q : Math.min(99, ex.qty + q); else if (q) lines.push({ id: p.id, mode: m, qty: q, ...(vk ? { v: vk } : {}), ...(prs ? { pr: prs } : {}) });
   const next = m === 'digital' ? lines.map((l) => (l.id === p.id && l.mode === 'digital' ? { ...l, qty: 1 } : l)) : lines;
   const clean = next.filter((l) => l.qty > 0);
