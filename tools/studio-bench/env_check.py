@@ -11,6 +11,10 @@ folder are replaced by <USER>, <HOST>, <HOME> before anything is printed or save
 
 Optional: --no-gpu-test skips the PyTorch check (it only runs if PyTorch is
 already installed; it runs in a separate process with a time limit).
+
+Exit codes: 0 = no problem found; 3 = problems found (listed); with --require-gpu
+(used by the installer as a gate) a missing PyTorch, no CUDA device, no native kernels
+for this GPU's architecture, or a failed/non-finite bf16 test is a problem too.
 Standalone on purpose: this single file is all that is needed for step 0.
 """
 import argparse, datetime as dt, json, os, platform, re, shutil, subprocess, sys, urllib.parse, urllib.request
@@ -183,22 +187,20 @@ def main():
     ap.add_argument('--disk', default=str(HERE), help='drive/folder where models will live')
     ap.add_argument('--comfy', action='append', default=[], help='local ComfyUI address to query if running (default: 127.0.0.1:8188 and :8000)')
     ap.add_argument('--no-gpu-test', action='store_true', help='skip the PyTorch check')
+    ap.add_argument('--require-gpu', action='store_true', help='gate mode: fail unless PyTorch works on this GPU (native kernels + bf16 test)')
     a = ap.parse_args()
 
     code, ff, _, ffexe = run('ffmpeg', ['-hide_banner', '-version'])
     rep = {
-        'timestamp': dt.datetime.now().isoformat(timespec='seconds'), 'tool': 'studio-bench/env_check v3',
+        'timestamp': dt.datetime.now().isoformat(timespec='seconds'), 'tool': 'studio-bench/env_check v4',
         'os': {'system': platform.system(), 'release': platform.release(), 'version': platform.version(), 'machine': platform.machine(), 'wsl': 'microsoft' in platform.release().lower()},
         'python': sys.version.split()[0], 'cpu_count': os.cpu_count(), 'ram': ram_info(), 'disk': disk_info(a.disk),
-        'gpu': gpu_info(), 'torch': {'skipped': True} if a.no_gpu_test else torch_info(True),
+        'gpu': gpu_info(), 'torch': {'skipped': True} if (a.no_gpu_test and not a.require_gpu) else torch_info(True),
         'ffmpeg': ff.splitlines()[0] if code == 0 and ff else 'not found',
         'ffmpeg_gpl_build': ('--enable-gpl' in ff) if code == 0 else None, 'ffmpeg_nonfree_build': ('--enable-nonfree' in ff) if code == 0 else None,
         'comfyui': comfy_info(a.comfy or ['http://127.0.0.1:8188', 'http://127.0.0.1:8000']),
     }
     rep = redact(rep)
-    out = HERE / 'results'; out.mkdir(exist_ok=True)
-    f = out / f"env-{dt.datetime.now():%Y%m%d-%H%M%S}.json"
-    f.write_text(json.dumps(rep, indent=2, ensure_ascii=False), encoding='utf-8')
 
     g, t = rep['gpu'], rep['torch']
     print('== GREENTEC studio-bench: environment (read-only) ==')
@@ -213,8 +215,21 @@ def main():
     if t.get('ok') and t.get('cuda_available') and not (t.get('native_kernels') or t.get('ptx_fallback')): problems.append('this PyTorch build has no kernels for this GPU')
     if t.get('ok') and not t.get('cuda_available'): problems.append('PyTorch is installed but cannot see CUDA')
     if rep['disk'].get('free_gb') is not None and rep['disk']['free_gb'] < 150: problems.append(f"less than 150 GB free on {rep['disk']['drive']}")
+    if a.require_gpu:
+        if not t.get('ok'): problems.append('GATE: PyTorch is not usable here: ' + str(t.get('error', 'unknown')))
+        elif not t.get('cuda_available'): problems.append('GATE: PyTorch does not see a CUDA GPU')
+        else:
+            if not t.get('native_kernels'): problems.append(f"GATE: no native kernels for this GPU (capability {t.get('capability')}) in PyTorch {t.get('version')}")
+            if t.get('bf16_matmul_error') or not t.get('bf16_matmul_ok'): problems.append('GATE: bf16 test on the GPU failed: ' + str(t.get('bf16_matmul_error', 'non-finite result')))
+    rep['problems'] = problems
     print('\nProblems:' if problems else '\nNo blocking problems found.', *(f'\n - {p}' for p in problems))
+    rep = redact(rep)
+    out = HERE / 'results'; out.mkdir(exist_ok=True)
+    f = out / f"env-{dt.datetime.now():%Y%m%d-%H%M%S}.json"
+    f.write_text(json.dumps(rep, indent=2, ensure_ascii=False), encoding='utf-8')
     print(f'\nSaved: results/{f.name}  (open it in Notepad before sending)')
+    blocking = [p for p in problems if p.startswith('GATE:') or p.startswith('nvidia-smi')] if a.require_gpu else problems
+    sys.exit(3 if blocking else 0)
 
 
 if __name__ == '__main__':

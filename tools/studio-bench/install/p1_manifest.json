@@ -1,34 +1,160 @@
 {
-  "_about": "Pinned, verified sources for step P1 (Qwen-Image-Edit-2511 multi-angle). Sizes and sha256 from the Hugging Face API (LFS metadata) and GitHub, read 2026-11-25. All model licenses: apache-2.0 per the official HF cards (see docs/OPEN_MODEL_EVALUATION.md §9.2).",
+  "_about": "Pinned, verified sources for step P1 (Qwen-Image-Edit-2511 multi-angle). Every URL is pinned to a version/commit and every file to a size + SHA256. Verified 2026-11-25: HF API LFS metadata (and the x-linked-etag header), GitHub release asset downloaded and hashed, NVIDIA driver lookup for the exact GPU model.",
   "root": "C:\\GREENTEC",
   "driver": {
     "min_version": 580.0,
-    "why": "ComfyUI v0.46.0 Windows portable ships PyTorch built for CUDA 13.0; CUDA 13.x needs driver >= 580 (NVIDIA CUDA 13.5 release notes, Table 3).",
-    "recommended": "NVIDIA RTX Enterprise Production Branch R580 U12 (582.99), released 2026-10-21 (nvidia.com driver listing)"
+    "why": "ComfyUI v0.46.0 portable ships torch 2.14.1+cu130 (CUDA 13.0, verified in the archive); CUDA 13.x needs driver >= 580 (NVIDIA CUDA 13.5 release notes, Table 3).",
+    "gpu_model": "NVIDIA RTX PRO 5000 48GB Blackwell",
+    "lookup": "https://www.nvidia.com/Download/processFind.aspx?psid=132&pfid=1080&osid=135&lid=1&whql=1&lang=en-us&ctk=0&dtcid=1",
+    "lookup_note": "psid 132 = NVIDIA RTX PRO Series, pfid 1080 = NVIDIA RTX PRO 5000 48GB Blackwell, osid 135 = Windows 11 (NVIDIA lookupValueSearch API)",
+    "recommended": {
+      "version": "621.14",
+      "branch": "R620 U1 Production Branch (WHQL)",
+      "released": "2026-11-04",
+      "details": "https://www.nvidia.com/download/driverResults.aspx/271743/en-us",
+      "why": "newest Production Branch for this exact model that has been public for more than two weeks"
+    },
+    "alternative": {
+      "version": "582.53",
+      "branch": "R580 U9 Production Branch (WHQL)",
+      "released": "2026-04-28",
+      "details": "https://www.nvidia.com/download/driverResults.aspx/265877/en-us",
+      "why": "most conservative option >= 580 listed for this model"
+    },
+    "not_recommended": {
+      "version": "621.40",
+      "why": "released 2026-11-24, too new"
+    },
+    "rollback": {
+      "primary": "pnputil export of the currently installed 573.42 package",
+      "fallback_installer": {
+        "version": "573.96",
+        "branch": "R570 U12 Production Branch",
+        "details": "https://www.nvidia.com/download/driverResults.aspx/259046/en-us",
+        "note": "573.42 itself is not in NVIDIA's list for this model; 573.96 is the newest R570 listed"
+      }
+    },
+    "corrected": "An earlier plan named 582.99 – that came from a listing for a different product (Quadro P5000 notebook) and is NOT offered for this GPU."
   },
   "comfyui": {
     "version": "v0.46.0",
     "asset": "ComfyUI_windows_portable_nvidia.7z",
     "url": "https://github.com/Comfy-Org/ComfyUI/releases/download/v0.46.0/ComfyUI_windows_portable_nvidia.7z",
     "size": 2085169944,
-    "sha256": null,
-    "sha256_source": "GitHub release API asset 'digest', read on the owner's machine at install time",
+    "sha256": "6a5255c7ec01fdc54bdbd8e4507073cf6acda2fbeea74ae1829a50681af5fac6",
+    "sha256_source": "downloaded from the pinned URL and hashed 2026-11-25; the installer also compares with the GitHub API digest when available",
     "api": "https://api.github.com/repos/Comfy-Org/ComfyUI/releases/tags/v0.46.0",
-    "bundles": "python 3.13 + PyTorch cuda 13.0 (ComfyUI docs/installation.md)",
-    "license": "GPL-3.0 (internal use only, no redistribution)"
+    "license": "GPL-3.0 (internal use only, no redistribution)",
+    "tag_commit": "a277b5bf213e8a44fa34817b7770b54f86ef4cea",
+    "contents_verified": {
+      "extracted_gb": 4.5,
+      "torch": "2.14.1+cu130",
+      "python": "3.13 (python313._pth: ../ComfyUI, python313.zip, ., import site)",
+      "custom_nodes": [
+        "example_node.py.example",
+        "websocket_image_save.py"
+      ],
+      "comfyui_manager": "not included",
+      "extract_tool": "libarchive 3.7.2 (bsdtar) extracted it fine – archive uses the BCJ2 filter"
+    },
+    "torch_version_expected": "2.14.1+cu130"
   },
   "workflow_template": {
     "name": "template_qwen_multiangle.app",
     "title": "Generate Multiple Angles with 3D Camera Node",
-    "min_comfyui": "0.40.0",
-    "source": "https://raw.githubusercontent.com/Comfy-Org/workflow_templates/main/templates/template_qwen_multiangle.app.json",
-    "note": "Native nodes only (CameraAngle, TextEncodeQwenImageEditPlus…). It links the text encoder from Comfy-Org/HunyuanVideo_1.5_repackaged; we use the byte-identical file from Comfy-Org/Qwen-Image (apache-2.0)."
+    "use": "the copy bundled inside ComfyUI v0.46.0 (no separate download)",
+    "bundled_path": "python_embeded/Lib/site-packages/comfyui_workflow_templates_json/templates/template_qwen_multiangle.app.json",
+    "bundled_package": "comfyui_workflow_templates_json 0.1.137",
+    "sha256": "0559608d2809ccb4bb6fa4c625f781b6d189457165638ec04cd15c1e06748a9e",
+    "model_files": "same five file names as in 'models' below (text encoder link in the template points to the HunyuanVideo repackage; we use the byte-identical file from Comfy-Org/Qwen-Image)",
+    "nodes": "native only: CameraAngle (comfy_extras/nodes_camera_angle.py), TextEncodeQwenImageEditPlus (comfy_extras/nodes_qwen.py)"
   },
   "models": [
-    {"dir": "diffusion_models", "name": "qwen_image_edit_2511_int8_convrot.safetensors", "repo": "Comfy-Org/Qwen-Image-Edit", "revision": "f68ace85e60b4a02a323e394253731947657b7d2", "path": "split_files/diffusion_models/qwen_image_edit_2511_int8_convrot.safetensors", "size": 20499083824, "sha256": "11b5af5ac601821d73930c84846c9a158e67177356daf927ce1c8d10f3963829", "required": true},
-    {"dir": "text_encoders", "name": "qwen_2.5_vl_7b_fp8_scaled.safetensors", "repo": "Comfy-Org/Qwen-Image", "revision": "1f12b17be14c89b026c51a91d67c32f84bb047bc", "path": "split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors", "size": 9384670680, "sha256": "cb5636d852a0ea6a9075ab1bef496c0db7aef13c02350571e388aea959c5c0b4", "required": true},
-    {"dir": "vae", "name": "qwen_image_vae.safetensors", "repo": "Comfy-Org/Qwen-Image", "revision": "1f12b17be14c89b026c51a91d67c32f84bb047bc", "path": "split_files/vae/qwen_image_vae.safetensors", "size": 253806246, "sha256": "a70580f0213e67967ee9c95f05bb400e8fb08307e017a924bf3441223e023d1f", "required": true},
-    {"dir": "loras", "name": "qwen-image-edit-2511-multiple-angles-lora.safetensors", "repo": "fal/Qwen-Image-Edit-2511-Multiple-Angles-LoRA", "revision": "e3066224ab74263f4a5b6179cd1a3b0a15577e44", "path": "qwen-image-edit-2511-multiple-angles-lora.safetensors", "size": 295140688, "sha256": "42426ded4e25fd22879d9e198b857556445ef4ca56e8da3246d0345155bb6765", "required": true},
-    {"dir": "loras", "name": "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors", "repo": "lightx2v/Qwen-Image-Edit-2511-Lightning", "revision": "107d238d68b8387e32843d0b4a2e24ceb0d3ad86", "path": "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors", "size": 849608296, "sha256": "22226e8d05d354bb356627d428809f5afd7819399b077238a2b70a82883a904f", "required": false, "note": "speed-up LoRA used by the official template; compared A/B against the slow path for quality"}
-  ]
+    {
+      "dir": "diffusion_models",
+      "name": "qwen_image_edit_2511_int8_convrot.safetensors",
+      "repo": "Comfy-Org/Qwen-Image-Edit",
+      "revision": "f68ace85e60b4a02a323e394253731947657b7d2",
+      "path": "split_files/diffusion_models/qwen_image_edit_2511_int8_convrot.safetensors",
+      "size": 20499083824,
+      "sha256": "11b5af5ac601821d73930c84846c9a158e67177356daf927ce1c8d10f3963829",
+      "required": true
+    },
+    {
+      "dir": "text_encoders",
+      "name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+      "repo": "Comfy-Org/Qwen-Image",
+      "revision": "1f12b17be14c89b026c51a91d67c32f84bb047bc",
+      "path": "split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+      "size": 9384670680,
+      "sha256": "cb5636d852a0ea6a9075ab1bef496c0db7aef13c02350571e388aea959c5c0b4",
+      "required": true
+    },
+    {
+      "dir": "vae",
+      "name": "qwen_image_vae.safetensors",
+      "repo": "Comfy-Org/Qwen-Image",
+      "revision": "1f12b17be14c89b026c51a91d67c32f84bb047bc",
+      "path": "split_files/vae/qwen_image_vae.safetensors",
+      "size": 253806246,
+      "sha256": "a70580f0213e67967ee9c95f05bb400e8fb08307e017a924bf3441223e023d1f",
+      "required": true
+    },
+    {
+      "dir": "loras",
+      "name": "qwen-image-edit-2511-multiple-angles-lora.safetensors",
+      "repo": "fal/Qwen-Image-Edit-2511-Multiple-Angles-LoRA",
+      "revision": "e3066224ab74263f4a5b6179cd1a3b0a15577e44",
+      "path": "qwen-image-edit-2511-multiple-angles-lora.safetensors",
+      "size": 295140688,
+      "sha256": "42426ded4e25fd22879d9e198b857556445ef4ca56e8da3246d0345155bb6765",
+      "required": true
+    },
+    {
+      "dir": "loras",
+      "name": "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
+      "repo": "lightx2v/Qwen-Image-Edit-2511-Lightning",
+      "revision": "107d238d68b8387e32843d0b4a2e24ceb0d3ad86",
+      "path": "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
+      "size": 849608296,
+      "sha256": "22226e8d05d354bb356627d428809f5afd7819399b077238a2b70a82883a904f",
+      "required": false,
+      "note": "speed-up LoRA used by the official template; compared A/B against the slow path for quality"
+    }
+  ],
+  "allowed_download_hosts": [
+    "github.com",
+    "api.github.com",
+    "release-assets.githubusercontent.com",
+    "objects.githubusercontent.com",
+    "huggingface.co",
+    ".hf.co"
+  ],
+  "isolation": {
+    "custom_nodes_allowed": [
+      "example_node.py.example",
+      "websocket_image_save.py"
+    ],
+    "comfy_flags": [
+      "--disable-all-custom-nodes",
+      "--offline",
+      "--listen",
+      "127.0.0.1"
+    ],
+    "env": {
+      "HF_HUB_OFFLINE": "1",
+      "TRANSFORMERS_OFFLINE": "1",
+      "HF_DATASETS_OFFLINE": "1",
+      "DO_NOT_TRACK": "1",
+      "HTTP_PROXY": "http://127.0.0.1:9",
+      "HTTPS_PROXY": "http://127.0.0.1:9",
+      "ALL_PROXY": "http://127.0.0.1:9",
+      "NO_PROXY": "127.0.0.1,localhost,::1",
+      "PYTHONUTF8": "1"
+    },
+    "custom_nodes_sha256": {
+      "example_node.py.example": "0894a8dd117629e216c77779883fb03be74356d9b5e5f1bf37a8b9cee9e7998b",
+      "websocket_image_save.py": "0b66b69eb7dab007d55bf63c5bd0f1343dcfbc2f5a350983f906ba2cd3dd5d23"
+    }
+  }
 }

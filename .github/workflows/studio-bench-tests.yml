@@ -1,0 +1,38 @@
+# Tests for tools/studio-bench (GREENTEC AI Film Studio local tools).
+# Windows PowerShell 5.1 tests use a mock nvidia-smi and temp folders; Python tests run on Windows and Linux.
+# Nothing here installs models or touches a real GPU.
+name: studio-bench tests
+on:
+  push:
+    paths:
+      - 'tools/studio-bench/**'
+      - '.github/workflows/studio-bench-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-powershell-5-1:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: PowerShell 5.1 tests (mock nvidia-smi, temp folders)
+        shell: powershell
+        run: |
+          $PSVersionTable | Format-Table -AutoSize | Out-String | Write-Host
+          & .\tools\studio-bench\tests\run_ps_tests.ps1
+          exit $LASTEXITCODE
+  python-tools:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Python tool tests
+        run: python -B -m unittest discover -s tools/studio-bench/tests -v
