@@ -34,7 +34,7 @@ async function handle(mod: string, action: string, id: number, f: FormData, url:
     case 'products/save': return P.productSave(id, f) as Promise<R>;
     case 'products/inline': {
       const field = String(f.get('field')); const v = String(f.get('value'));
-      const data: any = field === 'sort' ? { sort: Math.trunc(+v || 0) } : field === 'quantity' ? { quantity: v === '' ? null : Math.trunc(+v) } : field === 'showHome' ? { showHome: v === '1' } : null;
+      const data: any = field === 'sort' ? { sort: Math.trunc(+v || 0) } : field === 'quantity' ? { quantity: v === '' ? null : Math.trunc(+v) } : field === 'showHome' ? { showHome: v === '1' } : field === 'price' ? { price: v === '' ? null : +v } : null;
       if (!data) return err('שדה לא מוכר'); await db.product.update({ where: { id }, data }); return ok('עודכן');
     }
     case 'products/trash': await db.product.update({ where: { id }, data: { status: -1 } }); return ok('הועבר לסל המחזור', { redirect: '/admin?am=products&ac=recycle_bin' });

@@ -278,19 +278,11 @@ export async function setRelsSave(id: number, f: FormData) {
 }
 
 // ---------- A12 מלאי / A13 מלאי וריאציות / A14 סל מחזור / A15 מחיר גורף ----------
-export async function inventory(sp: Record<string, string>) {
-  // quantity: empty = unlimited, > 0 = in stock, 0 = out of stock
-  const f = sp.f === 'out' || sp.f === 'in' ? sp.f : '';
-  const base: any = { status: { gte: 0 } }; if (sp.q) base.name = { contains: sp.q, mode: 'insensitive' };
-  const [nOut, nIn, nUnl] = await Promise.all([
-    db.product.count({ where: { ...base, quantity: { lte: 0 } } }), db.product.count({ where: { ...base, quantity: { gt: 0 } } }), db.product.count({ where: { ...base, quantity: null } }),
-  ]);
-  const where: any = { ...base, quantity: f === 'out' ? { lte: 0 } : f === 'in' ? { gt: 0 } : { not: null } };
-  const rows = await db.product.findMany({ where, orderBy: f ? { id: 'desc' } : [{ quantity: 'asc' }, { id: 'desc' }], take: 1000 });
-  const chip = (k: string, label: string, n: number, cls: string) => `<a class="btn btn-sm ${f === k ? cls : 'btn-light'}" href="${A('products', 'inventory', {})}&f=${k}${sp.q ? '&q=' + encodeURIComponent(sp.q) : ''}">${label} (${n})</a>`;
-  const chips = `<div class="d-flex flex-wrap gap-2 mb-3">${chip('', 'מלאי מנוהל', nOut + nIn, 'btn-primary')}${chip('out', 'אזל מהמלאי', nOut, 'btn-danger')}${chip('in', 'במלאי', nIn, 'btn-success')}<span class="btn btn-sm btn-light disabled">ללא הגבלה (בלי כמות): ${nUnl}</span></div>`;
-  return card(`מלאי (${rows.length})`, chips + `<form class="d-flex gap-2 mb-3" action="/admin"><input type="hidden" name="am" value="products"><input type="hidden" name="ac" value="inventory">${f ? `<input type="hidden" name="f" value="${f}">` : ''}<input class="form-control form-control-sm" style="max-width:260px" name="q" value="${esc(sp.q || '')}" placeholder="חיפוש"><button class="btn btn-sm btn-primary">חיפוש</button></form>` +
-    table(['ID', 'שם', 'מחיר', 'מצב', 'כמות'], rows.map((p) => [String(p.id), `<a href="${A('products', 'edit', { id: p.id })}">${esc(p.name)}</a>`, fromPrice(p), (p.quantity ?? 0) <= 0 ? '<span class="badge bg-danger">אזל</span>' : '<span class="badge bg-success">במלאי</span>', `<input type="number" class="form-control form-control-sm adm-inline" style="width:90px" value="${p.quantity}" data-inline="${AJ('products', 'inline', p.id)}" data-field="quantity">`])));
+export async function inventory(_sp: Record<string, string>) {
+  // Same as the legacy screen: the products whose quantity is 0 (out of stock), by ID. Columns: ID, name, price, quantity – price and quantity editable in the table.
+  const rows = await db.product.findMany({ where: { quantity: 0, status: { gte: 0 } }, orderBy: { id: 'asc' } });
+  const ed = (p: any, field: string, v: any, w: number) => `<input type="number" step="any" class="form-control form-control-sm adm-inline" style="width:${w}px" value="${v ?? ''}" data-inline="${AJ('products', 'inline', p.id)}" data-field="${field}">`;
+  return card('מלאי', table(['ID', 'שם המוצר', 'מחיר', 'כמות'], rows.map((p) => [String(p.id), `<a href="${A('products', 'edit', { id: p.id })}">${esc(p.name)}</a>`, ed(p, 'price', p.price != null ? Number(p.price) : '', 100), ed(p, 'quantity', p.quantity, 80)])));
 }
 export async function inventoryV() {
   const rows = await db.product.findMany({ where: { variations: { some: {} } }, include: { variations: true }, orderBy: { id: 'desc' } });
