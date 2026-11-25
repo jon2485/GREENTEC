@@ -44,6 +44,17 @@ def gpu_used_mib():
 
 
 def ram_used_mib():
+    if sys.platform == 'win32':
+        try:
+            import ctypes
+            class MS(ctypes.Structure):
+                _fields_ = [('dwLength', ctypes.c_ulong), ('dwMemoryLoad', ctypes.c_ulong), ('ullTotalPhys', ctypes.c_ulonglong), ('ullAvailPhys', ctypes.c_ulonglong),
+                            ('ullTotalPageFile', ctypes.c_ulonglong), ('ullAvailPageFile', ctypes.c_ulonglong), ('ullTotalVirtual', ctypes.c_ulonglong),
+                            ('ullAvailVirtual', ctypes.c_ulonglong), ('ullAvailExtendedVirtual', ctypes.c_ulonglong)]
+            m = MS(); m.dwLength = ctypes.sizeof(MS)
+            if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m)): return (m.ullTotalPhys - m.ullAvailPhys) // 2**20
+        except Exception:  # noqa: BLE001
+            return None
     try:
         import psutil
         vm = psutil.virtual_memory(); return (vm.total - vm.available) // 2**20

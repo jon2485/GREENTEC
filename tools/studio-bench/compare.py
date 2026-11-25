@@ -7,7 +7,7 @@ Reads results/runs.jsonl (written by measure.py) and results/scores.csv
 scores.csv columns: run_id,rater,criterion,score,notes   (score 1–5)
 Criteria used by the first-shot acceptance test (see docs/OPEN_MODEL_EVALUATION.md §11–12):
 identity_before, identity_after, body_motion, acting, lipsync, hebrew, continuity,
-style_match, edit_sound, content_fit
+art_lines, art_colors, art_proportions, art_face, art_style, edit_sound, content_fit
 """
 import csv, json, statistics as stats
 from collections import defaultdict

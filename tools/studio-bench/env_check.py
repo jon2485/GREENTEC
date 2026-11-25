@@ -6,7 +6,7 @@ results/env-<timestamp>.json. Run it before any model download:
 
     python env_check.py [--comfy http://127.0.0.1:8188] [--disk D:\\models]
 """
-import argparse, datetime as dt, json, os, platform, shutil, subprocess, sys, time, urllib.request
+import argparse, datetime as dt, json, os, platform, re, shutil, subprocess, sys, time, urllib.request
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -22,7 +22,25 @@ def run(cmd, timeout=20):
         return 1, '', str(e)
 
 
+def _win_mem():
+    """Physical memory on Windows via GlobalMemoryStatusEx (read-only, no extra packages)."""
+    import ctypes
+    class MS(ctypes.Structure):
+        _fields_ = [('dwLength', ctypes.c_ulong), ('dwMemoryLoad', ctypes.c_ulong), ('ullTotalPhys', ctypes.c_ulonglong), ('ullAvailPhys', ctypes.c_ulonglong),
+                    ('ullTotalPageFile', ctypes.c_ulonglong), ('ullAvailPageFile', ctypes.c_ulonglong), ('ullTotalVirtual', ctypes.c_ulonglong),
+                    ('ullAvailVirtual', ctypes.c_ulonglong), ('ullAvailExtendedVirtual', ctypes.c_ulonglong)]
+    m = MS(); m.dwLength = ctypes.sizeof(MS)
+    if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m)): return None
+    return m.ullTotalPhys, m.ullAvailPhys
+
+
 def ram_info():
+    if platform.system() == 'Windows':
+        try:
+            t = _win_mem()
+            if t: return {'total_gb': round(t[0] / 2**30, 1), 'available_gb': round(t[1] / 2**30, 1), 'source': 'GlobalMemoryStatusEx'}
+        except Exception:  # noqa: BLE001
+            pass
     try:
         import psutil  # optional
         vm = psutil.virtual_memory()
@@ -87,6 +105,18 @@ def comfy_info(url):
         return {'ok': False, 'error': str(e)}
 
 
+def redact(obj):
+    """Replace the home folder and user name with placeholders, so the report can be shared safely."""
+    txt = json.dumps(obj, ensure_ascii=False)
+    home = str(Path.home()); user = os.environ.get('USERNAME') or os.environ.get('USER') or ''
+    for h in {home, home.replace('\\', '/'), json.dumps(home)[1:-1]}:
+        if h and len(h) > 3: txt = txt.replace(h, '<HOME>')
+    if user and len(user) > 2: txt = re.sub(r'(?i)\b' + re.escape(user) + r'\b', '<USER>', txt)
+    host = platform.node()
+    if host and len(host) > 2: txt = re.sub(r'(?i)\b' + re.escape(host) + r'\b', '<HOST>', txt)
+    return json.loads(txt)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--comfy', default='http://127.0.0.1:8188', help='ComfyUI address (only queried if running)')
@@ -107,6 +137,7 @@ def main():
         'ffmpeg_config_nonfree': ('--enable-nonfree' in ff) if code == 0 else None,
         'comfyui': comfy_info(a.comfy),
     }
+    rep = redact(rep)
     out = HERE / 'results'; out.mkdir(exist_ok=True)
     f = out / f"env-{dt.datetime.now():%Y%m%d-%H%M%S}.json"
     f.write_text(json.dumps(rep, indent=2, ensure_ascii=False), encoding='utf-8')

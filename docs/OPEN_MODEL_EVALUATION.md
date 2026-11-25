@@ -1,6 +1,6 @@
 # GREENTEC AI Film Studio: הערכת מודלים פתוחים (Open Model First)
 
-**גרסה 2** · ‏2026-11-25 · מעודכנת לפי "אישור בתנאים" של המפיק.
+**גרסה 2.1** · ‏2026-11-25 · מעודכנת לפי "אישור בתנאים" של המפיק, ולפי אישור ההתקדמות לשלב 0 (P0).
 
 **הסטטוס הנוכחי:**
 - **אושר:** הכיוון Open-First, Quality-First, וגם המשך המחקר וההכנות.
@@ -346,9 +346,9 @@ Chatterbox קורא ל‑`dicta_onnx` לניקוד. אם הספרייה חסרה
 
 | עדיפות | מועמד ותבנית | תפקיד | הורדה | זיכרון שפורסם | סטטוס רישוי | שלב |
 |---|---|---|---|---|---|---|
-| 1 | **Qwen-Image-Edit-2511 int8** (`image_qwen_image_edit_2511_int8`) | גיליון דמות, זוויות, הבעות | 31.0GB (גרסת fp8: ‏51.3GB) | לא פורסם | מודל: Apache-2.0 [ראשי]. ‏VAE ומקודד: [לא אומת]. ‏LoRA Lightning: [לא אומת] | Candidate |
-| 2 | **Wan-Animate-2 distilled int8** (`video_wan_animate2_distilled`) | הנפשה מקצה לקצה, **בלי custom nodes ובלי מחלץ פוזה** | 24.9GB (בסיס עם LoRA: ‏25.7GB) | היצרן: ‏8×A800 ב‑720p, ‏2×A800 ב‑480p. **אין נתון לכרטיס יחיד** | קוד Apache-2.0 [ראשי]. משקולות ב‑HF: [לא אומת]. ‏umt5, ‏clip_vision_h: [לא אומת] | Candidate. **סיכון הזיכרון הגבוה ביותר, נמדד ראשון** |
-| 3 | **Wan2.2-Animate-14B fp8** (`video_wan2_2_14B_animate`) | הנפשה מונחית פוזה, החלפת דמות | 27.4GB, ומודלי custom nodes בנוסף | לא פורסם | ‏Wan2.2 Apache-2.0 [ראשי]. ‏controlnet_aux ‏(DWPose, ‏YOLOX), ‏SAM2: ‏Apache-2.0 [ראשי, קוד]. משקולות ONNX: [לא אומת]. ‏kjnodes: ‏GPL-3.0 [ראשי]. ‏LoRA של Kijai: [לא אומת] | Candidate |
+| 1 | **Qwen-Image-Edit-2511 int8** (`image_qwen_image_edit_2511_int8`) | גיליון דמות, זוויות, הבעות | ‏31.0GB, כולל LoRA Lightning אופציונלי של 0.85GB (גרסת fp8: ‏51.3GB) | לא פורסם | **כל הרכיבים Apache-2.0 לפי כרטיסי HF [ראשי, ‏2026-11-25]** (פירוט ב‑§9.2) | Candidate. **מוכן ל‑License Cleared, באישורך** |
+| 2 | **Wan-Animate-2 distilled int8** (`video_wan_animate2_distilled`) | הנפשה מקצה לקצה, **בלי custom nodes ובלי מחלץ פוזה** | ‏24.9GB (בסיס עם LoRA: ‏25.7GB) | היצרן: ‏8×A800 ב‑720p, ‏2×A800 ב‑480p. **אין נתון לכרטיס יחיד** | **משקולות Apache-2.0 לפי כרטיס HF [ראשי]**. ‏umt5: ‏Apache-2.0, ‏clip_vision_h: ‏MIT [ראשי, כרטיסי המקור] (§9.2) | Candidate. מוכן ל‑License Cleared, באישורך. **סיכון הזיכרון הגבוה ביותר, נמדד ראשון** |
+| 3 | **Wan2.2-Animate-14B fp8** (`video_wan2_2_14B_animate`) | הנפשה מונחית פוזה, החלפת דמות | ‏27.4GB, ומודלי custom nodes בנוסף | לא פורסם | ‏Wan2.2: ‏Apache-2.0 [ראשי]. ‏controlnet_aux ‏(DWPose, ‏YOLOX) ו‑SAM2: ‏Apache-2.0 [ראשי, קוד]. משקולות ONNX: [לא אומת]. ‏kjnodes: ‏GPL-3.0 [ראשי]. המודל fp8 מ‑`Kijai/WanVideo_comfy_fp8_scaled`: ‏apache-2.0 [ראשי]. **ה‑LoRA relight ו‑LoRA lightx2v נלקחים מ‑`Kijai/WanVideo_comfy`, ולמאגר הזה אין רישיון בכרטיס [ראשי]** | Candidate. **חסום ל‑License Cleared** עד שה‑relight LoRA יוסר מהתבנית, וה‑LoRA ‏lightx2v יילקח מ‑`Comfy-Org/Wan-Animate-2` או מהמאגר הרשמי של lightx2v |
 | 4 | **Wan2.2 TI2V-5B** (`video_wan2_2_5B_ti2v`) | חלופה קלה, Animatic | 18.1GB | ‏22.8GB ב‑720p על RTX 4090 עם offload [ראשי] | Apache-2.0 [ראשי] | Candidate |
 | 5 | **LTX-2.5 int8** (`video_ltx2_5_i2v`) | שוט קולנועי, אודיו, דיבוב | 56.9GB | ‏"32GB+ VRAM" [ראשי] | LTX-2.x Community [ראשי]. ‏**ממתין לאישור הכנסה מתחת ל‑10 מיליון דולר**. מקודד Gemma 4: [משני] | Candidate, **חסום** עד אישור |
 | 6 | **דיבור בעברית:** ‏Chatterbox Multilingual או OmniVoice | קול | לא פורסם (Chatterbox כ‑0.5B פרמטרים) | ‏Chatterbox: כ‑3.5GB [משני] | ‏Chatterbox: קוד MIT [ראשי], משקולות MIT [משני], **לא מתוחזק מאוגוסט 2026** [ראשי]. ‏OmniVoice: משקולות [לא אומת] | Candidate |
@@ -375,11 +375,7 @@ Chatterbox קורא ל‑`dicta_onnx` לניקוד. אם הספרייה חסרה
 | **AGPL (מחוץ לצינור)** | ‏YOLOv10 |
 
 **טרם אומת. נדרשת קריאה בכרטיס המודל ב‑Hugging Face:**
-- משקולות Wan-Animate-2 והגרסאות הארוזות מחדש של Comfy-Org;
-- ‏umt5-xxl;
-- ‏clip_vision_h (OpenCLIP ViT-H);
-- ה‑VAE והמקודד של Qwen-Image;
-- ‏LoRA Lightning של lightx2v, ו‑LoRA ה‑relight של Kijai;
+- ‏Kijai/WanVideo_comfy: **אין רישיון בכרטיס.** משמש את ה‑relight LoRA ואת ה‑LoRA ‏lightx2v בעדיפות 3;
 - משקולות DWPose ו‑YOLOX בפורמט ONNX;
 - מקודדי Gemma 4;
 - משקולות Chatterbox ‏OmniVoice;
@@ -387,6 +383,30 @@ Chatterbox קורא ל‑`dicta_onnx` לניקוד. אם הספרייה חסרה
 - ‏LoRA ה‑Multiple-Angles של fal.
 
 **כל עוד אחד מהם לא אומת, המודל שתלוי בו לא עובר ל‑License Cleared.**
+
+### 9.2 אימות מכרטיסי Hugging Face (2026-11-25)
+
+כל השורות בטבלה נקראו מה‑API ומה‑README הרשמיים של המאגר [ראשי]. ה‑revision מאפשר לזהות בדיוק מה נקרא. sha256 נלקח ממטא‑הנתונים של ה‑LFS. הגדלים הם של הקבצים עצמם.
+
+| רכיב | מאגר (revision) | רישיון בכרטיס | קובץ וגודל | הערה |
+|---|---|---|---|---|
+| Qwen-Image-Edit-2511 (מקור) | ‏`Qwen/Qwen-Image-Edit-2511` (‏6f3ccc0b56) | ‏apache-2.0. ה‑README: ‏"Qwen-Image is licensed under Apache 2.0" | — | ‏— |
+| מודל int8 ל‑ComfyUI | ‏`Comfy-Org/Qwen-Image-Edit` (‏f68ace85e6) | ‏apache-2.0 | ‏`qwen_image_edit_2511_int8_convrot` ‏20.50GB (sha256 ‏11b5af5a…) | המאגר הזה אורז גם מודלים אחרים. רלוונטי רק הקובץ הזה |
+| ‏VAE | ‏`Comfy-Org/Qwen-Image` (‏1f12b17be1) | ‏apache-2.0 | ‏`qwen_image_vae` ‏0.25GB | ‏— |
+| מקודד טקסט Qwen2.5-VL 7B fp8 | ‏`Comfy-Org/Qwen-Image` | ‏apache-2.0. המקור `Qwen/Qwen2.5-VL-7B-Instruct`: ‏apache-2.0 | ‏`qwen_2.5_vl_7b_fp8_scaled` ‏9.38GB (sha256 ‏cb5636d8…) | **התבנית הרשמית מורידה את הקובץ ממאגר `Comfy-Org/Hunyuan-Video-1.5`, שהכרטיס שלו מסומן ברישיון Tencent Hunyuan.** אותו קובץ בדיוק (אותו sha256) קיים גם ב‑`Comfy-Org/Qwen-Image` תחת Apache-2.0. **מורידים רק משם** |
+| ‏LoRA Lightning בארבעה צעדים (אופציונלי) | ‏`lightx2v/Qwen-Image-Edit-2511-Lightning` (‏107d238d68) | ‏apache-2.0 | ‏0.85GB | מאיץ. משפיע על האיכות ולכן נבדק A/B |
+| ‏LoRA Multiple-Angles | ‏`fal/Qwen-Image-Edit-2511-Multiple-Angles-LoRA` (‏e3066224ab) | ‏apache-2.0 | ‏0.30GB | אומן על ‏"3000+ Gaussian Splatting renders". **מקור הרינדורים לא מפורט בכרטיס** |
+| Wan-Animate-2 (מקור) | ‏`Wan-AI/Wan2.2-Animate-2-14B` (‏6e8f1973bf) | ‏apache-2.0. ה‑README: ‏"licensed under the Apache License 2.0" | bf16, ‏32.79GB לקובץ | ‏"8× A800 … 720P; 480P on 2× A800" |
+| Wan-Animate-2 ל‑ComfyUI | ‏`Comfy-Org/Wan-Animate-2` (‏e7181fe189) | ‏apache-2.0 | ‏`wan_animate_2_distill_int8_convrot` ‏16.65GB, ‏umt5 fp8 ‏6.74GB, ‏clip_vision_h ‏1.26GB, ‏VAE ‏0.25GB | **סך הכל 24.9GB.** ההתאמה לגודל התבנית אומתה |
+| ‏umt5-xxl (מקור) | ‏`google/umt5-xxl` (‏66cb9e7e85) | ‏apache-2.0 | — | אומן על mC4 |
+| ‏clip_vision_h (מקור) | ‏`laion/CLIP-ViT-H-14-laion2B-s32B-b79K` (‏1c2b8495b2) | ‏mit | — | ‏— |
+| ‏LoRA הזיקוק של lightx2v לגרסת הבסיס | ‏`lightx2v/Wan2.1-I2V-14B-480P-StepDistill-CfgDistill-Lightx2v` | ‏apache-2.0 | ‏0.74GB | רק בתבנית שאינה distilled |
+| ‏Kijai/WanVideo_comfy | (‏8260d429d1) | **אין רישיון** | — | **חוסם את עדיפות 3**, עד להסרה או החלפה |
+| ‏Kijai/WanVideo_comfy_fp8_scaled | — | ‏apache-2.0 | ‏`Wan2_2-Animate-14B_fp8_e4m3fn_scaled_KJ` | המודל של עדיפות 3. תקין |
+
+**מה אין בכרטיסים:** קובץ LICENSE נפרד בתוך מאגרי ה‑HF. הרישיון מוצהר בתגית ובטקסט. זה מספיק לשלב License Cleared, אבל לפני Approved הרשימה המצומצמת עוברת לעו״ד (§8).
+
+**תלויות שנבדקות בנפרד, בהמשך:** משקולות ONNX של DWPose ו‑YOLOX (עדיפות 3), מקודדי Gemma 4 ‏(LTX), כל מועמדי הקול והניקוד.
 
 ---
 
@@ -448,11 +468,27 @@ Chatterbox קורא ל‑`dicta_onnx` לניקוד. אם הספרייה חסרה
 | ‏`lipsync` | סנכרון שפתיים, אם יש דיבור |
 | ‏`hebrew` | עברית טבעית: הבנה, ניקוד, הטעמה |
 | ‏`continuity` | רציפות בין שוטים |
-| ‏`style_match` | התאמה לסגנון האיורים המקוריים |
+| **נאמנות אמנותית למקור** | נבדקת בנפרד מזיהוי הזהות. לכל פריים מפתח ולכל תמונה מגיליון הדמות, מול האיור המקורי, זה לצד זה: |
+| ‏`art_lines` | קווים: עובי, אופי (יד חופשית, קו נקי), קווי מתאר, הצללה בקו |
+| ‏`art_colors` | צבעים: פלטה, רוויה, גוונים, ומעברי צבע. בלי צבעים שלא קיימים במקור |
+| ‏`art_proportions` | פרופורציות: יחס ראש לגוף, גודל עיניים, אורך גפיים |
+| ‏`art_face` | מאפייני פנים: צורת עיניים, אף, פה וגבות, כמו שהמאייר צייר אותם, ולא "פנים גנריות" של המודל |
+| ‏`art_style` | סגנון האיור הכולל: טקסטורה, רמת פירוט, תאורה, ותחושה של "אותו ספרון" |
 | ‏`edit_sound` | עריכה וסאונד |
 | ‏`content_fit` | התאמה לתוכן החרדי: צניעות, לבוש, שפה, ובלי גירוי יתר |
 
 ציון `content_fit` של 1–2 נחשב תקלה קריטית.
+
+**ההבדל בין זהות לנאמנות:** דמות יכולה להיות "אותו ילד", עם אותה כיפה ואותן פאות (זהות טובה), ובכל זאת להיראות כמו ציור של מאייר אחר (נאמנות נמוכה). שני הדברים נמדדים בנפרד.
+
+**מה המדרגים מקבלים:** גיליון השוואה, עם האיור המקורי ליד פריימים מתחילת השוט, מאמצעו ומסופו, באותו גודל.
+
+**עזרים אוטומטיים, כעזר בלבד ולא כציון:**
+- השוואת פלטת הצבעים הדומיננטית (ΔE);
+- מדידת יחס ראש לגוף;
+- השוואה של תמונת קווים (edge map).
+
+לא הוכח שמדדים אוטומטיים מהימנים באיורי 2D, ולכן ההכרעה אנושית.
 
 ### 11.4 מדדים טכניים
 
@@ -478,9 +514,10 @@ Chatterbox קורא ל‑`dicta_onnx` לניקוד. אם הספרייה חסרה
 |---|---|
 | טכני | ‏5–10 שניות. פלט סופי 24fps, ברזולוציה 480p לפחות (היעד 720p). בלי פריימים פגומים. **בלי OOM בתצורה הסופית.** שיא VRAM נמדד, ונמוך מ‑46GB |
 | שחזור | ‏seed, ה‑workflow המדויק (`workflow_api_used.json`) והגרסאות נשמרו. sha256 לכל תוצר. הרצה חוזרת מפיקה תוצאה זהה או שקולה |
-| איכות | ציון 4 לפחות ב‑`identity_before`, ‏`identity_after`, ‏`body_motion` ו‑`style_match`. ציון 3 לפחות ב‑`acting`. **אפס שינויים במאפיינים נעולים.** אם יש משפט: ציון 4 לפחות ב‑`hebrew` ו‑`lipsync` |
+| איכות | ציון 4 לפחות ב‑`identity_before`, ‏`identity_after` ו‑`body_motion`. ציון 3 לפחות ב‑`acting`. **אפס שינויים במאפיינים נעולים.** אם יש משפט: ציון 4 לפחות ב‑`hebrew` ו‑`lipsync` |
+| נאמנות אמנותית | **ציון 4 לפחות בכל אחד מ‑`art_lines`, ‏`art_colors`, ‏`art_proportions`, ‏`art_face` ו‑`art_style`**, גם לפני ההנפשה וגם אחריה |
 | תוכן | ‏`content_fit` בציון 4 לפחות, ואין תקלה קריטית |
-| תהליך | לפחות ניסיון אחד שנדחה מתועד, עם תיקון ממוקד ותוצאה משופרת. כל הכשלים מתועדים ב‑`runs.jsonl` |
+| תהליך | **הדגמה של תהליך התיקון ושמירת הגרסאות. אין יוצרים כישלון בכוונה.** כשנמצאת בעיה אמיתית: הערת תיקון, תיקון ממוקד שמשנה רק את הנדרש, ואז גרסה חדשה עם קישור לקודמת. הגרסה הקודמת נשמרת. שתי הגרסאות מוצגות בגיליון השוואה. אם לא נמצאה בעיה, ההדגמה נעשית על שיפור אמיתי שהמפיק מבקש. כל הכשלים שקרו בפועל מתועדים ב‑`runs.jsonl` |
 | רישוי | כל רכיב בשוט לפחות ב‑License Cleared. **עד אישור מסחרי סופי, השוט הוא מבחן פנימי ולא מופץ** |
 | הוכחה | רק הרצה אמיתית על ה‑RTX PRO 5000 וצפייה אנושית. **לא Mock ולא הדגמה** |
 
@@ -492,7 +529,7 @@ Chatterbox קורא ל‑`dicta_onnx` לניקוד. אם הספרייה חסרה
 
 | שלב | פעולה | הורדה | אישור |
 |---|---|---|---|
-| 0 | הרצת `env_check.py` (קריאה בלבד) ושליחת קובץ ה‑JSON | אין | — |
+| 0 | הרצת `env_check.py` (קריאה בלבד) לפי `tools/studio-bench/STEP0_WINDOWS.md`, ושליחת קובץ ה‑JSON. **בלי Python:** פקודות PowerShell לקריאה בלבד מאותו קובץ | קובץ טקסט של כ‑10KB | **אושר** (2026-11-25) |
 | 1 | התקנת ComfyUI בסביבה נפרדת (venv או portable), עם PyTorch שתומך בכרטיס לפי תוצאת שלב 0 | כ‑5–10GB | ★ |
 | 2 | השלמת בדיקת הרישוי (§9.1) לעדיפויות 1–2. המועמדים עוברים ל‑License Cleared | אין | ★ |
 | 3 | הורדת עדיפות 1 (Qwen-Image-Edit-2511 int8) והרצת עשן במדידה | ‏31GB | ★ |
