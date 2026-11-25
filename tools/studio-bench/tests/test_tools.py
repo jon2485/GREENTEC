@@ -131,9 +131,11 @@ class MeasureTests(unittest.TestCase):
 
     def test_timeout_kills_grandchildren(self):
         marker = self.tmp / 'grandchild_alive.txt'
-        prog = f"import subprocess,sys,time;subprocess.Popen([sys.executable,'-c','import time;time.sleep(6);open(r\"{marker}\",\"w\").write(\"x\")']);time.sleep(60)"
-        run([self.tool / 'measure.py', '--model', 't', '--profile', 'p', '--case', 'T', '--timeout', '2', '--', 'python', '-c', prog])
-        self.assertEqual(self.last()['status'], 'timeout')
+        grand = self.tmp / 'grand.py'; grand.write_text(f"import time\ntime.sleep(6)\nopen({str(marker)!r}, 'w').write('x')\n")
+        parent = self.tmp / 'parent.py'; parent.write_text(f"import subprocess, sys, time\nsubprocess.Popen([sys.executable, {str(grand)!r}])\ntime.sleep(60)\n")
+        code, txt = run([self.tool / 'measure.py', '--model', 't', '--profile', 'p', '--case', 'T', '--timeout', '2', '--', 'python', parent])
+        rec = self.last()
+        self.assertEqual(rec['status'], 'timeout', f"{txt}\n{rec.get('error_tail')}")
         import time; time.sleep(7)
         self.assertFalse(marker.exists(), 'grandchild survived the timeout')
 

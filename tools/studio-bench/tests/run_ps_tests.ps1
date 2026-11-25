@@ -10,14 +10,19 @@ $inst = Join-Path (Split-Path -Parent $here) 'install'
 $tmp = Join-Path ([IO.Path]::GetTempPath()) ("gtbench-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
 New-Item -ItemType Directory -Force $tmp | Out-Null
 $script:failed = 0; $script:passed = 0
+$script:lastOut = ''
 function Check([string]$name, [bool]$cond, [string]$info = '') {
   if ($cond) { $script:passed++; Write-Host "PASS  $name" -ForegroundColor Green }
-  else { $script:failed++; Write-Host "FAIL  $name  $info" -ForegroundColor Red }
+  else {
+    $script:failed++; Write-Host "FAIL  $name  $info" -ForegroundColor Red
+    if ($script:lastOut) { Write-Host '----- output of the last script run (tail) -----'; ($script:lastOut -split "`n" | Select-Object -Last 25) | ForEach-Object { Write-Host "  | $_" }; Write-Host '-----'; $script:lastOut = '' }
+  }
 }
 function Run-Ps([string]$script, [string[]]$arguments) {
   # run a script in a fresh Windows PowerShell 5.1 process, return exit code + output
   $ErrorActionPreference = 'Continue'   # PS 5.1 turns redirected native stderr into errors under 'Stop'
   $out = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $script @arguments 2>&1 | Out-String
+  $script:lastOut = $out
   return @{ code = $LASTEXITCODE; out = $out }
 }
 Write-Host ("PowerShell {0} ({1})" -f $PSVersionTable.PSVersion, $PSVersionTable.PSEdition)
@@ -77,7 +82,7 @@ Check 'precheck: old driver -> exit 2' ($r.code -eq 2) "exit $($r.code)"
 Check 'precheck: driver FAIL reported' ($r.out -match '\[FAIL\] driver: driver 573.42 < 580')
 Check 'precheck: idle check is labelled as observation, not load test' ($r.out -match 'no load applied')
 Check 'precheck: no network section (local only)' ($r.out -notmatch 'net https')
-Check 'precheck: writes one report only' (@(Get-ChildItem $rep -Filter 'p1_precheck-*.json').Count -eq 1)
+Check 'precheck: writes one report only' (@(Get-ChildItem $rep -Filter 'p1_precheck-*.json' -ErrorAction SilentlyContinue).Count -eq 1)
 Check 'precheck: install root not created' (-not (Test-Path (Join-Path $tmp 'gt')))
 $env:MOCK_DRV = '621.14'; $env:MOCK_APP = 'C:\Users\someone\AppData\Topaz\tvai.exe, 9000 MiB'; $env:MOCK_MEM = '9500'
 $r = Run-Ps (Join-Path $inst 'p1_precheck.ps1') @('-Root', (Join-Path $tmp 'gt'), '-ReportDir', $rep, '-IdleSeconds', '2')
@@ -147,7 +152,7 @@ Check 'launch: refuses unexpected custom node' (($r.code -ne 0) -and ($r.out -ma
 
 # ---------- topaz snapshot ----------
 $r = Run-Ps (Join-Path $inst 'p1_topaz_snapshot.ps1') @('-Label', 'before', '-ReportDir', $rep)
-Check 'topaz snapshot writes a report' (@(Get-ChildItem $rep -Filter 'topaz-before-*.json').Count -eq 1)
+Check 'topaz snapshot writes a report' (@(Get-ChildItem $rep -Filter 'topaz-before-*.json' -ErrorAction SilentlyContinue).Count -eq 1)
 
 Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
 Write-Host ''; Write-Host "passed $script:passed, failed $script:failed"
