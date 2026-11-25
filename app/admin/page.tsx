@@ -7,6 +7,7 @@ import * as P from '@/lib/admin/products';
 import * as O from '@/lib/admin/orders';
 import * as C from '@/lib/admin/content';
 import { legacyImportScreen } from '@/lib/admin/legacyImport';
+import * as S from '@/lib/admin/studio';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,6 +55,12 @@ async function screen(am: string, ac: string, id: number, sp: Record<string, str
     case 'configs/shutdown_site': return C.shutdownScreen();
     case 'configs/legacy_import': return legacyImportScreen();
     case 'dashboard/index': return C.dashboard();
+    case 'studio/projects': return S.projects();
+    case 'studio/project': return S.project(id);
+    case 'studio/task': return S.task(id);
+    case 'studio/version': return S.version(id);
+    case 'studio/agents': return S.agents();
+    case 'studio/agent': return S.agent(sp.agent || '');
   }
   if (C.SETTINGS[k]) return C.settingsScreen(k);
   const r = findResource(am, ac);
@@ -68,7 +75,7 @@ async function screen(am: string, ac: string, id: number, sp: Record<string, str
 
 function sidebar(am: string, ac: string) {
   return MENU.map((g) => {
-    const open = g.items.some((i) => i.am === am && i.ac === ac) || (g.group === 'מוצרים' && ['products', 'ProductsSets', 'ProductSuppliers'].includes(am)) || (g.group === 'הזמנות' && am === 'orders');
+    const open = g.items.some((i) => i.am === am && i.ac === ac) || (g.group === 'מוצרים' && ['products', 'ProductsSets', 'ProductSuppliers'].includes(am)) || (g.group === 'הזמנות' && am === 'orders') || (g.group === 'אולפן AI' && am === 'studio');
     return `<div class="adm-nav-group${open ? ' open' : ''}"><button type="button" class="adm-nav-head" data-nav-toggle><span>${g.icon}</span> ${g.group}</button><ul>${g.items.map((i) => `<li><a href="${A(i.am, i.ac)}" class="${i.am === am && i.ac === ac ? 'active' : ''}">${esc(i.title)}</a></li>`).join('')}</ul></div>`;
   }).join('');
 }
@@ -83,7 +90,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<Re
   const am = sp.am || 'dashboard', ac = sp.ac || 'index', id = Number(sp.id || 0);
   let body: string;
   try { body = await screen(am, ac, id, sp, user); } catch (e: any) { console.error('[admin]', am, ac, e); body = card('שגיאה', `<pre class="small" dir="ltr">${esc(e?.message || e)}</pre>`); }
-  const title = findMenu(am, ac)?.title || findMenu(am, 'manage')?.title || '';
+  const title = findMenu(am, ac)?.title || findMenu(am, 'manage')?.title || (am === 'studio' ? 'אולפן AI' : '');
   const html = `<div class="adm-shell"><aside class="adm-side" id="admSide"><a href="/admin" class="adm-brand"><img src="/t/assets/images/logo-v.png" alt=""> <span>GREENTEC</span></a><nav>${sidebar(am, ac)}</nav></aside>
   <div class="adm-main"><header class="adm-top"><button type="button" class="btn btn-sm btn-light d-lg-none" data-side-toggle>☰</button><div class="adm-crumb">${title ? esc(title) : 'לוח בקרה'}</div><div class="ms-auto d-flex align-items-center gap-2"><a href="/" target="_blank" class="btn btn-sm btn-light">לאתר ↗</a><span class="small text-muted d-none d-md-inline">${esc(user.name || user.email)} · ${esc(USER_TYPES.find(([k]) => k === user.type)?.[1] || '')}</span><a href="/admin/adminAjax/admin/logout" class="btn btn-sm btn-light">יציאה</a></div></header>
   <main class="adm-content">${body}</main></div></div><div class="adm-toast" id="admToast"></div>`;

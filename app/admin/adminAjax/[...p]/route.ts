@@ -7,6 +7,7 @@ import * as P from '@/lib/admin/products';
 import * as O from '@/lib/admin/orders';
 import * as C from '@/lib/admin/content';
 import { statusLine } from '@/lib/admin/legacyImport';
+import { studioAction } from '@/lib/studio/actions';
 import { importUsers, importOrders, importCarts } from '@/lib/legacyPersonal';
 import { startImageMigration, imageStatus } from '@/lib/imageMigration';
 import { importLegacyAdmin, loadLegacyAdmin, SECTION_LABELS } from '@/scripts/import-legacy-admin.mjs';
@@ -20,6 +21,7 @@ const err = (message: string): R => ({ status: 'error', message });
 
 async function handle(mod: string, action: string, id: number, f: FormData, url: URL, user: any): Promise<R> {
   const k = `${mod}/${action}`;
+  if (mod === 'studio') return studioAction(action, id, f, url, user);
   switch (k) {
     // products
     case 'products/create_quickly': case 'ProductsSets/create': {
@@ -61,7 +63,7 @@ async function handle(mod: string, action: string, id: number, f: FormData, url:
       if (!storageReady()) return err('אחסון הקבצים (Bucket) לא הוגדר במשתני הסביבה');
       const name = safeKeyPart(String(f.get('name') || 'file')); const folder = String(f.get('folder') || 'media/misc').replace(/[^\w/\-]/g, '').replace(/^\/+|\.\./g, '');
       const pid = Number(f.get('product')) || 0; const kind = String(f.get('kind') || 'media');
-      const key = kind === 'digital' ? `products/${pid}/${name}` : kind === 'sample' ? `products/${pid}/sample/${name}` : `${folder.startsWith('media/') ? folder : 'media/' + folder}/${Date.now().toString(36)}-${name}`;
+      const key = kind === 'studio' ? `studio/${Number(f.get('project')) || 0}/${Date.now().toString(36)}-${name}` : kind === 'digital' ? `products/${pid}/${name}` : kind === 'sample' ? `products/${pid}/sample/${name}` : `${folder.startsWith('media/') ? folder : 'media/' + folder}/${Date.now().toString(36)}-${name}`;
       const type = String(f.get('type') || 'application/octet-stream'); const size = Number(f.get('size') || 0);
       if (size > 64 * 1024 * 1024) {
         const partSize = Math.max(16 * 1024 * 1024, Math.ceil(size / 9000));
@@ -173,6 +175,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ p: strin
     const key = p?.[field] || ''; if (!key || key.startsWith('http')) return new NextResponse('אין קובץ', { status: 404 });
     if (!storageReady()) return new NextResponse('אחסון לא הוגדר', { status: 503 });
     return NextResponse.redirect(await signedDownload(key, key.split('/').pop() || 'file'));
+  }
+  if (k(mod, action) === 'studio/file') {
+    const v = await db.filmAssetVersion.findUnique({ where: { id } });
+    if (!v?.storageKey) return new NextResponse('אין קובץ', { status: 404 });
+    if (!storageReady()) return new NextResponse('אחסון לא הוגדר', { status: 503 });
+    return NextResponse.redirect(await signedDownload(v.storageKey, v.storageKey.split('/').pop() || 'file', 900));
   }
   if (k(mod, action) === 'ProductsDigitalDownloads/export') {
     const csv = (await O.reportDigital(Object.fromEntries(url.searchParams), true)) as string;

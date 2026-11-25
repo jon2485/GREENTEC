@@ -64,6 +64,7 @@
     if (el.matches('[data-upload-to]')) uploadImage(el);
     if (el.matches('[data-upload-gallery]')) uploadGallery(el);
     if (el.matches('[data-bucket-upload]')) uploadDigital(el);
+    if (el.matches('[data-studio-upload]')) uploadStudio(el);
   });
 
   // filters
@@ -147,6 +148,20 @@
     bar.classList.remove('d-none'); el.setAttribute('data-uploading', '1');
     uploadFile(file, { kind: el.dataset.bucketUpload === 'sampleFile' ? 'sample' : 'digital', product: el.dataset.product }, function (p) { var v = Math.min(100, Math.round(p * 100)); pb.style.width = v + '%'; pb.textContent = v + '%'; })
       .then(function (r) { $('input[type=hidden]', bx).value = r.key; $('.adm-file-state', bx).innerHTML = '<span class="badge text-bg-success">הועלה</span> <code dir="ltr">' + esc(r.key) + '</code>'; pb.style.width = '100%'; pb.textContent = '100%'; toast('הקובץ הועלה. לחצו "שמירה".', true); })
+      .catch(function (e) { toast(e.message, false); pb.classList.add('bg-danger'); }).then(function () { el.removeAttribute('data-uploading'); el.value = ''; });
+  }
+
+  // studio: media deliverable → bucket (studio/{project}/...) → new immutable asset version
+  function uploadStudio(el) {
+    var file = el.files[0]; if (!file) return; var bx = el.closest('[data-studio-box]'), bar = $('.progress', bx), pb = $('.progress-bar', bx);
+    var engine = $('[name=engine]', bx).value; if (!engine) { toast('יש לבחור מנוע מאושר', false); el.value = ''; return; }
+    bar.classList.remove('d-none'); el.setAttribute('data-uploading', '1');
+    uploadFile(file, { kind: 'studio', project: el.dataset.project }, function (p) { var v = Math.min(100, Math.round(p * 100)); pb.style.width = v + '%'; pb.textContent = v + '%'; })
+      .then(function (r) {
+        var fd = new FormData(); fd.append('output', el.dataset.studioUpload); fd.append('key', r.key); fd.append('name', file.name); fd.append('mime', file.type || ''); fd.append('size', file.size);
+        fd.append('engine', engine); fd.append('cost', $('[name=cost]', bx).value || '0'); fd.append('settings', $('[name=settings]', bx).value || '');
+        return post('/admin/adminAjax/studio/add_media/' + el.dataset.task, fd).then(handle);
+      })
       .catch(function (e) { toast(e.message, false); pb.classList.add('bg-danger'); }).then(function () { el.removeAttribute('data-uploading'); el.value = ''; });
   }
 

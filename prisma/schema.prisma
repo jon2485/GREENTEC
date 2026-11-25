@@ -608,3 +608,139 @@ model ContactMessage { // טופס "צור קשר" (/contact – legacy URL)
   handled   Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+
+// ---------- GREENTEC AI Film Studio (אולפן הסרטים) ----------
+// Production memory lives here and in the bucket (studio/{projectId}/...), never in a model's chat memory.
+model FilmProject {
+  id          Int      @id @default(autoincrement())
+  title       String
+  story       String   @default("")   // source story (Hebrew)
+  audience    String   @default("")   // target age / audience notes
+  stage       Int      @default(1)    // 1..6 (lib/studio/workflow.ts STAGES), 7 = delivered
+  budgetLimit Decimal  @default(0) @db.Decimal(10, 2) // USD, hard cap for the whole project
+  aiEnabled   Boolean  @default(false) // owner approved sending this project's materials to the Claude API
+  providers   String   @default("[]")  // JSON: external services the owner approved for this project
+  isTest      Boolean  @default(false) // competency / acceptance test project
+  scores      String   @default("{}")  // JSON: acceptance scorecard 1–5 per domain
+  notes       String   @default("")
+  approvedAt  DateTime?                // producer's final approval for distribution (human only)
+  approvedBy  Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tasks       FilmTask[]
+  assets      FilmAsset[]
+  costs       FilmCost[]
+  rights      FilmRight[]
+  events      FilmEvent[]
+}
+
+model FilmTask {
+  id                 Int       @id @default(autoincrement())
+  projectId          Int
+  key                String    // template key inside the project (e.g. "s1.screenplay")
+  stage              Int
+  sceneId            String    @default("")
+  shotId             String    @default("")
+  agent              String    // AI-01..AI-14
+  title              String
+  inputAssets        String    @default("[]") // JSON: FilmAsset ids
+  approvedVersions   String    @default("{}") // JSON: {assetId: version} pinned when the task became READY
+  creativeBrief      String    @default("")
+  technicalReq       String    @default("")
+  constraints        String    @default("")
+  budgetLimit        Decimal   @default(0) @db.Decimal(10, 2)
+  expectedOutputs    String    @default("[]") // JSON: [{name, kind, media}]
+  acceptanceCriteria String    @default("")
+  reviewAgent        String    @default("HUMAN") // AI-xx or HUMAN
+  status             String    @default("DRAFT")
+  dependsOn          String    @default("[]") // JSON: task keys
+  selfReview         String    @default("")   // agent's self-check before hand-off
+  revisionNotes      String    @default("")
+  blockedReason      String    @default("")
+  attempts           Int       @default(0)
+  runStartedAt       DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  project            FilmProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  versions           FilmAssetVersion[]
+  @@unique([projectId, key])
+  @@index([projectId, status])
+}
+
+model FilmAsset {
+  id             Int      @id @default(autoincrement())
+  projectId      Int
+  name           String
+  kind           String   // screenplay, scene_list, character_bible, image, video, audio, report, ...
+  media          Boolean  @default(false) // true = file in the bucket (image/video/audio), false = text/JSON
+  currentVersion Int      @default(0)
+  approvedVersion Int     @default(0)
+  createdAt      DateTime @default(now())
+  project        FilmProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  versions       FilmAssetVersion[]
+  @@unique([projectId, name])
+}
+
+model FilmAssetVersion { // immutable: a change is always a new version
+  id         Int       @id @default(autoincrement())
+  assetId    Int
+  version    Int
+  taskId     Int?
+  content    String    @default("") // text / JSON deliverable
+  storageKey String    @default("") // bucket key for media
+  mime       String    @default("")
+  size       Int       @default(0)
+  sha256     String    @default("")
+  status     String    @default("draft") // draft | approved | rejected
+  createdBy  String    @default("")      // AI-xx, human:{userId}
+  meta       String    @default("{}")    // JSON: engine, model, settings, prompt, seed…
+  approvedBy String    @default("")
+  approvedAt DateTime?
+  createdAt  DateTime  @default(now())
+  asset      FilmAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  task       FilmTask? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  @@unique([assetId, version])
+}
+
+model FilmCost {
+  id        Int      @id @default(autoincrement())
+  projectId Int
+  taskId    Int?
+  provider  String   // anthropic, kling, elevenlabs, …
+  kind      String   @default("text") // text | image | video | voice | music | other
+  units     String   @default("")     // e.g. "in 12000 / out 3000 tokens", "8 sec"
+  amount    Decimal  @db.Decimal(10, 4) // USD
+  note      String   @default("")
+  createdBy String   @default("")
+  createdAt DateTime @default(now())
+  project   FilmProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model FilmRight {
+  id         Int      @id @default(autoincrement())
+  projectId  Int
+  assetId    Int?
+  subject    String   // story, illustration, voice, music, font, engine output…
+  owner      String   @default("")
+  license    String   @default("")
+  commercial Boolean  @default(false)
+  proofKey   String   @default("") // bucket key of the signed agreement / license
+  verified   Boolean  @default(false)
+  notes      String   @default("")
+  createdAt  DateTime @default(now())
+  project    FilmProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model FilmEvent { // production log: every status change and hand-off
+  id        Int      @id @default(autoincrement())
+  projectId Int
+  taskId    Int?
+  actor     String   // AI-xx, human:{userId}, system
+  action    String   // status, run, review, version, approve, cost, right, plan…
+  fromState String   @default("")
+  toState   String   @default("")
+  note      String   @default("")
+  createdAt DateTime @default(now())
+  project   FilmProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  @@index([projectId, createdAt])
+}

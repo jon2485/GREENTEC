@@ -71,6 +71,11 @@ export const MENU: { group: string; icon: string; items: MenuItem[] }[] = [
     { id: 'M01', am: 'configs', ac: 'legacy_import', title: 'ייבוא נתונים מהמערכת הישנה' },
     { id: 'A54', am: 'configs', ac: 'shutdown_site', title: 'כיבוי האתר' },
   ] },
+  // New module (not in UPME): GREENTEC AI Film Studio – lib/studio/*, lib/admin/studio.ts
+  { group: 'אולפן AI', icon: '🎬', items: [
+    { id: 'S01', am: 'studio', ac: 'projects', title: 'פרויקטי סרטים' },
+    { id: 'S02', am: 'studio', ac: 'agents', title: 'צוות האולפן' },
+  ] },
 ];
 export const findMenu = (am: string, ac: string) => MENU.flatMap((g) => g.items).find((i) => i.am === am && i.ac === ac);
 export const USER_TYPES: [number, string][] = [[0, 'רגיל'], [50, 'פרימיום'], [69, 'מנהל זוטר'], [70, 'מנהל אתר'], [80, 'ספק (Vendor)'], [99, 'SuperAdmin']];
