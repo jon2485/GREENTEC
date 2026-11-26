@@ -4,8 +4,10 @@ import { db } from '@/lib/db';
 import { currentUser } from '@/lib/auth';
 import { saveCart } from '@/lib/cart';
 import { completeOrder } from '@/lib/orders';
+import { testPayments } from '@/lib/payments';
 
 export async function POST(req: Request) {
+  if (!testPayments()) return NextResponse.json({ error: 'payments are not available' }, { status: 404 });
   const u = await currentUser(); const f = await req.formData();
   const id = +String(f.get('order')); const action = String(f.get('action'));
   const o = await db.order.findUnique({ where: { id } });

@@ -431,3 +431,11 @@ a.gt-ann-item::after { content: "‹"; color: #cadb2d; font-weight: 700; margin-
 .pp-btns { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .pp-buy-multi .pp-addbtn { width: 100%; justify-content: center; }
 @media (width >= 992px) { .pp-btns { flex: 0 1 auto; } .pp-buy-multi .pp-addbtn { justify-content: flex-start; } }
+
+/* sold-out item on a card: the cart button is dimmed and opens the product page */
+[data-soldout]{opacity:.45;cursor:pointer}
+/* Phones: the Judaica/accessories carousels pull out by 16px while the section padding is 14px – keep them inside the screen (no sideways scroll) */
+@media (width < 576px) {
+  .accessories-section .main-carousel { margin-inline: -10px; }
+  .accessories-section, .movies-section, .new-singles-section, .recent-articles-section, .new-on-section, .jewish-music-section { overflow-x: clip; }
+}

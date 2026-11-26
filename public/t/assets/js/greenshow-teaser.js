@@ -15,7 +15,7 @@
         <a class="gs-teaser-go" href="${SITE}">כניסה ל־GreenShow ‹</a>
       </div>
     </div>`;
-  document.body.appendChild(box);
+  (document.getElementById('gt-overlays') || document.body).appendChild(box);
   const video = box.querySelector('video');
   let last = null;
   function open(trigger) {

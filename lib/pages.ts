@@ -1,6 +1,6 @@
 import { I } from './tpl';
 import { esc, shopCard, bundleCard, thumb, href } from './render';
-import { buyText, enc, money, oldPrice, priceOptions } from './format';
+import { buyText, enc, money, oldPrice, priceOptions, sellableOptions } from './format';
 import { parseVariants, optLabel } from './variants';
 import { decodeEntities } from './seo';
 
@@ -80,7 +80,7 @@ export function variantsHtml(p: any) {
 }
 
 export function productPage(o: { p: any; crumbs: Crumb[]; kicker: string; catName: string; catUrl: string; suppliers: { name: string; url: string; count: number }[]; related: any[]; delivery: string; returns: string; siteUrl: string }) {
-  const { p } = o; const opts = priceOptions(p).filter((x) => !(p.quantity === 0 && (x.key === 'physical' || x.key === 'both'))); // quantity 0 = out of stock
+  const { p } = o; const opts = sellableOptions(p); // quantity 0 = out of stock
   const share = encodeURIComponent(o.siteUrl + p.urlPath);
   const optIcon = (k: string) => (k === 'digital' ? I.optDigital : I.optBoth);
   const optsHtml = ''; // legacy: one button per purchase option (see the buy area below), no separate chooser

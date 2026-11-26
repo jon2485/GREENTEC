@@ -11,7 +11,9 @@ export async function POST(req: Request) {
   const { id, mode, qty = 1, set, v, pr } = await req.json();
   const p = await db.product.findUnique({ where: { id: +id } });
   if (!p || p.status !== 1) return NextResponse.json({ error: 'not found' }, { status: 404 });
-  const m = mode || 'physical';
+  const offered = priceOptions(p).map((o) => o.key) as string[];
+  const m = mode || offered[0] || 'physical';
+  if (!offered.includes(m)) return NextResponse.json({ error: 'mode', message: 'אפשרות הרכישה אינה קיימת במוצר זה' }, { status: 400 });
   const vk = v ? String(v) : undefined; const prs = pr ? String(pr) : undefined;
   // products with sizes/colours/add-ons: a valid choice is required (same as the live site)
   if (m !== 'digital') {

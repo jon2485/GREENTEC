@@ -1,4 +1,5 @@
 import { notFound, permanentRedirect } from 'next/navigation';
+import { locationOf } from '@/lib/redirects';
 import type { Metadata } from 'next';
 import { db } from '@/lib/db';
 import { categoryChain, categoryListing, cardSelect, parseSup } from '@/lib/catalog';
@@ -53,7 +54,9 @@ export async function generateMetadata({ params, searchParams }: P): Promise<Met
   // legacy title / description / keywords stay exactly as they were; only empty ones get a generated fallback
   const title = x.metaTitle || name;
   const isAttr = r.kind === 'product' && /shop_attributes/.test(x.content || '');
-  const description = x.metaDescription || metaFrom(r.kind === 'product' ? (isAttr ? x.shortContent : x.shortContent || x.content) : x.shortContent || x.content || '') || undefined;
+  // last resort for pages with no legacy description and no usable text (e.g. a product whose content is only a specs table)
+  const fallback = r.kind === 'product' ? `${name} – ${x.digitalPrice != null || x.bothPrice != null ? 'לרכישה ולהורדה מיידית' : 'לרכישה'} באתר גרינטק, מוזיקה ותוכן יהודי.` : `${name} – גרינטק, מוזיקה ותוכן יהודי.`;
+  const description = x.metaDescription || metaFrom(r.kind === 'product' ? (isAttr ? x.shortContent : x.shortContent || x.content) : x.shortContent || x.content || '') || fallback;
   const img = abs(x.ogImage || x.mainImage || x.image || '');
   const L = r.kind === 'category' ? listingSeo(r.path, sp, Infinity) : null;
   const canonical = L ? L.canonical : SITE + r.path;
@@ -75,7 +78,7 @@ export async function generateMetadata({ params, searchParams }: P): Promise<Met
 export default async function Page({ params, searchParams }: P) {
   const r = await resolve((await params).slug);
   if (!r) notFound();
-  if (r.kind === 'redirect') permanentRedirect(r.to);
+  if (r.kind === 'redirect') permanentRedirect(locationOf(r.to));
   if (r.kind === 'supplier') return SupplierPage({ params: Promise.resolve({ id: String(r.supplier.id) }), searchParams });
   const sp = await searchParams;
 

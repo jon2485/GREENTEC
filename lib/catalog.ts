@@ -1,7 +1,7 @@
 import { db } from './db';
 import { priceOptions } from './format';
 
-export const cardSelect = { id: true, name: true, urlPath: true, mainImage: true, price: true, newPrice: true, digitalPrice: true, physicalPrice: true, bothPrice: true, buyLabels: true, isSet: true, sort: true } as const;
+export const cardSelect = { id: true, name: true, urlPath: true, mainImage: true, price: true, newPrice: true, digitalPrice: true, physicalPrice: true, bothPrice: true, buyLabels: true, isSet: true, sort: true, quantity: true } as const;
 
 export async function withDescendants(ids: number[]) {
   const all = await db.category.findMany({ select: { id: true, parentId: true } });

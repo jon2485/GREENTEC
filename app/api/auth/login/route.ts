@@ -10,5 +10,7 @@ export async function POST(req: Request) {
   if (u && u.active && !u.passwordHash) return NextResponse.redirect(new URL('/forgot-password?legacy=1', req.url), 303);
   if (!u || !u.active || !verifyPassword(pw, u.passwordHash)) return NextResponse.redirect(new URL(`/login?err=1&next=${encodeURIComponent(next)}`, req.url), 303);
   await setSession(u.id); await db.user.update({ where: { id: u.id }, data: { lastSeen: new Date() } });
-  return NextResponse.redirect(new URL(next.startsWith('/') ? next : '/account', req.url), 303);
+  // only a path on this site (not "//host" or "/\\host", which browsers treat as another site)
+  const safe = /^\/(?![\/\\])/.test(next) ? next : '/account';
+  return NextResponse.redirect(new URL(safe, req.url), 303);
 }

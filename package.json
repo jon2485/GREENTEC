@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "prisma db push --skip-generate && node scripts/seed.mjs && node scripts/import-legacy-admin.mjs --once && (node scripts/audit-legacy.mjs &) && next start -p ${PORT:-3000}",
-    "seed": "node scripts/seed.mjs"
+    "seed": "node scripts/seed.mjs",
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.932.0",
@@ -19,6 +21,7 @@
     "react-dom": "19.1.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@types/node": "22.18.0",
     "@types/react": "19.1.12",
     "typescript": "5.9.2"

@@ -1,3 +1,5 @@
+// read at request time (STAGING / SITE_URL may change without a rebuild)
+export const dynamic = 'force-dynamic';
 export default function robots() {
   if (process.env.STAGING === '1') return { rules: [{ userAgent: '*', disallow: '/' }] };
   const site = (process.env.SITE_URL || 'https://www.greentec.co.il').replace(/\/$/, '');

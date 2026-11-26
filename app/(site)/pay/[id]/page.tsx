@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { currentUser } from '@/lib/auth';
 import { esc } from '@/lib/render';
 import { money } from '@/lib/format';
+import { testPayments } from '@/lib/payments';
 import { getSettings } from '@/lib/settings';
 import { parseScripts, trackingEnabled } from '@/lib/headerCodes';
 
@@ -19,7 +20,7 @@ export default async function Pay({ params, searchParams }: { params: Promise<{ 
     : `<h1 class="header-text">תשלום על הזמנה ${o.id}</h1><p class="subheader-text">לתשלום: ${money(o.total)}</p>${sp.fail ? '<p class="gt-flash err">התשלום בוטל. אפשר לנסות שוב.</p>' : ''}
 <div class="card custom-card"><div class="card-body"><h5 class="card-title">סליקה בסביבת בדיקה</h5><p>זה מסך סליקה מדומה. בפרודקשן יוחלף בדף התשלום המאובטח של חברת הסליקה.</p>
 <ul>${o.items.map((i) => `<li>${esc(i.name)} – ${money(Number(i.price) * i.quantity)}</li>`).join('')}</ul>
-<form method="post" action="/api/pay" class="d-flex gap-3"><input type="hidden" name="order" value="${o.id}"><button class="btn btn-primary" name="action" value="approve">אישור תשלום (בדיקה)</button><button class="btn btn-secondary-outline" name="action" value="cancel">ביטול</button></form></div></div>`;
+${testPayments() ? `<form method="post" action="/api/pay" class="d-flex gap-3"><input type="hidden" name="order" value="${o.id}"><button class="btn btn-primary" name="action" value="approve">אישור תשלום (בדיקה)</button><button class="btn btn-secondary-outline" name="action" value="cancel">ביטול</button></form>` : '<p class="gt-flash err">התשלום באתר אינו זמין כרגע. נציג יחזור אליך להשלמת ההזמנה.</p>'}</div></div>`;
   // conversion codes (admin → headers → order_success), only those not already loaded on every page
   let conv: ReturnType<typeof parseScripts> = [];
   if (o.paymentStatus === 'completed' && trackingEnabled()) {

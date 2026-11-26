@@ -39,7 +39,7 @@
         </div>
       </div>
     </div>`;
-  document.body.appendChild(box);
+  (document.getElementById('gt-overlays') || document.body).appendChild(box);
   const $ = (id) => document.getElementById(id);
   let lastFocus = null;
   function open(d, trigger) {

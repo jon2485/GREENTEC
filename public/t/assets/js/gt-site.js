@@ -24,6 +24,8 @@
       });
   };
   document.addEventListener('click', function (e) {
+    var so = e.target.closest('[data-soldout]');
+    if (so) { e.preventDefault(); var sc = so.closest('article, .album-card, .item-box, .carousel-cell'); var sl = sc && sc.querySelector('a[href]:not([href="#"])'); if (sl) location.href = sl.href; return; }
     var a = e.target.closest('[data-add]');
     if (a && !a.hasAttribute('data-qv')) {
       e.preventDefault();

@@ -9,7 +9,7 @@ export const metadata = { title: 'גרינטק - מוזיקה ותוכן יהו�
 const JS = `{
   const note=document.createElement('div');note.setAttribute('role','status');
   note.style.cssText='position:fixed;inset-inline:16px;bottom:20px;margin:0 auto;max-width:420px;background:#2a2b2c;color:#fff;border-radius:980px;padding:12px 22px;font:500 15px Heebo,Arial,sans-serif;text-align:center;box-shadow:0 10px 24px rgba(0,0,0,.25);opacity:0;transform:translateY(12px);transition:opacity .2s,transform .2s;pointer-events:none;z-index:99999';
-  note.textContent='זוהי תצוגה מקדימה של דף הבית. האתר המלא מוצג בהדגמה חיה.';document.body.appendChild(note);let t;
+  note.textContent='זוהי תצוגה מקדימה של דף הבית. האתר המלא מוצג בהדגמה חיה.';(document.getElementById('gt-overlays')||document.body).appendChild(note);let t;
   const say=()=>{note.style.opacity=1;note.style.transform='none';clearTimeout(t);t=setTimeout(()=>{note.style.opacity=0;note.style.transform='translateY(12px)'},2600)};
   document.addEventListener('click',e=>{const el=e.target.closest('a[href],[data-add],[data-wish],[data-qv],.cart-button,button[type=submit]');if(!el)return;
     const h=el.getAttribute&&el.getAttribute('href');if(h&&(h.startsWith('#')||h.startsWith('javascript')))return;

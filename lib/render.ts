@@ -1,16 +1,17 @@
 // HTML generators that reproduce the approved template cards exactly (same classes/markup).
 import { I } from './tpl';
-import { enc, fromPrice, money, priceOptions } from './format';
+import { enc, fromPrice, money, priceOptions, sellableOptions } from './format';
 
 export const esc = (s: any) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 export const thumb = (u: string) => (u || '').replace('/resized/large/', '/resized/medium/') || '/t/assets/images/logo.png';
 export const href = (p: { urlPath: string }) => enc(p.urlPath);
 const isMusic = (p: any) => p.digitalPrice != null || p.bothPrice != null;
 const qv = (p: any) => {
-  const opts = priceOptions(p);
+  const opts = sellableOptions(p);
   return `data-qv data-qv-id="${p.id}" data-qv-href="${href(p)}" data-qv-img="${esc(p.mainImage)}" data-qv-title="${esc(p.name)}" data-qv-price="${esc(fromPrice(p))}" data-qv-type="${isMusic(p) ? 'music' : 'item'}" data-qv-opts="${esc(JSON.stringify(opts))}"`;
 };
-const addAttr = (p: any) => { const o = priceOptions(p)[0]; return `data-add="${p.id}" data-mode="${o?.key || 'physical'}"`; };
+// add-to-cart on a card = the first option that is on sale; a sold-out item (quantity 0, nothing else to buy) opens its page instead
+const addAttr = (p: any) => { const o = sellableOptions(p)[0]; return o ? `data-add="${p.id}" data-mode="${o.key}"` : `data-soldout="${p.id}" title="אזל מהמלאי"`; };
 const isNew = (p: any) => p.id >= 8700;
 
 export function albumCard(p: any) {
@@ -29,7 +30,7 @@ export function articleCell(a: any) {
   return `<div class="carousel-cell"><div class="card article-card"><img src="${esc(img)}" class="card-img-top" alt="${esc(a.title)}"><div class="card-body"><div class="d-flex date-box">${I.date}<span class="mt-1">${d}</span></div><h5 class="card-title">${esc(a.title)}</h5><p class="card-text">${esc(txt)}</p><a href="/${(a.url ? enc(a.url) : 'articles/id/' + a.id)}" class="btn group">קרא עוד <span>←</span></a></div></div></div>`;
 }
 export function shopCard(p: any, i = 0, pinned = false) {
-  const price = priceOptions(p)[0]?.price ?? 0;
+  const o = priceOptions(p); const price = o.length ? Math.min(...o.map((x) => x.price)) : 0; // same key the listing sorts and filters by
   return `<article class="shop-card"${pinned ? ' data-pin="1"' : ''} data-price="${price}" data-name="${esc(p.name)}" data-i="${i}"><div class="shop-media">${pinned ? `<span class="shop-pin" title="מוצר נעוץ – מופיע ראשון" aria-label="מוצר נעוץ">${I.pin}</span>` : ''}<a href="${href(p)}" class="shop-img"><img src="${esc(thumb(p.mainImage))}" alt="${esc(p.name)}" loading="lazy"></a>${isNew(p) ? '<span class="shop-badge">חדש</span>' : ''}<div class="shop-icons"><button type="button" class="shop-icon" ${qv(p)} aria-label="תצוגה מהירה: ${esc(p.name)}">${I.shopEye}</button><button type="button" class="shop-icon wish" data-wish="${p.id}" aria-label="הוספה לרשימת המשאלות">${I.wish}</button></div><button type="button" class="shop-cart" ${addAttr(p)} aria-label="הוספה לסל: ${esc(p.name)}">${I.shopCart}<span>הוספה לסל</span></button></div><div class="shop-body"><a href="${href(p)}" class="shop-name">${esc(p.name)}</a><span class="shop-price">${esc(fromPrice(p))}</span><div class="shop-actions"><button type="button" class="sa-cart" ${addAttr(p)} aria-label="הוספה לסל: ${esc(p.name)}">${I.shopCart}<span>הוספה לסל</span></button><button type="button" class="sa-icon" ${qv(p)} aria-label="תצוגה מהירה: ${esc(p.name)}">${I.shopEye}</button><button type="button" class="sa-icon wish" data-wish="${p.id}" aria-label="הוספה לרשימת המשאלות">${I.wish}</button></div></div></article>`;
 }
 export function bundleCard(p: any) {

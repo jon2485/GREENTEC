@@ -22,7 +22,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const st = trackingEnabled() ? await getSettings().catch(() => ({} as Record<string, string>)) : ({} as Record<string, string>);
   const codes = parseScripts(st.header_landing || '');
   return (
-    <html lang="he" dir="rtl">
+    <html lang="he" dir="rtl" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
@@ -44,6 +44,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {children}
           <Footer />
         </div>
+        {/* overlays the template scripts build at load (quick view, GreenShow teaser) live here, outside React's tree */}
+        <div id="gt-overlays" dangerouslySetInnerHTML={{ __html: '' }} />
         <script src="/t/vendor/jquery.min.js"></script>
         <script src="/t/vendor/bootstrap.bundle.min.js"></script>
         <script src={"/t/assets/js/main.js?v=" + V}></script>

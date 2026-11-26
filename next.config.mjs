@@ -2,6 +2,7 @@
 const nextConfig = {
   images: { unoptimized: true },
   eslint: { ignoreDuringBuilds: true },
+  // Railway installs without devDependencies (no TypeScript at build time), so types are checked with `npm run typecheck` instead
   typescript: { ignoreBuildErrors: true },
   output: undefined,
   async headers() {

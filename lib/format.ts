@@ -18,6 +18,9 @@ export function priceOptions(p: any) {
   if (Array.isArray(L.order)) o.sort((a, b) => (L.order.indexOf(a.key) + 1 || 9) - (L.order.indexOf(b.key) + 1 || 9));
   return o;
 }
+/** What can be bought right now. Stock rule: no quantity = unlimited, quantity > 0 = in stock, 0 = out of stock –
+ *  then the shipped options (physical, album + download) are hidden; downloads and the linked edition stay on sale. */
+export const sellableOptions = (p: any) => priceOptions(p).filter((o) => !(p.quantity === 0 && (o.key === 'physical' || o.key === 'both')));
 /** The legacy crossed-out price: product price when a sale price is set and it is higher than what is charged. */
 export const oldPrice = (p: any, charged: number) => (p.newPrice != null && p.price != null && Number(p.price) > charged + 0.001 ? Number(p.price) : null);
 /** Button text as on the legacy site: "הורדת האלבום - ₪50". */
