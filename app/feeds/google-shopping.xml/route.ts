@@ -11,8 +11,13 @@ const x = (t: string) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&am
 export async function GET() {
   const site = (process.env.SITE_URL || 'https://www.greentec.co.il').replace(/\/$/, '');
   const abs = (u: string) => (!u ? '' : /^https?:\/\//.test(u) ? u : site + (u.startsWith('/') ? '' : '/') + u);
+  // admin → קמפיינים → google shopping: פיד פעיל, התאמות (category IDs), להוציא מן הכלל (product IDs)
+  const st = Object.fromEntries((await db.setting.findMany({ where: { key: { in: ['gs_enabled', 'gs_categories', 'gs_exclude'] } } })).map((r) => [r.key, r.value]));
+  if (st.gs_enabled === '0') return new Response('Feed disabled', { status: 404 });
+  const idList = (v?: string) => String(v || '').split(/[\s,]+/).map(Number).filter((n) => n > 0);
+  const onlyCats = idList(st.gs_categories), exclude = idList(st.gs_exclude);
   const rows = await db.product.findMany({
-    where: { status: 1, onlyDigital: false, NOT: { mainImage: '' }, OR: [{ physicalPrice: { not: null } }, { bothPrice: { not: null } }, { AND: [{ digitalPrice: null }, { price: { not: null } }] }] },
+    where: { status: 1, onlyDigital: false, NOT: { mainImage: '' }, ...(exclude.length ? { id: { notIn: exclude } } : {}), ...(onlyCats.length ? { categories: { some: { categoryId: { in: onlyCats } } } } : {}), OR: [{ physicalPrice: { not: null } }, { bothPrice: { not: null } }, { AND: [{ digitalPrice: null }, { price: { not: null } }] }] },
     include: { suppliers: { include: { supplier: true }, take: 1 }, categories: { include: { category: true } }, images: { orderBy: { sort: 'asc' }, take: 5 } },
   });
   const items = rows.map((p) => {

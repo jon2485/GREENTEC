@@ -78,6 +78,7 @@ async function handle(mod: string, action: string, id: number, f: FormData, url:
       await setBucketCors([...new Set(origins)]); return ok('הוגדר CORS לדליים עבור: ' + [...new Set(origins)].join(', '));
     }
     // orders
+    case 'orders/save_status_order': return O.statusReorderSave(f) as Promise<R>;
     case 'orders/bulk_status': return O.bulkStatus(f) as Promise<R>;
     case 'orders/save_payment': return O.orderSavePayment(id, f) as Promise<R>;
     case 'orders/save_customer': return O.orderSaveCustomer(id, f) as Promise<R>;
@@ -98,11 +99,15 @@ async function handle(mod: string, action: string, id: number, f: FormData, url:
     }
     // content / system
     case 'configs/save_settings': return C.settingsSave(String(url.searchParams.get('screen') || ''), f) as Promise<R>;
+    case 'googleAnalytics/event_add': return C.gaEventAdd(f) as Promise<R>;
+    case 'googleAnalytics/event_delete': return C.gaEventDelete(Number(url.pathname.split('/').pop())) as Promise<R>;
+    case 'dashboard/event_add': return C.calendarAdd(f) as Promise<R>;
+    case 'dashboard/event_delete': return C.calendarDelete(url.pathname.split('/').pop() || '') as Promise<R>;
     case 'design/save_home': return C.designHomeSave(f) as Promise<R>;
     case 'menus/create': { const max = (await db.menu.aggregate({ _max: { id: true } }))._max.id || 0; const m = await db.menu.create({ data: { id: max + 1, title: String(f.get('title') || 'תפריט') } }); return ok('נוצר', { redirect: `/admin?am=menus&ac=items&id=${m.id}` }); }
     case 'menus/delete': await db.menu.delete({ where: { id } }); return ok('הוסר', { reload: true });
     case 'menus/save_items': return C.menuItemsSave(id, f) as Promise<R>;
-    case 'albums/create': { const max = (await db.album.aggregate({ _max: { id: true } }))._max.id || 0; const a = await db.album.create({ data: { id: max + 1, title: String(f.get('title') || 'גלריה') } }); return ok('נוצר', { redirect: `/admin?am=albums&ac=images&id=${a.id}` }); }
+    case 'albums/create': { const max = (await db.album.aggregate({ _max: { id: true } }))._max.id || 0; const a = await db.album.create({ data: { id: max + 1, title: String(f.get('title') || 'גלריה'), description: String(f.get('description') || '') } }); return ok('נוצר', { redirect: `/admin?am=albums&ac=images&id=${a.id}` }); }
     case 'albums/delete': await db.album.delete({ where: { id } }); return ok('הוסר', { reload: true });
     case 'albums/save_images': return C.albumImagesSave(id, f) as Promise<R>;
     case 'shipping/save_countries': return C.countriesSave(f) as Promise<R>;

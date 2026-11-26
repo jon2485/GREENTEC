@@ -380,6 +380,7 @@ model DownloadGrant { // link ≠ file: right to download a product's files
 model OrderStatus {
   id          Int     @id
   title       String
+  sort        Int     @default(0) // "סידור מחדש" in the legacy admin
   sendMessage Boolean @default(false)
   mailTitle   String  @default("")
   message     String  @default("")
@@ -533,6 +534,7 @@ model MenuItem {
 model Album { // גלריות (סליידר וכו')
   id          Int     @id
   title       String
+  description String  @default("")
   imageWidth  Int     @default(1900)
   imageHeight Int     @default(893)
   thumbPrec   Int     @default(5)

@@ -1,5 +1,6 @@
 // /admin?am={module}&ac={action}&id={id} – same URL scheme as the UPME admin.
 import { requireAdmin } from '@/lib/auth';
+import { db } from '@/lib/db';
 import { MENU, findMenu } from '@/lib/admin/menu';
 import { esc, A, card } from '@/lib/admin/ui';
 import { findResource, listScreen, editScreen } from '@/lib/admin/resources';
@@ -28,6 +29,7 @@ async function screen(am: string, ac: string, id: number, sp: Record<string, str
     case 'ProductsSets/manage_rels': return P.setRels(id);
     case 'ProductSuppliers/items': return P.supplierItems(id);
     case 'orders/manage': return O.ordersManage(sp);
+    case 'orders/reorder_status': return O.statusReorder();
     case 'orders/deleted_list': return O.ordersManage(sp, true);
     case 'orders/view': return O.orderView(id);
     case 'orders/customer_view': return O.orderCustomerView(id);
@@ -53,7 +55,8 @@ async function screen(am: string, ac: string, id: number, sp: Record<string, str
     case 'configs/manage_images': return C.manageImages();
     case 'configs/shutdown_site': return C.shutdownScreen();
     case 'configs/legacy_import': return legacyImportScreen();
-    case 'dashboard/index': return C.dashboard();
+    case 'googleAnalytics/events': return C.gaEventsScreen();
+    case 'dashboard/index': return C.dashboard(user, sp);
     case 'albums/create': return C.albumCreate();
     case 'ProductProperties/manage_prod_props': return P.propLists();
   }
@@ -69,6 +72,17 @@ async function screen(am: string, ac: string, id: number, sp: Record<string, str
     return html;
   }
   return card('המסך לא נמצא', `<p>אין מסך עבור <code>am=${esc(am)}&amp;ac=${esc(ac)}</code>.</p>`);
+}
+
+// "נצפו לאחרונה" on the dashboard, as in the legacy admin: products, categories and orders the admin opened
+async function recent(userId: number, am: string, ac: string, id: number) {
+  if (!id) return;
+  let label = '';
+  if (am === 'products' && ac === 'edit') label = 'מוצר: ' + ((await db.product.findUnique({ where: { id }, select: { name: true } }))?.name || id);
+  else if (am === 'products' && ac === 'edit_cat') label = 'קטגוריה: ' + ((await db.category.findUnique({ where: { id }, select: { name: true } }))?.name || id);
+  else if (am === 'orders' && ac === 'view') label = 'הזמנה: ' + ((await db.order.findUnique({ where: { id }, select: { orderNumber: true } }))?.orderNumber || id);
+  else return;
+  await C.trackRecent(userId, label, `/admin?am=${am}&ac=${ac}&id=${id}`);
 }
 
 function sidebar(am: string, ac: string) {
@@ -89,6 +103,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<Re
   const am = sp.am || 'dashboard', ac = sp.ac || 'index', id = Number(sp.id || 0);
   let body: string;
   try { body = await screen(am, ac, id, sp, user); } catch (e: any) { console.error('[admin]', am, ac, e); body = card('שגיאה', `<pre class="small" dir="ltr">${esc(e?.message || e)}</pre>`); }
+  await recent(user.id, am, ac, id).catch(() => {});
   const title = findMenu(am, ac)?.title || findMenu(am, 'manage')?.title || (am === 'admin' && ac === 'profile' ? 'הפרופיל שלי' : '');
   const html = `<div class="adm-shell"><aside class="adm-side" id="admSide"><a href="/admin" class="adm-brand"><img src="/t/assets/images/logo-v.png" alt=""> <span>GREENTEC</span></a><nav>${sidebar(am, ac)}</nav></aside>
   <div class="adm-main"><header class="adm-top"><button type="button" class="btn btn-sm btn-light d-lg-none" data-side-toggle>☰</button><div class="adm-crumb">${title ? esc(title) : 'מערכת ניהול'}</div><nav class="adm-quick d-none d-xl-flex gap-1"><a href="${A('products', 'manage')}">ניהול מוצרים</a><a href="${A('user', 'manage')}">ניהול משתמשים</a><a href="${A('orders', 'manage')}">ניהול הזמנות</a></nav><div class="ms-auto dropdown adm-usermenu"><button type="button" class="btn btn-sm btn-light" data-usermenu aria-expanded="false">${esc(user.name || user.email)} ▾</button><div class="adm-usermenu-list" hidden><a href="${A('admin', 'profile')}">הפרופיל שלי</a><a href="/" target="_blank">צפייה באתר</a><a href="/admin/adminAjax/admin/logout">התנתקות</a></div></div></header>

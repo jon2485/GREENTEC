@@ -104,3 +104,13 @@ See **docs/MIGRATION.md** (owner request 2026-11-23): import everything from the
 - `Product.buyLabels` = `{digital?, both?, physical?, link?: {label, price}, order: [...]}`; `lib/format.ts priceOptions()` reads it. Crossed-out price = `price` when `newPrice` is set and higher than what is charged.
 - Verified page-by-page against the legacy site (3,878 products). `scripts/audit-legacy.mjs` compares against `legacy_buttons` on every start.
 - TODO with the other migration routes: delete `app/api/migrate/buttons`.
+
+## 9. Tests and checks (2026-11-26)
+
+- `tests/e2e` (Playwright): storefront, product buttons, stock, checkout → test payment → downloads, security, admin (every menu screen loads, no-op saves change no stored field). How to run: `tools/e2e-local/README.md`. Run them before pushing.
+- `npm run typecheck` must stay clean.
+- Hydration gate in `app/(site)/layout.tsx`: React hydrates only after DOMContentLoaded (fixes React #418 on slow connections, which broke the template scripts' buttons). Template scripts are `defer`.
+- Category default order = the legacy "סדר מוצרים" (`Category.productsOrder`, legacy values such as `attr.2:desc`), inherited from the nearest parent; category pages include sub-category products unless `hideChildCats`. First 12 products matched the live site in 148/151 categories (the rest: a legacy dead link, the custom games page, a 404 URL).
+- `Product.releaseYear` comes from legacy `attributes[2]` (option id → year, `scripts/seed.mjs` LEGACY_YEARS).
+- Admin saves keep stored text when only CRLF/whitespace differs (`keepUnchanged` in `lib/admin/ui.ts`); switches are read with `getAll` (a hidden "0" precedes the checkbox).
+- Legacy Google Shopping feed URL `/GoogleShopping/feed/1` serves the same feed as `/feeds/google-shopping.xml`.

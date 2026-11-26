@@ -3,6 +3,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { getSettings } from '@/lib/settings';
 import { parseScripts, trackingEnabled } from '@/lib/headerCodes';
+import { parseGaEvents, GA_FIRE } from '@/lib/gaEvents';
 
 const SITE = process.env.SITE_URL || 'https://www.greentec.co.il';
 export const metadata: Metadata = {
@@ -35,6 +36,7 @@ const V = (process.env.RAILWAY_GIT_COMMIT_SHA || process.env.BUILD_ID || String(
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const st = trackingEnabled() ? await getSettings().catch(() => ({} as Record<string, string>)) : ({} as Record<string, string>);
   const codes = parseScripts(st.header_landing || '');
+  const gaCart = parseGaEvents(st.ga_events).filter((e) => e.type === 'cart');
   return (
     <html lang="he" dir="rtl" suppressHydrationWarning>
       <head>
@@ -51,6 +53,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script src="/t/vendor/flickity.pkgd.min.js" defer></script>
         <script src="/t/vendor/flickity-fade.js" defer></script>
         {st.google_site_verification ? <meta name="google-site-verification" content={st.google_site_verification} /> : null}
+        {gaCart.length ? <script dangerouslySetInnerHTML={{ __html: `window.GT_GA_CART=${JSON.stringify(gaCart).replace(/</g, '\\u003c')};window.GT_GA_FIRE=${GA_FIRE};` }} /> : null}
         {codes.map((c, i) => (c.src ? <script key={i} src={c.src} async={c.async} /> : <script key={i} dangerouslySetInnerHTML={{ __html: c.code! }} />))}
       </head>
       <body>

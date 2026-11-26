@@ -1,6 +1,6 @@
 // Config-driven CRUD for the simple admin screens (list + edit form + save/delete over adminAjax).
 import { db } from '@/lib/db';
-import { A, AJ, esc, card, table, btn, actBtn, form, fText, fArea, fBool, fSelect, fImage, seoFields, tabs, shekel, dt, pager, type Opt } from './ui';
+import { A, AJ, esc, card, table, btn, actBtn, form, fText, fArea, fBool, fSelect, fImage, seoFields, tabs, shekel, dt, pager, type Opt, keepUnchanged } from './ui';
 
 export type Field = { name: string; label: string; type: 'text' | 'textarea' | 'html' | 'int' | 'money' | 'bool' | 'select' | 'date' | 'image' | 'json'; options?: Opt[]; required?: boolean; help?: string; tab?: string };
 export type Col = { name: string; label: string; fmt?: (v: any, row: any) => string };
@@ -42,7 +42,7 @@ export const RESOURCES: Resource[] = [
   { am: 'faq', ac: 'manage', editAc: 'edit', model: 'faq', title: 'ניהול שאלות ותשובות', singular: 'שאלה', orderBy: { sort: 'asc' },
     cols: [{ name: 'id', label: 'ID' }, { name: 'question', label: 'שאלה' }, { name: 'sort', label: 'סדר' }],
     fields: [{ name: 'question', label: 'שאלה', type: 'text', required: true }, { name: 'answer', label: 'תשובה', type: 'html' }, { name: 'sort', label: 'סדר', type: 'int' }], creatable: true, deletable: true },
-  { am: 'orders', ac: 'user_order_status', editAc: 'edit_status', model: 'orderStatus', title: 'סטטוס הזמנה', singular: 'סטטוס', orderBy: { id: 'asc' }, manualId: true,
+  { am: 'orders', ac: 'user_order_status', editAc: 'edit_status', model: 'orderStatus', title: 'סטטוס הזמנה', singular: 'סטטוס', orderBy: [{ sort: 'asc' }, { id: 'asc' }], manualId: true,
     cols: [{ name: 'id', label: 'ID' }, { name: 'title', label: 'שם' }, { name: 'sendMessage', label: 'שליחת הודעה', fmt: (v) => (v ? 'כן' : 'לא') }],
     fields: [{ name: 'title', label: 'שם', type: 'text', required: true }, { name: 'sendMessage', label: 'שליחת הודעה ללקוח בשינוי סטטוס', type: 'bool', help: 'שליחת מייל/SMS בפועל תופעל בשלב מאוחר יותר, באישור הבעלים.' }, { name: 'mailTitle', label: 'כותרת מייל', type: 'text' }, { name: 'message', label: 'תוכן מייל', type: 'html' }, { name: 'smsContent', label: 'תוכן SMS', type: 'textarea' }], creatable: true, deletable: true },
   { am: 'orders', ac: 'manage_memos_templates', editAc: 'edit_memo_template', model: 'memoTemplate', title: 'ניהול עיצובי הערות', singular: 'תבנית', orderBy: { id: 'asc' },
@@ -104,7 +104,8 @@ export async function listScreen(r: Resource, sp: Record<string, string>) {
     ...r.cols.map((c) => (c.fmt ? c.fmt(row[c.name], row) : esc(row[c.name]))),
     `<div class="d-flex gap-1 flex-wrap">${btn(A(r.am, r.editAc, { id: row.id }), 'עריכה', 'btn-light-primary')}${r.viewUrl ? btn(r.viewUrl(row), 'צפייה', 'btn-light') : ''}${r.deletable ? actBtn(AJ(r.am, 'delete_' + r.model, row.id), 'הסרה', 'להסיר את הרשומה?') : ''}</div>`,
   ])) + pager(A(r.am, r.ac, { q: sp.q }), page, Math.ceil(total / per), total);
-  return card(r.title, body, r.creatable ? btn(A(r.am, r.editAc, { id: 0 }), 'הוספת ' + r.singular) : '');
+  const reorder = r.model === 'orderStatus' ? btn(A('orders', 'reorder_status'), 'סידור מחדש', 'btn-light') : '';
+  return card(r.title, body, reorder + (r.creatable ? btn(A(r.am, r.editAc, { id: 0 }), 'הוספת ' + r.singular) : ''));
 }
 
 export async function editScreen(r: Resource, id: number) {
@@ -126,10 +127,11 @@ export async function editScreen(r: Resource, id: number) {
 
 export async function saveResource(r: Resource, id: number, f: FormData) {
   const data: any = {};
-  for (const fl of r.fields) { if (f.has(fl.name)) data[fl.name] = coerce(fl, f.get(fl.name)); }
+  // a switch posts a hidden "0" and, when on, a "1" with the same name: the field is on if any value is "1"
+  for (const fl of r.fields) { if (f.has(fl.name)) data[fl.name] = fl.type === 'bool' ? f.getAll(fl.name).map(String).includes('1') : coerce(fl, f.get(fl.name)); }
   if (r.seo) for (const k of seoKeys) if (f.has(k)) data[k] = String(f.get(k) || '');
   for (const fl of r.fields) if (fl.required && !data[fl.name]) return { status: 'error', message: `השדה "${fl.label}" הוא חובה` };
-  if (id) { await M(r.model).update({ where: { id }, data }); return { status: 'success', message: 'נשמר בהצלחה' }; }
+  if (id) { await M(r.model).update({ where: { id }, data: keepUnchanged(await M(r.model).findUnique({ where: { id } }), data) }); return { status: 'success', message: 'נשמר בהצלחה' }; }
   if (r.manualId) data.id = Number(f.get('id'));
   const row = await M(r.model).create({ data: { ...(r.defaults || {}), ...data } });
   return { status: 'success', message: 'נוצר בהצלחה', redirect: A(r.am, r.editAc, { id: row.id }) };

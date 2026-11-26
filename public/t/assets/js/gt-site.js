@@ -20,7 +20,9 @@
           if (d.error === 'choose' && extra.href) { location.href = extra.href; return Promise.reject(d); }
           alert(d.message || 'לא ניתן להוסיף לסל'); return Promise.reject(d);
         }
-        badge(d.count); return d;
+        badge(d.count);
+        try { if (window.GT_GA_CART && window.GT_GA_FIRE) window.GT_GA_FIRE(window.GT_GA_CART.filter(function (ev) { return !ev.pid || String(ev.pid) === String(id); })); } catch (x) {}
+        return d;
       });
   };
   document.addEventListener('click', function (e) {

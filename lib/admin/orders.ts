@@ -25,7 +25,7 @@ export async function ordersManage(sp: Record<string, string>, deleted = false) 
   const per = 50; const page = Math.max(1, +sp.page || 1);
   const [rows, total, statuses, ships] = await Promise.all([
     db.order.findMany({ where, orderBy: { id: 'desc' }, skip: (page - 1) * per, take: per }), db.order.count({ where }),
-    db.orderStatus.findMany({ orderBy: { id: 'asc' } }), db.shippingMethod.findMany({ orderBy: { sort: 'asc' } }),
+    db.orderStatus.findMany({ orderBy: [{ sort: 'asc' }, { id: 'asc' }] }), db.shippingMethod.findMany({ orderBy: { sort: 'asc' } }),
   ]);
   const stOpts: Opt[] = statuses.map((s) => [s.id, s.title]);
   const filters = filterBar('orders', deleted ? 'deleted_list' : 'manage', fcol('oid', 'ID', sp.oid, 'number', 'col-6 col-md-1') + fcol('onum', 'מספר הזמנה', sp.onum) + fcol('name', 'שם מלא / מייל / טלפון', sp.name) +
@@ -60,7 +60,7 @@ async function setPayment(id: number, ps: string) {
 export async function orderView(id: number) {
   const o = await db.order.findUnique({ where: { id }, include: { items: { orderBy: { id: 'asc' } }, memos: { orderBy: { id: 'desc' } }, user: true, grants: true } });
   if (!o) return card('פרטי הזמנה', 'ההזמנה לא נמצאה');
-  const [statuses, ships, templates] = await Promise.all([db.orderStatus.findMany({ orderBy: { id: 'asc' } }), db.shippingMethod.findMany(), db.memoTemplate.findMany()]);
+  const [statuses, ships, templates] = await Promise.all([db.orderStatus.findMany({ orderBy: [{ sort: 'asc' }, { id: 'asc' }] }), db.shippingMethod.findMany(), db.memoTemplate.findMany()]);
   const kv = (rows: [string, string][]) => `<table class="table table-sm adm-kv m-0">${rows.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join('')}</table>`;
   const sub = o.items.reduce((s, i) => s + Number(i.price) * i.quantity, 0);
   const left = card('פרטי הזמנה', kv([['מספר', String(o.id)], ['תאריך', dt(o.createdAt)], ['סכום', shekel(o.total)], ['קופון', esc(o.couponCode) + (Number(o.discount) ? ` (−${shekel(o.discount)})` : '')], ['משלוח', `${esc(ships.find((s) => s.id === o.shippingMethodId)?.name || '')} ${shekel(o.shippingPrice)}`], ['הערות לקוח', esc(o.notes)]])) +
@@ -250,4 +250,16 @@ export async function reportCampaigns() {
   const rows: string[][] = [];
   for (const c of camps) { if (!c.code) continue; const os = await db.order.findMany({ where: { landingPage: { contains: c.code }, paymentStatus: 'completed' }, take: 200, orderBy: { id: 'desc' } }); for (const o of os) rows.push([esc(c.name), `<a href="${A('orders', 'view', { id: o.id })}">${o.id}</a>`, dt(o.paidAt), shekel(o.total)]); }
   return card('סטטיסטיקה', `<p class="small text-muted">הזמנות ששולמו שעמוד הנחיתה שלהן מכיל את קוד הקמפיין.</p>` + table(['קמפיינים', 'מספר הזמנה', 'תאריך תשלום', 'סה"כ לתשלום'], rows));
+}
+
+// ---------- סטטוס הזמנה: סידור מחדש ----------
+export async function statusReorder() {
+  const rows = await db.orderStatus.findMany({ orderBy: [{ sort: 'asc' }, { id: 'asc' }] });
+  const tr = rows.map((s) => `<tr data-row><td class="adm-drag">☰</td><td>${s.id}<input type="hidden" name="sid" value="${s.id}"></td><td>${esc(s.title)}</td><td><button type="button" class="btn btn-sm btn-light" data-move="up" aria-label="למעלה">▲</button> <button type="button" class="btn btn-sm btn-light" data-move="down" aria-label="למטה">▼</button></td></tr>`).join('');
+  return card('סטטוס הזמנה · סידור מחדש', `<p class="text-muted small">גררו או השתמשו בחיצים. הסדר קובע את סדר הסטטוסים בכל הרשימות.</p><form data-ajax action="${AJ('orders', 'save_status_order')}"><div class="table-responsive"><table class="table align-middle adm-table"><thead><tr><th></th><th>ID</th><th>שם</th><th>סדר</th></tr></thead><tbody data-rows="items" data-sortable>${tr}</tbody></table></div><div class="adm-savebar"><button class="btn btn-primary px-4">שמירת הסדר</button></div></form>`, btn(A('orders', 'user_order_status'), 'חזרה', 'btn-light'));
+}
+export async function statusReorderSave(f: FormData) {
+  const order = f.getAll('sid').map(Number);
+  await db.$transaction(order.map((id, i) => db.orderStatus.update({ where: { id }, data: { sort: i + 1 } })));
+  return { status: 'success', message: 'הסדר נשמר' };
 }

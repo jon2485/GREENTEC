@@ -48,7 +48,7 @@ export const fPicker = (name: string, label: string, items: { id: number; name: 
 
 export const seoFields = (o: any) =>
   fSelect('robots', 'robots', o.robots || 'all', [['all', 'all'], ['index, follow', 'index, follow'], ['noindex, follow', 'noindex, follow'], ['noindex, nofollow', 'noindex, nofollow']]) +
-  fText('metaTitle', 'כותרת (title)', o.metaTitle) + fText('metaKeywords', 'מילות מפתח', o.metaKeywords) + fArea('metaDescription', 'תיאור (meta description)', o.metaDescription, 3) +
+  fText('metaTitle', 'כותרת (title)', o.metaTitle) + fArea('metaKeywords', 'מילות מפתח', o.metaKeywords, 2) + fArea('metaDescription', 'תיאור (meta description)', o.metaDescription, 3) +
   fText('ogTitle', 'og:title', o.ogTitle) + fArea('ogDescription', 'og:description', o.ogDescription, 2) + fImage('ogImage', 'og:image', o.ogImage, 'media/og');
 
 export const form = (action: string, inner: string, submit = 'שמירה', extra = '') =>
@@ -62,3 +62,13 @@ export const filterBar = (am: string, ac: string, inner: string) =>
 export const fcol = (name: string, label: string, v: any, type = 'text', w = 'col-6 col-md-2') => `<div class="${w}"><label class="form-label small mb-1">${label}</label><input class="form-control form-control-sm" type="${type}" name="${name}" value="${esc(v ?? '')}"></div>`;
 export const fcolSel = (name: string, label: string, v: any, opts: Opt[], w = 'col-6 col-md-2') => `<div class="${w}"><label class="form-label small mb-1">${label}</label><select class="form-select form-select-sm" name="${name}"><option value="">הכל</option>${opts.map(([k, l]) => `<option value="${esc(k)}"${String(k) === String(v ?? '') ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></div>`;
 export const badge = (t: string, c = 'secondary') => `<span class="badge text-bg-${c}">${esc(t)}</span>`;
+
+/** Browsers send textarea line breaks as CRLF and the save helpers trim values, so opening an editor and saving
+ *  without changes would rewrite stored text (legacy content, SEO fields). Text that is the same after that
+ *  normalisation keeps its stored value; real edits are saved as typed. */
+export function keepUnchanged<T extends Record<string, any>>(old: Record<string, any> | null | undefined, data: T): T {
+  if (!old) return data;
+  const norm = (v: string) => v.replace(/\r\n?/g, '\n').trim();
+  for (const k of Object.keys(data)) { const n = data[k], o = old[k]; if (typeof n === 'string' && typeof o === 'string' && n !== o && norm(n) === norm(o)) (data as any)[k] = o; }
+  return data;
+}

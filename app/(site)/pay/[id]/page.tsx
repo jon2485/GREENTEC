@@ -6,6 +6,7 @@ import { money } from '@/lib/format';
 import { testPayments } from '@/lib/payments';
 import { getSettings } from '@/lib/settings';
 import { parseScripts, trackingEnabled } from '@/lib/headerCodes';
+import { parseGaEvents, gaFor, gaScript } from '@/lib/gaEvents';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'תשלום | גרינטק', robots: { index: false } };
@@ -23,13 +24,16 @@ export default async function Pay({ params, searchParams }: { params: Promise<{ 
 ${testPayments() ? `<form method="post" action="/api/pay" class="d-flex gap-3"><input type="hidden" name="order" value="${o.id}"><button class="btn btn-primary" name="action" value="approve">אישור תשלום (בדיקה)</button><button class="btn btn-secondary-outline" name="action" value="cancel">ביטול</button></form>` : '<p class="gt-flash err">התשלום באתר אינו זמין כרגע. נציג יחזור אליך להשלמת ההזמנה.</p>'}</div></div>`;
   // conversion codes (admin → headers → order_success), only those not already loaded on every page
   let conv: ReturnType<typeof parseScripts> = [];
+  let ga = '';
   if (o.paymentStatus === 'completed' && trackingEnabled()) {
     const st = await getSettings().catch(() => ({} as Record<string, string>));
     const landing = new Set(parseScripts(st.header_landing || '').map((t) => (t.src || t.code || '').trim()));
     conv = parseScripts(st.header_order_success || '').filter((t) => !landing.has((t.src || t.code || '').trim()));
+    ga = gaScript(gaFor(parseGaEvents(st.ga_events), 'purchase', o.items.map((i) => i.productId || 0)));
   }
   return (<>
     <div dangerouslySetInnerHTML={{ __html: `<section class="content-section"><div class="container">${body}</div></section>` }} />
+    {ga ? <script dangerouslySetInnerHTML={{ __html: ga }} /> : null}
     {conv.map((c, i) => (c.src ? <script key={i} src={c.src} async={c.async} /> : <script key={i} dangerouslySetInnerHTML={{ __html: c.code! }} />))}
   </>);
 }

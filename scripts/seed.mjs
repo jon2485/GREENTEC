@@ -34,6 +34,8 @@ async function main() {
     await syncPrices2();
     await restorePrices3();
     await syncStockLive();
+    await syncReleaseYear();
+    await syncGaEvents();
     return;
   }
   const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
@@ -112,7 +114,7 @@ async function main() {
   }
   await ensureAdmin();
   await syncLegacyCatalog();
-  await syncHiddenProducts(); await syncHomeFlags(); await syncSupplierLinks(); await syncNames(); await syncVariants(); await syncPrices(); await syncPrices2(); await restorePrices3(); await syncStockLive();
+  await syncHiddenProducts(); await syncHomeFlags(); await syncSupplierLinks(); await syncNames(); await syncVariants(); await syncPrices(); await syncPrices2(); await restorePrices3(); await syncStockLive(); await syncReleaseYear(); await syncGaEvents();
   console.log('[seed] done:', products.length, 'products');
 }
 
@@ -330,6 +332,31 @@ async function syncStockLive() {
   await db.product.updateMany({ where: { id: { in: [2533, 8023] } }, data: { quantity: 0 } });
   await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
   console.log('[seed] stock synced with the live legacy pages (6 products)');
+}
+
+// Legacy "שנת יציאה" is a select (product[attributes][2]) whose values are option ids, not years. The ids are
+// copied into Product.attributes; this fills Product.releaseYear with the year each id stands for (from the legacy edit form).
+export const LEGACY_YEARS = { 1: 2005, 2: 2006, 3: 2007, 4: 2008, 5: 2009, 6: 2010, 7: 2011, 8: 2012, 9: 2013, 10: 2014, 11: 2015, 12: 2016, 13: 2017, 14: 2018, 15: 2004, 16: 2003, 17: 2002, 18: 2001, 19: 2000, 20: 1999, 21: 1998, 22: 1997, 23: 1996, 24: 1995, 25: 2019, 26: 2020, 27: 2021, 28: 2022, 29: 2023 };
+async function syncReleaseYear() {
+  const FLAG = 'release_year_v1';
+  if (await db.setting.findUnique({ where: { key: FLAG } })) return;
+  let n = 0;
+  for (const [id, year] of Object.entries(LEGACY_YEARS)) n += await db.$executeRawUnsafe(`UPDATE "Product" SET "releaseYear" = $1 WHERE "releaseYear" IS NULL AND attributes LIKE $2`, year, `%"2":"${id}"%`);
+  await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
+  console.log(`[seed] release year from the legacy year select: ${n} products`);
+}
+
+// The two rows of the legacy admin → google analytics events screen (copied as they are, including the duplicate).
+async function syncGaEvents() {
+  const FLAG = 'ga_events_v1';
+  if (await db.setting.findUnique({ where: { key: FLAG } })) return;
+  if (!(await db.setting.findUnique({ where: { key: 'ga_events' } }))?.value) {
+    const row = 'purchase||מוזיקה|רכישה|אלבום|35';
+    await db.setting.upsert({ where: { key: 'ga_events' }, update: { value: row + '\n' + row }, create: { key: 'ga_events', value: row + '\n' + row } });
+  }
+  // google shopping feed: active, as in the legacy admin (campaign status 1)
+  if (!(await db.setting.findUnique({ where: { key: 'gs_enabled' } }))) await db.setting.create({ data: { key: 'gs_enabled', value: '1' } });
+  await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
 }
 
 async function ensureAdmin() {

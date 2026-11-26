@@ -1,7 +1,7 @@
 // Products, categories, sets, inventory – admin screens (A08–A19).
 import { db } from '@/lib/db';
 import { fromPrice } from '@/lib/format';
-import { A, AJ, esc, card, table, btn, actBtn, form, fText, fArea, fBool, fSelect, fChecks, fImage, fPicker, seoFields, tabs, filterBar, fcol, fcolSel, pager, badge, dt, num, type Opt } from './ui';
+import { A, AJ, esc, card, table, btn, actBtn, form, fText, fArea, fBool, fSelect, fChecks, fImage, fPicker, seoFields, tabs, filterBar, fcol, fcolSel, pager, badge, dt, num, keepUnchanged, type Opt } from './ui';
 
 export async function categoryTree() {
   const cats = await db.category.findMany({ orderBy: [{ sort: 'asc' }, { id: 'asc' }], select: { id: true, name: true, parentId: true } });
@@ -77,7 +77,7 @@ export async function productEdit(id: number) {
   <div class="col-md-3">${m('shippingPrice', 'מחיר משלוח למוצר')}</div><div class="col-md-3">${fText('profit', 'רווח', p.profit)}</div><div class="col-md-3">${m('cost', 'עלות')}</div></div>` +
     fChecks('propertyLists', 'תכונות מוצר (תוספות בתשלום)', ids((p as any).propertyLists), propLists.map((l) => [l.id, l.name]));
   const catsTab = fSelect('primaryCat', 'קטגוריה ראשית', primary, [['', '— בחירה —'], ...cats]) + fChecks('cats', 'קטגוריות', p.categories.map((c) => c.categoryId), cats, true);
-  const props = `<div class="row"><div class="col-md-3">${fText('weight', 'משקל', p.weight === null ? '' : Number(p.weight), 'number', 'step="0.001"')}</div><div class="col-md-3">${fText('releaseYear', 'שנת יציאה', p.releaseYear ?? '', 'number')}</div><div class="col-md-3">${fText('depth', 'עומק הפריט', p.depth)}</div><div class="col-md-3">${fSelect('vendorUserId', 'משתמש ספק', p.vendorUserId ?? '', [['', '— ללא —'], ...vendors.map((v) => [v.id, v.name || v.email] as Opt)])}</div></div>` +
+  const props = `<div class="row"><div class="col-md-3">${fText('weight', 'משקל', p.weight === null ? '' : Number(p.weight), 'number', 'step="0.001"')}</div><div class="col-md-3">${fSelect('releaseYear', 'שנת יציאה', p.releaseYear ?? '', [['', 'בחר'], ...Array.from({ length: new Date().getFullYear() + 2 - 1995 }, (_, i) => new Date().getFullYear() + 1 - i).map((y) => [y, String(y)] as Opt), ...(p.releaseYear && (p.releaseYear < 1995 || p.releaseYear > new Date().getFullYear() + 1) ? [[p.releaseYear, String(p.releaseYear)] as Opt] : [])])}</div><div class="col-md-3">${fText('depth', 'עומק הפריט', p.depth)}</div><div class="col-md-3">${fSelect('vendorUserId', 'משתמש ספק', p.vendorUserId ?? '', [['', '— ללא —'], ...vendors.map((v) => [v.id, v.name || v.email] as Opt), ...(p.vendorUserId && !vendors.some((v) => v.id === p.vendorUserId) ? [[p.vendorUserId, `משתמש ספק #${p.vendorUserId} (טרם יובא)`] as Opt] : [])])}</div></div>` +
     fBool('checkoutProduct', 'מוצר קופה (מוצע בקופה)', p.checkoutProduct) + fBool('showHome', 'הצג בדף הבית', p.showHome) +
     fChecks('suppliers', 'יצרן', p.suppliers.map((s) => s.supplierId), sups.map((s) => [s.id, s.name]), true) +
     (p.suppliers.length ? `<label class="form-label">נעיצה אצל היצרן</label><div class="mb-3">${p.suppliers.map((s) => `<label class="form-check form-check-inline"><input type="checkbox" class="form-check-input" name="supPinned" value="${s.supplierId}"${s.pinned ? ' checked' : ''}> ${esc(s.supplier.name)}</label>`).join('')}</div>` : '');
@@ -155,7 +155,7 @@ export async function productSave(id: number, f: FormData) {
   const ta = f.getAll('task_at').map(String), tf = f.getAll('task_field').map(String), tv = f.getAll('task_value').map(String), td = f.getAll('task_done').map(String);
   const related = ids(f.get('related')).filter((x) => x !== id), refs = ids(f.get('refProducts')).filter((x) => x !== id), setItems = ids(f.get('setItems')).filter((x) => x !== id);
   await db.$transaction([
-    db.product.update({ where: { id }, data }),
+    db.product.update({ where: { id }, data: keepUnchanged(old, data) }),
     db.productCategory.deleteMany({ where: { productId: id } }),
     db.productCategory.createMany({ data: [...cats].map((c) => { const o = oldCats.find((x) => x.categoryId === c); return { productId: id, categoryId: c, primary: c === primary, sort: o?.sort ?? 0, pinned: o?.pinned ?? false }; }) }),
     db.productSupplier.deleteMany({ where: { productId: id } }),
@@ -199,9 +199,9 @@ export async function categoriesManage() {
     String(cnt.get(c.id) || 0), info.get(c.id)?.showInMenu ? '✓' : '',
     `<div class="d-flex gap-1">${btn(A('products', 'edit_cat', { id: c.id }), 'עדכון', 'btn-light-primary')}${btn(A('products', 'cat_items', { id: c.id }), 'סידור פריטים', 'btn-light')}${btn('/' + (info.get(c.id)?.url || ''), 'צפייה', 'btn-light')}${actBtn(AJ('products', 'delete_cat', c.id), 'הסרה', 'להסיר את הקטגוריה? המוצרים לא יימחקו.')}</div>`,
   ]));
-  return card('קטגוריות מוצרים', body, btn(A('products', 'edit_cat', { id: 'new' }), '+ הוספת קטגוריה'));
+  return card('ניהול קטגוריות מוצרים', body, btn(A('products', 'edit_cat', { id: 'new' }), '+ הוספת קטגוריה'));
 }
-const ORDERS: Opt[] = [['', 'ידני (סידור פריטים)'], ['id_desc', 'מזהה – חדש לישן'], ['id_asc', 'מזהה – ישן לחדש'], ['updated', 'עדכון אחרון'], ['price_asc', 'מחיר – מהנמוך'], ['price_desc', 'מחיר – מהגבוה'], ['new_price', 'מחיר מבצע'], ['name', 'שם']];
+const ORDERS: Opt[] = [['', 'לא (ידני / ברירת מחדל)'], ['ordered:desc', 'סידור מהסוף'], ['ordered:asc', 'סידור מהתחלה'], ['id:desc', 'id מהסוף'], ['id:asc', 'id מהתחלה'], ['last_mod:desc', 'modification מהסוף'], ['last_mod:asc', 'modification מהתחלה'], ['price:desc', 'מחיר מהסוף'], ['price:asc', 'מחיר מהתחלה'], ['new_price:desc', 'מחיר חדש מהסוף'], ['new_price:asc', 'מחיר חדש מהתחלה'], ['attr.1:asc', 'הצג בדף הבית מהתחלה'], ['attr.1:desc', 'הצג בדף הבית מהסוף'], ['attr.2:asc', 'שנת יציאה מהתחלה'], ['attr.2:desc', 'שנת יציאה מהסוף']]; // same values as the legacy select (catData[products_order])
 // id === null → new category (category 0 "המוצרים שלנו" is a real category, so 0 is not "new")
 export async function categoryEdit(id: number | null) {
   const isNew = id === null;
@@ -231,7 +231,7 @@ export async function categorySave(id: number | null, f: FormData) {
     robots: str(f.get('robots')) || 'all', metaTitle: str(f.get('metaTitle')), metaKeywords: str(f.get('metaKeywords')), metaDescription: str(f.get('metaDescription')), ogTitle: str(f.get('ogTitle')), ogDescription: str(f.get('ogDescription')), ogImage: str(f.get('ogImage')) };
   if (!data.name) return { status: 'error', message: 'שם הוא חובה' };
   if (data.parentId !== null && data.parentId === id) return { status: 'error', message: 'קטגוריה לא יכולה להיות ההורה של עצמה' };
-  if (id !== null) { await db.category.update({ where: { id }, data }); return { status: 'success', message: 'הקטגוריה נשמרה' }; }
+  if (id !== null) { await db.category.update({ where: { id }, data: keepUnchanged(await db.category.findUnique({ where: { id } }), data) }); return { status: 'success', message: 'הקטגוריה נשמרה' }; }
   const nid = int(f.get('id')) || ((await db.category.aggregate({ _max: { id: true } }))._max.id || 0) + 1;
   await db.category.create({ data: { ...data, id: nid } });
   return { status: 'success', message: 'נוצרה', redirect: A('products', 'edit_cat', { id: nid }) };
@@ -311,12 +311,14 @@ export async function bulkPrice(sp: Record<string, string>) {
   const where: any = { status: { gte: 0 } };
   if (sp.cat) where.categories = { some: { categoryId: +sp.cat } };
   if (sp.name) where.name = { contains: sp.name, mode: 'insensitive' };
-  const rows = sp.cat || sp.name ? await db.product.findMany({ where, orderBy: { id: 'desc' }, take: 500 }) : [];
-  const f = filterBar('products', 'bulk_price', fcolSel('cat', 'קטגוריה', sp.cat, cats, 'col-12 col-md-4') + fcol('name', 'שם', sp.name));
+  if (sp.sup) where.suppliers = { some: { supplierId: +sp.sup } };
+  const sups = await db.supplier.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true } });
+  const rows = sp.cat || sp.name || sp.sup ? await db.product.findMany({ where, orderBy: { id: 'desc' }, take: 500 }) : [];
+  const f = filterBar('products', 'bulk_price', fcolSel('cat', 'קטגוריה', sp.cat, cats, 'col-12 col-md-4') + fcolSel('sup', 'יצרן', sp.sup, sups.map((x) => [x.id, x.name] as Opt), 'col-12 col-md-3') + fcol('name', 'שם', sp.name));
   const m = (p: any, k: string) => `<input type="number" step="0.01" class="form-control form-control-sm" style="width:95px" name="${k}_${p.id}" value="${num(p[k])}" placeholder="—">`;
   const body = f + (rows.length ? `<form data-ajax action="${AJ('products', 'bulk_price_save')}"><div class="row g-2 mb-3 align-items-end"><div class="col-auto"><label class="form-label small">שינוי באחוזים לכל המסומנים (+/−)</label><input class="form-control form-control-sm" name="pct" type="number" step="0.1" placeholder="לדוגמה 10 או -5"></div></div>` +
     table(['<input type="checkbox" class="form-check-input" data-check-all>', 'Id', 'תמונה', 'כותרת', 'מחיר', 'הורדה', 'עותק פיזי', 'פיזי+הורדה', 'מחיר חדש (מבצע)'], rows.map((p) => [`<input type="checkbox" class="form-check-input" name="sel" value="${p.id}">`, String(p.id), p.mainImage ? `<img src="${esc(p.mainImage)}" class="adm-thumb-sm" loading="lazy" alt="">` : '', esc(p.name), m(p, 'price'), m(p, 'digitalPrice'), m(p, 'physicalPrice'), m(p, 'bothPrice'), m(p, 'newPrice')])) +
-    `<input type="hidden" name="all" value="${rows.map((p) => p.id).join(',')}"><div class="adm-savebar"><button class="btn btn-primary px-4">שמירה</button></div></form>` : '<p class="text-muted">בחרו קטגוריה או שם כדי להציג מוצרים.</p>');
+    `<input type="hidden" name="all" value="${rows.map((p) => p.id).join(',')}"><div class="adm-savebar"><button class="btn btn-primary px-4">שמירה</button></div></form>` : '<p class="text-muted">בחרו קטגוריה, יצרן או שם כדי להציג מוצרים.</p>');
   return card('עדכון מחיר גורף', body);
 }
 export async function bulkPriceSave(f: FormData) {
