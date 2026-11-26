@@ -86,7 +86,11 @@ export async function importUsers(recs: any[], dry = false) {
       const u = mapUser(rec);
       if (dry) { preview.push({ 'מזהה ישן': u.legacyId, 'מייל': u.email, 'שם': u.name, 'טלפון': u.phone, 'סוג': u.type, 'קבוצות': u.groups, 'פעיל': u.active ? 'כן' : 'לא', 'הרשמה': u.createdAt?.toLocaleDateString('he-IL') || '', 'זיכויים': u.credits.length }); continue; }
       if (!u.legacyId) { r.skipped++; why(r, 'חסר מזהה משתמש'); continue; }
-      if (!u.email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(u.email)) { r.skipped++; why(r, 'מייל חסר או לא תקין'); continue; }
+      if (!u.email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(u.email)) {
+        // the legacy site accepted a broken user name: keep the account (and its orders) under a placeholder address
+        u.note = [`שם משתמש במערכת הישנה: ${u.email || '(ריק)'}`, u.note].filter(Boolean).join('\n'); u.email = `legacy-${u.legacyId}@no-email.invalid`;
+        why(r, 'מייל לא תקין במערכת הישנה – נשמר עם כתובת זמנית'); note(r, `משתמש ישן ${u.legacyId}: מייל לא תקין, נשמר עם כתובת זמנית`);
+      }
       const data: any = { email: u.email, name: u.name, phone: u.phone, birthday: u.birthday, type: u.type, groups: u.groups, note: u.note, active: u.active, lastSeen: u.lastSeen, legacyId: u.legacyId, ...(u.createdAt ? { createdAt: u.createdAt } : {}) };
       let existing = await db.user.findFirst({ where: { legacyId: u.legacyId } });
       const byEmail = await db.user.findUnique({ where: { email: u.email } });
