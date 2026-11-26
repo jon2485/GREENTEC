@@ -333,9 +333,10 @@ export async function importSupplierPaid(recs: any[], dry = false) {
 export async function importLineModes(recs: any[], dry = false) {
   const r = emptyReport(); const conf: Record<string, number> = {};
   const orderIds = [...new Set(recs.map((x) => int(x?.o)).filter((n): n is number => !!n))];
-  const items = await db.orderItem.findMany({ where: { orderId: { in: orderIds } }, orderBy: { id: 'asc' }, select: { id: true, orderId: true, name: true, price: true, origPrice: true, quantity: true, mode: true, productId: true, product: { select: { name: true, digitalPrice: true, physicalPrice: true, bothPrice: true, price: true, newPrice: true, onlyDigital: true } }, order: { select: { userId: true, paymentStatus: true, userStatusId: true, createdAt: true, shippingPrice: true, _count: { select: { items: true } } } } } });
+  const items = await db.orderItem.findMany({ where: { orderId: { in: orderIds } }, orderBy: { id: 'asc' }, select: { id: true, orderId: true, name: true, price: true, origPrice: true, quantity: true, mode: true, productId: true, product: { select: { name: true, digitalPrice: true, physicalPrice: true, bothPrice: true, price: true, newPrice: true, onlyDigital: true, digitalFile: true } }, order: { select: { userId: true, paymentStatus: true, userStatusId: true, createdAt: true, shippingPrice: true, _count: { select: { items: true } } } } } });
+  const stTitle = new Map((await db.orderStatus.findMany({ select: { id: true, title: true } })).map((x) => [x.id, x.title]));
   const byOrder = new Map<number, typeof items>(); for (const it of items) byOrder.set(it.orderId, [...(byOrder.get(it.orderId) || []), it]);
-  const used = new Set<number>(); const changes: { it: (typeof items)[number]; mode: string }[] = []; const mis: any[] = [];
+  const used = new Set<number>(); const changes: { it: (typeof items)[number]; mode: string }[] = []; const mis: any[] = []; const alt: Record<string, number> = {};
   for (const x of recs) {
     const o = int(x?.o), q = int(x?.q) || 1, p = num(x?.p), n = nameKey(x?.n);
     const free = ((o && byOrder.get(o)) || []).filter((it) => !used.has(it.id));
@@ -345,10 +346,16 @@ export async function importLineModes(recs: any[], dry = false) {
     used.add(hit.id);
     const truth = x?.d ? 'digital' : hit.mode === 'both' ? 'both' : 'physical';
     conf[`${hit.mode || '?'}→${truth}`] = (conf[`${hit.mode || '?'}→${truth}`] || 0) + 1;
+    if (dry && hit.mode !== 'both') { // what-if: other rules for the unclear lines
+      const st = stTitle.get(hit.order.userStatusId as number) || ''; const it = { price: hit.price, originalPrice: hit.origPrice, name: hit.name };
+      for (const [k, h] of [['noHint', ''], ['digitalHintOnly', /דיגיטל/.test(st) ? 'digital' : ''], ['current', /דיגיטל/.test(st) ? 'digital' : /החבילה|נשלח|משלוח/.test(st) ? 'physical' : '']] as const) {
+        const m = hit.product ? inferMode(it, hit.product, h as any).mode : hit.mode; const key = `${k}:${m === truth ? 'ok' : m + '→' + truth}`; alt[key] = (alt[key] || 0) + 1;
+      }
+    }
     if (dry && hit.mode !== truth && mis.length < 300) { const P: any = hit.product || {}; mis.push([hit.mode, truth, hit.productId, Number(hit.price), Number(hit.origPrice), P.digitalPrice, P.physicalPrice, P.bothPrice, P.price, P.newPrice, hit.order.userStatusId, hit.order.createdAt.toISOString().slice(0, 10), Number(hit.order.shippingPrice), hit.order._count.items]); }
     changes.push({ it: hit, mode: truth });
   }
-  if (dry) return { report: r, preview: [conf, mis] };
+  if (dry) return { report: r, preview: [conf, mis, alt] };
   for (const { it, mode } of changes) {
     await db.orderItem.update({ where: { id: it.id }, data: { mode, modeLocked: true } });
     if (mode !== it.mode) { r.updated++; if (it.order.userId && it.productId && it.order.paymentStatus === 'completed') { if (mode === 'physical') await revokeIfOrphan(it.order.userId, it.productId); else await grantForOrder(it.orderId); } }
