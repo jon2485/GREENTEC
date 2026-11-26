@@ -1,6 +1,7 @@
 // Products, categories, sets, inventory – admin screens (A08–A19).
 import { db } from '@/lib/db';
 import { fromPrice } from '@/lib/format';
+import { vendorUsers } from '@/lib/vendors';
 import { A, AJ, esc, card, table, btn, actBtn, form, fText, fArea, fBool, fSelect, fChecks, fImage, fPicker, seoFields, tabs, filterBar, fcol, fcolSel, pager, badge, dt, num, keepUnchanged, type Opt } from './ui';
 
 export async function categoryTree() {
@@ -63,7 +64,7 @@ export async function productEdit(id: number) {
   if (!p) return card('עריכת מוצר', '<p>המוצר לא נמצא.</p>');
   const [cats, sups, labels, discounts, vendors, propLists] = await Promise.all([
     catOpts(), db.supplier.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true } }), db.label.findMany({ orderBy: { id: 'asc' } }),
-    db.discount.findMany({ orderBy: { id: 'asc' } }), db.user.findMany({ where: { type: 80 }, select: { id: true, name: true, email: true } }), db.propertyList.findMany(),
+    db.discount.findMany({ orderBy: { id: 'asc' } }), vendorUsers(), db.propertyList.findMany(),
   ]);
   const primary = p.categories.find((c) => c.primary)?.categoryId ?? '';
   const folder = `media/products/${p.id}`;
@@ -77,7 +78,7 @@ export async function productEdit(id: number) {
   <div class="col-md-3">${m('shippingPrice', 'מחיר משלוח למוצר')}</div><div class="col-md-3">${fText('profit', 'רווח', p.profit)}</div><div class="col-md-3">${m('cost', 'עלות')}</div></div>` +
     fChecks('propertyLists', 'תכונות מוצר (תוספות בתשלום)', ids((p as any).propertyLists), propLists.map((l) => [l.id, l.name]));
   const catsTab = fSelect('primaryCat', 'קטגוריה ראשית', primary, [['', '— בחירה —'], ...cats]) + fChecks('cats', 'קטגוריות', p.categories.map((c) => c.categoryId), cats, true);
-  const props = `<div class="row"><div class="col-md-3">${fText('weight', 'משקל', p.weight === null ? '' : Number(p.weight), 'number', 'step="0.001"')}</div><div class="col-md-3">${fSelect('releaseYear', 'שנת יציאה', p.releaseYear ?? '', [['', 'בחר'], ...Array.from({ length: new Date().getFullYear() + 2 - 1995 }, (_, i) => new Date().getFullYear() + 1 - i).map((y) => [y, String(y)] as Opt), ...(p.releaseYear && (p.releaseYear < 1995 || p.releaseYear > new Date().getFullYear() + 1) ? [[p.releaseYear, String(p.releaseYear)] as Opt] : [])])}</div><div class="col-md-3">${fText('depth', 'עומק הפריט', p.depth)}</div><div class="col-md-3">${fSelect('vendorUserId', 'משתמש ספק', p.vendorUserId ?? '', [['', '— ללא —'], ...vendors.map((v) => [v.id, v.name || v.email] as Opt), ...(p.vendorUserId && !vendors.some((v) => v.id === p.vendorUserId) ? [[p.vendorUserId, `משתמש ספק #${p.vendorUserId} (טרם יובא)`] as Opt] : [])])}</div></div>` +
+  const props = `<div class="row"><div class="col-md-3">${fText('weight', 'משקל', p.weight === null ? '' : Number(p.weight), 'number', 'step="0.001"')}</div><div class="col-md-3">${fSelect('releaseYear', 'שנת יציאה', p.releaseYear ?? '', [['', 'בחר'], ...Array.from({ length: new Date().getFullYear() + 2 - 1995 }, (_, i) => new Date().getFullYear() + 1 - i).map((y) => [y, String(y)] as Opt), ...(p.releaseYear && (p.releaseYear < 1995 || p.releaseYear > new Date().getFullYear() + 1) ? [[p.releaseYear, String(p.releaseYear)] as Opt] : [])])}</div><div class="col-md-3">${fText('depth', 'עומק הפריט', p.depth)}</div><div class="col-md-3">${fSelect('vendor', 'משתמש ספק', p.vendorUserId ? String(p.vendorUserId) : p.vendorLegacyId ? 'L' + p.vendorLegacyId : '', [['', '— ללא —'], ...vendors.map((v) => [String(v.id), v.name || v.email] as Opt), ...(p.vendorUserId && !vendors.some((v) => v.id === p.vendorUserId) ? [[String(p.vendorUserId), `משתמש #${p.vendorUserId}`] as Opt] : []), ...(!p.vendorUserId && p.vendorLegacyId ? [['L' + p.vendorLegacyId, `משתמש ספק #${p.vendorLegacyId} מהמערכת הישנה (יקושר כשהמשתמשים ייובאו)`] as Opt] : [])])}</div></div>` +
     fBool('checkoutProduct', 'מוצר קופה (מוצע בקופה)', p.checkoutProduct) + fBool('showHome', 'הצג בדף הבית', p.showHome) +
     fChecks('suppliers', 'יצרן', p.suppliers.map((s) => s.supplierId), sups.map((s) => [s.id, s.name]), true) +
     (p.suppliers.length ? `<label class="form-label">נעיצה אצל היצרן</label><div class="mb-3">${p.suppliers.map((s) => `<label class="form-check form-check-inline"><input type="checkbox" class="form-check-input" name="supPinned" value="${s.supplierId}"${s.pinned ? ' checked' : ''}> ${esc(s.supplier.name)}</label>`).join('')}</div>` : '');
@@ -120,6 +121,16 @@ const int = (v: FormDataEntryValue | null) => { const s = String(v ?? '').trim()
 const str = (v: FormDataEntryValue | null) => String(v ?? '').trim();
 const bool = (f: FormData, k: string) => f.getAll(k).map(String).includes('1');
 
+// "משתמש ספק": a user of the new site (id) or, until the users are imported, the legacy user id ("L460")
+async function vendorFields(f: FormData, old: { vendorUserId: number | null; vendorLegacyId: number | null }) {
+  if (!f.has('vendor')) return {};
+  const v = String(f.get('vendor') || '').trim();
+  if (!v) return { vendorUserId: null, vendorLegacyId: null };
+  if (v.startsWith('L')) return { vendorUserId: null, vendorLegacyId: Number(v.slice(1)) || null };
+  const id = Number(v) || null;
+  if (id === old.vendorUserId) return { vendorUserId: id, vendorLegacyId: old.vendorLegacyId };
+  return { vendorUserId: id, vendorLegacyId: id ? (await db.user.findUnique({ where: { id }, select: { legacyId: true } }))?.legacyId ?? null : null };
+}
 export async function productSave(id: number, f: FormData) {
   const old = await db.product.findUnique({ where: { id } });
   if (!old) return { status: 'error', message: 'המוצר לא נמצא' };
@@ -136,7 +147,7 @@ export async function productSave(id: number, f: FormData) {
     price: dec(f.get('price')), newPrice: dec(f.get('newPrice')), groupPrice: dec(f.get('groupPrice')), relatedPrice: dec(f.get('relatedPrice')), shippingPrice: dec(f.get('shippingPrice')),
     profit: str(f.get('profit')), cost: dec(f.get('cost')), digitalPrice: dec(f.get('digitalPrice')), physicalPrice: dec(f.get('physicalPrice')), bothPrice: dec(f.get('bothPrice')),
     propertyLists: f.getAll('propertyLists').map(String).join(','),
-    weight: dec(f.get('weight')), releaseYear: int(f.get('releaseYear')), depth: str(f.get('depth')), vendorUserId: int(f.get('vendorUserId')),
+    weight: dec(f.get('weight')), releaseYear: int(f.get('releaseYear')), depth: str(f.get('depth')), ...(await vendorFields(f, old)),
     checkoutProduct: bool(f, 'checkoutProduct'), showHome: bool(f, 'showHome'),
     mainImage: str(f.get('mainImage')), topImage: str(f.get('topImage')), header: str(f.get('header')), searchText: str(f.get('searchText')),
     digitalFile: str(f.get('digitalFile')), sampleFile: sample, previewName: str(f.get('previewName')), oneButton: bool(f, 'oneButton'), oneButtonTitle: str(f.get('oneButtonTitle')),

@@ -179,3 +179,11 @@ document.addEventListener('change', function (e) {
   if (e.target.matches('[data-exclude-all]')) f.querySelectorAll('[data-exclude-row]').forEach(function (c) { c.checked = e.target.checked; });
   if (e.target.matches('[data-exclude-row], [data-exclude-all]')) f.querySelector('input[name=ex]').value = [].map.call(f.querySelectorAll('[data-exclude-row]:checked'), function (c) { return c.value; }).join(',');
 });
+// user card → הזמנות ספק: ticking "סטטוס" saves at once and locks the box (as in the legacy admin)
+document.addEventListener('change', function (e) {
+  var cb = e.target.closest('[data-supplier-item]'); if (!cb || !cb.checked) return;
+  var fd = new FormData(); fd.append('item_id', cb.getAttribute('data-supplier-item'));
+  fetch('/admin/adminAjax/ProductUserSuppliers/update_order_item_status', { method: 'POST', body: fd, credentials: 'same-origin' })
+    .then(function (r) { return r.json(); }).then(function (d) { if (d.status === 'success') cb.disabled = true; else { cb.checked = false; alert(d.message || 'שגיאה'); } })
+    .catch(function () { cb.checked = false; alert('שגיאה בשמירה'); });
+});

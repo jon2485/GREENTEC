@@ -2,8 +2,9 @@
 import { db } from '@/lib/db';
 import { grantForOrder, completeOrder } from '@/lib/orders';
 import { hashPassword } from '@/lib/auth';
-import { A, AJ, esc, card, table, btn, actBtn, form, fText, fArea, fBool, fSelect, filterBar, fcol, fcolSel, pager, badge, dt, shekel, type Opt } from './ui';
+import { A, AJ, esc, card, table, btn, actBtn, form, fText, fArea, fBool, fSelect, filterBar, fcol, fcolSel, pager, badge, dt, shekel, num, type Opt } from './ui';
 import { PAY_STATUS, PAY_METHODS, USER_TYPES } from './menu';
+import { vendorUsers as listVendors, vendorSales, hasVendorProducts, VENDOR_TYPES, dmyhm } from '@/lib/vendors';
 import { ids } from './products';
 
 const payLabel = (s: string) => PAY_STATUS.find(([k]) => k === s)?.[1] || s;
@@ -137,7 +138,7 @@ export async function usersManage(sp: Record<string, string>) {
     table(['ID', 'שם משתמש (כתובת מייל)', 'שם מלא', 'טלפון', 'סוג', 'פעיל', 'last active', 'תאריך הרשמה', 'פעולות'], rows.map((u) => [String(u.id), `<span dir="ltr">${esc(u.email)}</span>`, esc(u.name), `<span dir="ltr">${esc(u.phone)}</span>`, esc(USER_TYPES.find(([k]) => k === u.type)?.[1] || u.type), u.active ? '✓' : '✗', dt(u.lastSeen), dt(u.createdAt, false), btn(A('user', 'edit_user', { id: u.id }), 'כרטיס', 'btn-light-primary')])) +
     pager(A('user', 'manage', qs), page, Math.ceil(total / per), total), btn(AJ('user', 'export') + '?' + new URLSearchParams(qs as any).toString(), 'ייצוא', 'btn-light') + ' ' + btn(A('admin', 'createUser'), 'הוספת משתמש'));
 }
-export async function userEdit(id: number) {
+export async function userEdit(id: number, sp: Record<string, string> = {}) {
   const u = await db.user.findUnique({ where: { id }, include: { orders: { orderBy: { id: 'desc' }, take: 100 }, credits: { orderBy: { id: 'desc' } }, grants: { include: { product: { select: { id: true, name: true } } }, orderBy: { id: 'desc' } } } });
   if (!u) return card('כרטיס משתמש', 'לא נמצא');
   const bal = u.credits.reduce((s, c) => s + Number(c.amount), 0);
@@ -147,7 +148,19 @@ export async function userEdit(id: number) {
     `<form data-ajax action="${AJ('user', 'add_credit', id)}" class="row g-2 align-items-end"><div class="col-md-3"><input type="number" step="0.01" class="form-control form-control-sm" name="amount" placeholder="סכום (שלילי = חיוב)" required></div><div class="col-md-2"><input type="number" class="form-control form-control-sm" name="orderId" placeholder="הזמנה"></div><div class="col-md-4"><input class="form-control form-control-sm" name="note" placeholder="הערה"></div><div class="col-auto"><button class="btn btn-sm btn-primary">הוספת זיכוי</button></div></form>`;
   const grants = table(['מוצר', 'הזמנה', 'תאריך', ''], u.grants.map((g) => [`<a href="${A('products', 'edit', { id: g.productId })}">${esc(g.product.name)}</a>`, g.orderId ? `<a href="${A('orders', 'view', { id: g.orderId })}">${g.orderId}</a>` : 'ידני', dt(g.createdAt, false), actBtn(AJ('user', 'remove_grant', g.id), 'ביטול', 'לבטל את הרשאת ההורדה?')])) +
     `<form data-ajax action="${AJ('user', 'add_grant', id)}"><div data-picker><input type="hidden" name="products" value=""><div class="adm-chips"></div><input type="search" class="form-control form-control-sm mt-2" placeholder="הענקת הורדה ידנית – חיפוש מוצר..." data-picker-q><div class="adm-picker-res list-group"></div></div><button class="btn btn-sm btn-primary mt-2">הענקת הרשאה</button></form>`;
-  return `<div class="d-flex justify-content-between mb-3"><h2 class="h4">כרטיס משתמש #${u.id} · ${esc(u.name || u.email)}</h2>${btn(A('user', 'manage'), 'חזרה', 'btn-light')}</div><div class="row"><div class="col-lg-6">${card('מידע אישי', info)}</div><div class="col-lg-6">${card(`הזמנות (${u.orders.length})`, orders)}${card('זיכויים', credits)}</div></div>${card(`הרשאות הורדה (${u.grants.length})`, grants)}${card('SMS', '<p class="text-muted small mb-0">שליחת SMS תופעל בשלב מאוחר יותר, עם ספק SMS שיאושר על ידי הבעלים.</p>')}`;
+  // "הזמנות ספק" – as in the legacy user card: every paid sale line of the products linked to this user
+  let supplier = '';
+  if (VENDOR_TYPES.includes(u.type) || (await hasVendorProducts(id))) {
+    const vs = await vendorSales(id, { page: +sp.sp_page || 1, per: 200, from: sp.sp_from, to: sp.sp_to });
+    const first = vs.total - (vs.page - 1) * vs.per;
+    const rows = vs.items.map((it, i) => [String(first - i), `<a href="${A('orders', 'view', { id: it.order.id })}" dir="ltr">${esc(it.order.orderNumber || String(it.order.id))}</a>`, `<span dir="ltr">${dmyhm(it.order.paidAt || it.order.createdAt)}</span>`, esc(it.name), String(it.quantity), num(it.price),
+      `<input type="checkbox" class="form-check-input" data-supplier-item="${it.id}" aria-label="סטטוס"${it.supplierStatus ? ' checked disabled' : ''}>`]);
+    const qs = (p: number) => A('user', 'edit_user', { id, sp_page: p, sp_from: sp.sp_from || '', sp_to: sp.sp_to || '' }) + '#supplier';
+    const nav = vs.pages > 1 ? `<div class="d-flex gap-2 align-items-center my-2">${vs.page > 1 ? `<a class="btn btn-sm btn-light" href="${qs(vs.page - 1)}">הקודם</a>` : ''}<span class="small">עמוד ${vs.page} מתוך ${vs.pages}</span>${vs.page < vs.pages ? `<a class="btn btn-sm btn-light" href="${qs(vs.page + 1)}">הבא</a>` : ''}</div>` : '';
+    const filter = `<form method="get" action="/admin" class="row g-2 align-items-end mb-2"><input type="hidden" name="am" value="user"><input type="hidden" name="ac" value="edit_user"><input type="hidden" name="id" value="${id}"><div class="col-auto"><label class="form-label small mb-1">מתאריך</label><input type="date" class="form-control form-control-sm" name="sp_from" value="${esc(sp.sp_from || '')}"></div><div class="col-auto"><label class="form-label small mb-1">עד תאריך</label><input type="date" class="form-control form-control-sm" name="sp_to" value="${esc(sp.sp_to || '')}"></div><div class="col-auto"><button class="btn btn-sm btn-primary">סינון</button></div><div class="col-auto">${btn(A('ProductsDigitalDownloads', 'pdd_statistics', { vendor: id, from: sp.sp_from || '', to: sp.sp_to || '' }), 'דוח לפי תאריכים (PDF / Excel)', 'btn-light')}</div></form>`;
+    supplier = `<div id="supplier">${card(`הזמנות ספק (${vs.total.toLocaleString('he-IL')})`, filter + `<p class="small text-muted mb-2">${vs.qty.toLocaleString('he-IL')} יחידות. "סטטוס" מסומן נשמר מיד ואינו ניתן לביטול, כמו במערכת הישנה.</p>` + nav + table(['#', 'מספר הזמנה', 'תאריך תשלום', 'מוצר', 'כמות', 'מחיר', 'סטטוס'], rows) + nav)}</div>`;
+  }
+  return `<div class="d-flex justify-content-between mb-3"><h2 class="h4">כרטיס משתמש #${u.id} · ${esc(u.name || u.email)}</h2>${btn(A('user', 'manage'), 'חזרה', 'btn-light')}</div><div class="row"><div class="col-lg-6">${card('מידע אישי', info)}</div><div class="col-lg-6">${card(`הזמנות (${u.orders.length})`, orders)}${card('זיכויים', credits)}</div></div>${card(`הרשאות הורדה (${u.grants.length})`, grants)}${supplier}${card('SMS', '<p class="text-muted small mb-0">שליחת SMS תופעל בשלב מאוחר יותר, עם ספק SMS שיאושר על ידי הבעלים.</p>')}`;
 }
 export async function userSave(id: number, f: FormData) {
   const email = str(f.get('email')).toLowerCase(); if (!email) return { status: 'error', message: 'מייל חובה' };
@@ -185,7 +198,7 @@ export async function reportDigital(sp: Record<string, string>, fmt: '' | 'csv' 
   const head = `<tr><th>שם</th><th>id</th><th>מק"ט</th><th>כמות</th><th>מחיר</th><th>תאריך תשלום</th><th>מספר הזמנה</th></tr>`;
   const line = (r: any) => `<td>${esc(r.name)}</td><td>${r.id || ''}</td><td dir="ltr">${esc(r.sku)}</td><td>${r.qty}</td><td>${r.price.toFixed(2)}</td><td>${d(r.paidAt)}</td><td dir="ltr">${esc(r.order)}</td>`;
   if (fmt === 'print') return `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>קבצים דיגיטליים${sup ? ' – ' + esc(sup) : ''}</title><style>body{font-family:Arial,sans-serif;margin:24px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #ccc;padding:5px 7px;text-align:right}th{background:#f2f2f2}h1{font-size:18px}</style></head><body onload="print()"><h1>קבצים דיגיטליים${sup ? ' – ' + esc(sup) : ''}</h1><p>${sp.from ? 'מתאריך ' + esc(sp.from) + ' ' : ''}${sp.to ? 'עד תאריך ' + esc(sp.to) : ''}</p><table><thead>${head}</thead><tbody>${keep.map((r) => '<tr>' + line(r) + '</tr>').join('')}<tr><th>סה"כ</th><th></th><th></th><th>${qty}</th><th>${sum.toFixed(2)}</th><th></th><th></th></tr></tbody></table></body></html>`;
-  const [sups, vendorUsers] = await Promise.all([db.supplier.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true } }), db.user.findMany({ where: { type: 80 }, select: { id: true, name: true, email: true }, orderBy: { name: 'asc' } })]);
+  const [sups, vendorUsers] = await Promise.all([db.supplier.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true } }), listVendors()]);
   const vSel = new Set(String(sp.vendor || '').split(','));
   const show = sp.show === '1';
   const tbl = show ? `<div class="mb-2 small text-muted">${rows.length} שורות · סה"כ ${qty} יח' · ${shekel(sum)}. שורה מסומנת לא תיכלל בקובץ.</div><div class="table-responsive"><table class="table table-sm table-hover align-middle"><thead><tr><th><input type="checkbox" class="form-check-input" data-exclude-all title="סימון הכל"></th>${head.slice(4)}</thead><tbody>${rows.map((r) => `<tr><td><input type="checkbox" class="form-check-input" data-exclude-row value="${r.line}"${r.excluded ? ' checked' : ''}></td>${line(r).replace(`<td>${esc(r.name)}</td>`, `<td><a href="${A('orders', 'view', { id: r.orderId })}">${esc(r.name)}</a></td>`)}</tr>`).join('')}</tbody></table></div>` : '';

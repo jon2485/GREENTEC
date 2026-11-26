@@ -37,7 +37,8 @@ async function main() {
     const name = dec(f['product[name]']);
     if (name && dec(p.name) !== name) add('שם שונה', p.id, { old: name, now: p.name });
     const st = f['product[status]'] === '1' ? 1 : 0;
-    if ((p.status === 1 ? 1 : 0) !== st) add('סטטוס פרסום שונה', p.id, { name, old: st, now: p.status });
+    // status -1 = moved to the recycle bin on purpose (e.g. the 4 dead legacy links, owner's decision 2026-11-26)
+    if (p.status !== -1 && (p.status === 1 ? 1 : 0) !== st) add('סטטוס פרסום שונה', p.id, { name, old: st, now: p.status });
     const url = dec(f['custom_url[url]']);
     if (url && seg(p.urlPath) !== url) add('כתובת שונה', p.id, { name, old: url, now: p.urlPath });
     const lv = live[p.urlPath];

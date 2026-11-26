@@ -114,3 +114,17 @@ See **docs/MIGRATION.md** (owner request 2026-11-23): import everything from the
 - `Product.releaseYear` comes from legacy `attributes[2]` (option id → year, `scripts/seed.mjs` LEGACY_YEARS).
 - Admin saves keep stored text when only CRLF/whitespace differs (`keepUnchanged` in `lib/admin/ui.ts`); switches are read with `getAll` (a hidden "0" precedes the checkbox).
 - Legacy Google Shopping feed URL `/GoogleShopping/feed/1` serves the same feed as `/feeds/google-shopping.xml`.
+
+## 10. משתמש ספק – supplier users (2026-11-26, owner: "critical, exactly like the legacy site")
+
+- A supplier is a registered user the admin made **"משתמש פרימיום" (type 50)** (80 also accepted) and linked to products
+  (product → מאפייני מוצר → משתמש ספק; `Product.vendorUserId`). All 31 legacy suppliers are type 50.
+- Legacy links use legacy user ids: kept in `Product.vendorLegacyId`; `vendorUserId` is filled when that user is imported
+  (`lib/legacyPersonal.ts`, and `syncVendorUsers()` in `scripts/seed.mjs` on every start). Until then the editor shows "L<id>".
+- Supplier's personal area: `/account?tab=sales` "רכישות למוצרים שלי" (legacy `/user/profile` #list-orders2): every PAID line of
+  his products – מספר הזמנה, תאריך הזמנה (date + time), המוצר (+ "[מוצר דיגיטלי]"), כמות, מחיר. Never buyer details.
+- Admin: user card → "הזמנות ספק" (#, order number → order, payment date+time, product, qty, price, סטטוס tick =
+  `OrderItem.supplierStatus`, one-way, endpoint `ProductUserSuppliers/update_order_item_status` as in legacy) and
+  דו"חות → קבצים דיגיטליים with "משתמש ספק" + dates → PDF / Excel. `lib/vendors.ts`, test `tests/e2e/vendor.spec.ts`.
+- TODO after the orders are imported: copy the legacy "סטטוס" ticks (legacy user card → הזמנות ספק, read-only) to `supplierStatus`.
+- Hydration gate also holds `self.__next_f` (page data) until DOMContentLoaded – robust when a cached chunk runs early.

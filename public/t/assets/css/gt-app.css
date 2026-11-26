@@ -439,3 +439,12 @@ a.gt-ann-item::after { content: "‹"; color: #cadb2d; font-weight: 700; margin-
   .accessories-section .main-carousel { margin-inline: -10px; }
   .accessories-section, .movies-section, .new-singles-section, .recent-articles-section, .new-on-section, .jewish-music-section { overflow-x: clip; }
 }
+/* account → רכישות למוצרים שלי (supplier sales): a table on desktop, one card per purchase on phones */
+@media (max-width: 575.98px) {
+  .gt-sales thead { display: none; }
+  .gt-sales, .gt-sales tbody, .gt-sales tr, .gt-sales td { display: block; width: 100%; }
+  .gt-sales tr { border: 1px solid #e6e6df; border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; background: #fff; }
+  .gt-sales td { display: flex; justify-content: space-between; gap: 12px; text-align: start !important; border: 0; padding: 4px 0; }
+  .gt-sales td::before { content: attr(data-label); font-weight: 600; color: #5f6157; flex: none; }
+  .gt-sales td[data-label="המוצר"] { flex-direction: column; gap: 2px; }
+}

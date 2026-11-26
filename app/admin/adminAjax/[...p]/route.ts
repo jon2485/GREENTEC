@@ -79,6 +79,8 @@ async function handle(mod: string, action: string, id: number, f: FormData, url:
     }
     // orders
     case 'orders/save_status_order': return O.statusReorderSave(f) as Promise<R>;
+    // הזמנות ספק → סטטוס (same endpoint name as the legacy admin)
+    case 'ProductUserSuppliers/update_order_item_status': { const itemId = Number(f.get('item_id')) || id; if (!itemId) return err('חסר מזהה'); await db.orderItem.update({ where: { id: itemId }, data: { supplierStatus: true } }); return ok('הסטטוס עודכן', { item_id: itemId }); }
     case 'orders/bulk_status': return O.bulkStatus(f) as Promise<R>;
     case 'orders/save_payment': return O.orderSavePayment(id, f) as Promise<R>;
     case 'orders/save_customer': return O.orderSaveCustomer(id, f) as Promise<R>;

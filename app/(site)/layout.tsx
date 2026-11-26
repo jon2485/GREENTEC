@@ -24,13 +24,21 @@ export const viewport = { themeColor: '#161616', width: 'device-width', initialS
 // DOMContentLoaded are held and handed to the webpack runtime afterwards. If anything here is unexpected the
 // page keeps working as server HTML + template scripts.
 const HYDRATION_GATE = `(function(){try{var d=document;if(d.readyState!=='loading')return;var a=self.webpackChunk_N_E=self.webpackChunk_N_E||[];
-if(Object.prototype.hasOwnProperty.call(a,'push'))return;var held=[],rt=null,open=false,depth=0,ap=Array.prototype.push;
+var held=[],rt=Object.prototype.hasOwnProperty.call(a,'push')?a.push:null,open=false,depth=0,ap=Array.prototype.push;
 function run(c){depth++;try{rt(c)}finally{depth--}}
 function flush(){if(!open||!rt)return;var h=held;held=[];for(var i=0;i<h.length;i++)run(h[i])}
 function q(){if(depth>0)return ap.apply(a,arguments);for(var i=0;i<arguments.length;i++){if(open&&rt)run(arguments[i]);else held.push(arguments[i])}return a.length}
 Object.defineProperty(a,'push',{configurable:true,get:function(){return q},set:function(f){rt=f;flush()}});
 d.addEventListener('DOMContentLoaded',function(){open=true;flush()})}catch(e){}})();`;
 
+// Second half of the gate, independent of script order: Next streams the page data (RSC payload) through
+// self.__next_f in inline scripts in <body>, after this <head> script has run. Holding that data until
+// DOMContentLoaded keeps React from hydrating before the whole page is parsed, even when a cached chunk ran
+// before the webpack gate above could be installed.
+const FLIGHT_GATE = `(function(){try{var d=document;if(d.readyState!=='loading'||self.__next_f)return;var held=[],cb=null,open=false,arr=[];
+function flush(){if(!open||!cb)return;var h=held;held=[];for(var i=0;i<h.length;i++)cb(h[i])}
+Object.defineProperty(arr,'push',{configurable:true,get:function(){return function(){for(var i=0;i<arguments.length;i++){if(open&&cb)cb(arguments[i]);else held.push(arguments[i])}return held.length}},set:function(f){cb=f;flush()}});
+self.__next_f=arr;d.addEventListener('DOMContentLoaded',function(){open=true;flush()})}catch(e){}})();`;
 const V = (process.env.RAILWAY_GIT_COMMIT_SHA || process.env.BUILD_ID || String(Date.now())).slice(0, 8);
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -40,7 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="he" dir="rtl" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: HYDRATION_GATE }} />
+        <script dangerouslySetInnerHTML={{ __html: FLIGHT_GATE + HYDRATION_GATE }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Varela+Round&display=swap" rel="stylesheet" />

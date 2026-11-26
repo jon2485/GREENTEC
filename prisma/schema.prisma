@@ -38,6 +38,7 @@ model Product {
   weight          Decimal?  @db.Decimal(10, 3)
   checkoutProduct Boolean   @default(false) // מוצר קופה
   vendorUserId    Int?      // משתמש ספק
+  vendorLegacyId  Int?      // the legacy user id of the "משתמש ספק" (resolved to vendorUserId once that user is imported)
   showHome        Boolean   @default(false)
   releaseYear     Int?
   depth           String    @default("")
@@ -353,6 +354,7 @@ model OrderItem {
   origPrice   Decimal  @default(0) @db.Decimal(10, 2)
   price       Decimal  @default(0) @db.Decimal(10, 2)
   exists      Boolean  @default(true)
+  supplierStatus Boolean @default(false) // "סטטוס" in the user card → הזמנות ספק (admin ticks it, one-way)
   order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product     Product? @relation(fields: [productId], references: [id])
 }

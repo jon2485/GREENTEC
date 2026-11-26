@@ -37,9 +37,9 @@ export function clean(w: PageWatch, what: string) {
 
 const PW = 'Test-Only-Pass-123';
 /** Creates a fresh customer and logs the browser in through the real login form. */
-export async function newCustomer(page: Page) {
+export async function newCustomer(page: Page, extra: { type?: number; name?: string } = {}) {
   const email = `e2e+${Date.now()}${Math.floor(Math.random() * 1e6)}@test.local`;
-  const u = await db.user.create({ data: { email, name: 'בדיקה אוטומטית', phone: '0500000000', passwordHash: hashPassword(PW) } });
+  const u = await db.user.create({ data: { email, name: extra.name || 'בדיקה אוטומטית', phone: '0500000000', type: extra.type ?? 0, passwordHash: hashPassword(PW) } });
   await page.goto('/login');
   await page.locator('form[action="/api/auth/login"] input[name="email"]').fill(email);
   await page.locator('form[action="/api/auth/login"] input[name="password"]').fill(PW);

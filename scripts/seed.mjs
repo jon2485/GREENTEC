@@ -36,6 +36,8 @@ async function main() {
     await syncStockLive();
     await syncReleaseYear();
     await syncGaEvents();
+    await syncVendorUsers();
+    await trashDeadProducts();
     return;
   }
   const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/greentec-seed.json.gz', import.meta.url))).toString('utf8'));
@@ -114,7 +116,7 @@ async function main() {
   }
   await ensureAdmin();
   await syncLegacyCatalog();
-  await syncHiddenProducts(); await syncHomeFlags(); await syncSupplierLinks(); await syncNames(); await syncVariants(); await syncPrices(); await syncPrices2(); await restorePrices3(); await syncStockLive(); await syncReleaseYear(); await syncGaEvents();
+  await syncHiddenProducts(); await syncHomeFlags(); await syncSupplierLinks(); await syncNames(); await syncVariants(); await syncPrices(); await syncPrices2(); await restorePrices3(); await syncStockLive(); await syncReleaseYear(); await syncGaEvents(); await syncVendorUsers(); await trashDeadProducts();
   console.log('[seed] done:', products.length, 'products');
 }
 
@@ -356,6 +358,29 @@ async function syncGaEvents() {
   }
   // google shopping feed: active, as in the legacy admin (campaign status 1)
   if (!(await db.setting.findUnique({ where: { key: 'gs_enabled' } }))) await db.setting.create({ data: { key: 'gs_enabled', value: '1' } });
+  await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
+}
+
+// "משתמש ספק": Product.vendorUserId came from the legacy export as a LEGACY user id. Keep that id in vendorLegacyId and
+// point vendorUserId at the imported user (User.legacyId). Runs on every start, so products are linked as soon as
+// the users are imported (admin → ייבוא נתונים מהמערכת הישנה).
+async function syncVendorUsers() {
+  const FLAG = 'vendor_legacy_v1';
+  if (!(await db.setting.findUnique({ where: { key: FLAG } }))) {
+    await db.$executeRawUnsafe(`UPDATE "Product" SET "vendorLegacyId" = "vendorUserId", "vendorUserId" = NULL WHERE "vendorUserId" IS NOT NULL AND "vendorLegacyId" IS NULL`);
+    await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
+  }
+  const n = await db.$executeRawUnsafe(`UPDATE "Product" p SET "vendorUserId" = u.id FROM "User" u WHERE p."vendorLegacyId" IS NOT NULL AND p."vendorUserId" IS NULL AND u."legacyId" = p."vendorLegacyId"`);
+  if (n) console.log(`[seed] supplier users linked to ${n} products`);
+}
+// Owner's decision (2026-11-26): the 4 products that the legacy site lists but whose pages are 404 go to the recycle bin.
+async function trashDeadProducts() {
+  const FLAG = 'trash_dead_products_v1';
+  if (await db.setting.findUnique({ where: { key: FLAG } })) return;
+  await db.product.updateMany({ where: { id: { in: [1742, 2230, 484, 869] }, status: { not: 1 } }, data: { status: -1 } });
+  // and one of the two identical google analytics event rows (it would count every purchase twice)
+  const ga = await db.setting.findUnique({ where: { key: 'ga_events' } });
+  if (ga?.value) { const lines = ga.value.split(/\r?\n/).filter(Boolean); const uniq = [...new Set(lines)]; if (uniq.length !== lines.length) await db.setting.update({ where: { key: 'ga_events' }, data: { value: uniq.join('\n') } }); }
   await db.setting.create({ data: { key: FLAG, value: new Date().toISOString() } });
 }
 

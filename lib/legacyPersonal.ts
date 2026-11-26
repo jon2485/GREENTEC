@@ -83,6 +83,8 @@ export async function importUsers(recs: any[], dry = false) {
       let userId: number;
       if (existing) { await db.user.update({ where: { id: existing.id }, data }); userId = existing.id; r.updated++; }
       else { userId = (await db.user.create({ data })).id; r.created++; }
+      // "משתמש ספק": products that the legacy admin linked to this user (Product.vendorLegacyId) now point to him
+      await db.product.updateMany({ where: { vendorLegacyId: u.legacyId, vendorUserId: null }, data: { vendorUserId: userId } });
       for (const c of u.credits) {
         const key = `${u.legacyId}:${c.index}`;
         const cd = { userId, amount: c.amount, orderId: c.orderId, note: c.note, legacyKey: key, ...(c.date ? { createdAt: c.date } : {}) };

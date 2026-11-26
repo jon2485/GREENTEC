@@ -36,7 +36,7 @@ async function screen(am: string, ac: string, id: number, sp: Record<string, str
     case 'orders/abandoned_carts': return O.abandonedCarts();
     case 'orders/statistics': return O.reportOrderStats(sp);
     case 'user/manage': return O.usersManage(sp);
-    case 'user/edit_user': return O.userEdit(id);
+    case 'user/edit_user': return O.userEdit(id, sp);
     case 'admin/createUser': return O.createUser();
     case 'admin/profile': return O.profile(user);
     case 'user/orders_reports': return O.reportUserOrders(sp);

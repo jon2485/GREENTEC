@@ -85,7 +85,7 @@ export async function importLegacyAdmin(db, data, log = () => {}) {
           newPrice: num(f['product[new_price]']), groupPrice: num(f['user_group_price[1]']), relatedPrice: num(f['related_products[price]']), shippingPrice: num(f['shipping_price']),
           profit: str(f['product_profit']), header: str(f['product_header']), searchText: str(f['search_content']),
           onlyDigital: on(f['digital_downloads[only_digital]']), oneButton: on(f['digital_downloads[one_button]']), oneButtonTitle: str(f['digital_downloads[one_button_title]']),
-          previewName: str(f['digital_downloads[preview_name]']), vendorUserId: vendors[0] ?? null, attributes: JSON.stringify(attrs),
+          previewName: str(f['digital_downloads[preview_name]']), vendorLegacyId: vendors[0] ?? null, vendorUserId: vendors[0] ? (await db.user.findFirst({ where: { legacyId: vendors[0] }, select: { id: true } }))?.id ?? null : null, attributes: JSON.stringify(attrs),
           propertyLists: int(f['product_properties[id]']) ? String(int(f['product_properties[id]'])) : '',
         };
         // 3 fixed prices – only where the seed (from the public storefront) left all three empty
