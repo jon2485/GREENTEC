@@ -5,7 +5,7 @@
 import { db } from './db';
 import { grantForOrder } from './orders';
 
-export type Kind = 'users' | 'orders' | 'carts' | 'supplierPaid' | 'lineModes' | 'usersGone';
+export type Kind = 'users' | 'orders' | 'carts' | 'supplierPaid' | 'lineModes' | 'usersGone' | 'ordersGone';
 export type Report = { created: number; updated: number; skipped: number; failed: number; reasons: Record<string, number>; notes: string[] };
 export const emptyReport = (): Report => ({ created: 0, updated: 0, skipped: 0, failed: 0, reasons: {}, notes: [] });
 const why = (r: Report, reason: string) => { r.reasons[reason] = (r.reasons[reason] || 0) + 1; };
@@ -333,9 +333,9 @@ export async function importSupplierPaid(recs: any[], dry = false) {
 export async function importLineModes(recs: any[], dry = false) {
   const r = emptyReport(); const conf: Record<string, number> = {};
   const orderIds = [...new Set(recs.map((x) => int(x?.o)).filter((n): n is number => !!n))];
-  const items = await db.orderItem.findMany({ where: { orderId: { in: orderIds } }, orderBy: { id: 'asc' }, select: { id: true, orderId: true, name: true, price: true, quantity: true, mode: true, productId: true, product: { select: { name: true } }, order: { select: { userId: true, paymentStatus: true } } } });
+  const items = await db.orderItem.findMany({ where: { orderId: { in: orderIds } }, orderBy: { id: 'asc' }, select: { id: true, orderId: true, name: true, price: true, origPrice: true, quantity: true, mode: true, productId: true, product: { select: { name: true, digitalPrice: true, physicalPrice: true, bothPrice: true, price: true, newPrice: true, onlyDigital: true } }, order: { select: { userId: true, paymentStatus: true, userStatusId: true, createdAt: true, shippingPrice: true, _count: { select: { items: true } } } } } });
   const byOrder = new Map<number, typeof items>(); for (const it of items) byOrder.set(it.orderId, [...(byOrder.get(it.orderId) || []), it]);
-  const used = new Set<number>(); const changes: { it: (typeof items)[number]; mode: string }[] = [];
+  const used = new Set<number>(); const changes: { it: (typeof items)[number]; mode: string }[] = []; const mis: any[] = [];
   for (const x of recs) {
     const o = int(x?.o), q = int(x?.q) || 1, p = num(x?.p), n = nameKey(x?.n);
     const free = ((o && byOrder.get(o)) || []).filter((it) => !used.has(it.id));
@@ -345,9 +345,10 @@ export async function importLineModes(recs: any[], dry = false) {
     used.add(hit.id);
     const truth = x?.d ? 'digital' : hit.mode === 'both' ? 'both' : 'physical';
     conf[`${hit.mode || '?'}→${truth}`] = (conf[`${hit.mode || '?'}→${truth}`] || 0) + 1;
+    if (dry && hit.mode !== truth && mis.length < 300) { const P: any = hit.product || {}; mis.push([hit.mode, truth, hit.productId, Number(hit.price), Number(hit.origPrice), P.digitalPrice, P.physicalPrice, P.bothPrice, P.price, P.newPrice, hit.order.userStatusId, hit.order.createdAt.toISOString().slice(0, 10), Number(hit.order.shippingPrice), hit.order._count.items]); }
     changes.push({ it: hit, mode: truth });
   }
-  if (dry) return { report: r, preview: [conf] };
+  if (dry) return { report: r, preview: [conf, mis] };
   for (const { it, mode } of changes) {
     await db.orderItem.update({ where: { id: it.id }, data: { mode, modeLocked: true } });
     if (mode !== it.mode) { r.updated++; if (it.order.userId && it.productId && it.order.paymentStatus === 'completed') { if (mode === 'physical') await revokeIfOrphan(it.order.userId, it.productId); else await grantForOrder(it.orderId); } }
@@ -374,5 +375,19 @@ export async function importUsersGone(recs: any[], dry = false) {
     if (!u.active && u.note.includes('נמחק במערכת הישנה')) continue;
     await db.user.update({ where: { id: u.id }, data: { active: false, note: [u.note, 'נמחק במערכת הישנה'].filter(Boolean).join('\n') } }); r.updated++;
   }
+  return { report: r, preview: [] };
+}
+
+// ---------------- orders the legacy admin deleted for good after the export ----------------
+// records: legacy order ids that no longer exist on the legacy site (not in its order list, nor in "הזמנות שנמחקו").
+// Only unpaid legacy orders are removed – a paid order is never deleted automatically.
+export async function importOrdersGone(recs: any[], dry = false) {
+  const r = emptyReport();
+  const ids = [...new Set(recs.map((x) => int(x)).filter((n): n is number => !!n))];
+  const rows = await db.order.findMany({ where: { id: { in: ids }, legacy: true }, select: { id: true, paymentStatus: true } });
+  const del = rows.filter((o) => o.paymentStatus !== 'completed').map((o) => o.id);
+  r.skipped = ids.length - del.length; if (rows.length > del.length) why(r, 'הזמנה ששולמה – לא נמחקה');
+  if (dry) return { report: r, preview: [{ 'יימחקו': del.length }] };
+  if (del.length) { await db.downloadGrant.updateMany({ where: { orderId: { in: del } }, data: { orderId: null } }); r.updated = (await db.order.deleteMany({ where: { id: { in: del } } })).count; }
   return { report: r, preview: [] };
 }

@@ -5,7 +5,7 @@
 // Delete together with the other /api/migrate routes after the move to the new site.
 import { db } from '@/lib/db';
 import { json, preflight, tokenOk, tokenFrom, readBody } from '@/lib/migrate';
-import { importUsers, importOrders, importCarts, importSupplierPaid, importLineModes, importUsersGone } from '@/lib/legacyPersonal';
+import { importUsers, importOrders, importCarts, importSupplierPaid, importLineModes, importUsersGone, importOrdersGone } from '@/lib/legacyPersonal';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   if (!tokenOk(tokenFrom(req, body))) return json(req, { error: 'unauthorized' }, 401);
   const kind = String(body?.kind || ''); const recs = body?.records; const dry = !!body?.dry;
   if (!Array.isArray(recs) || recs.length > 1000) return json(req, { error: 'bad batch' }, 400);
-  const res = kind === 'users' ? await importUsers(recs, dry) : kind === 'orders' ? await importOrders(recs, dry) : kind === 'carts' ? await importCarts(recs[0], dry) : kind === 'supplierPaid' ? await importSupplierPaid(recs, dry) : kind === 'lineModes' ? await importLineModes(recs, dry) : kind === 'usersGone' ? await importUsersGone(recs, dry) : null;
+  const res = kind === 'users' ? await importUsers(recs, dry) : kind === 'orders' ? await importOrders(recs, dry) : kind === 'carts' ? await importCarts(recs[0], dry) : kind === 'supplierPaid' ? await importSupplierPaid(recs, dry) : kind === 'lineModes' ? await importLineModes(recs, dry) : kind === 'usersGone' ? await importUsersGone(recs, dry) : kind === 'ordersGone' ? await importOrdersGone(recs, dry) : null;
   if (!res) return json(req, { error: 'unknown kind' }, 400);
   // the report has counts and reasons only; previews (personal data) are returned only for dry runs
   return json(req, dry || kind === 'lineModes' ? res : { report: res.report });
@@ -46,6 +46,11 @@ export async function GET(req: Request) {
     const rows: any[] = await db.$queryRawUnsafe(`SELECT p."vendorLegacyId" AS v, COUNT(*)::int AS n, COUNT(*) FILTER (WHERE i."supplierStatus")::int AS paid
       FROM "OrderItem" i JOIN "Product" p ON p.id = i."productId" JOIN "Order" o ON o.id = i."orderId"
       WHERE p."vendorLegacyId" IS NOT NULL AND o."paymentStatus" = 'completed' AND o.deleted = false GROUP BY 1`);
+    return json(req, { rows });
+  }
+  if (what === 'unlinked') { // order lines without a product on the new site (product gone from the legacy catalog)
+    const rows: any[] = await db.$queryRawUnsafe(`SELECT i.name, i.mode, COUNT(*)::int AS n, COUNT(*) FILTER (WHERE o."paymentStatus" = 'completed')::int AS paid
+      FROM "OrderItem" i JOIN "Order" o ON o.id = i."orderId" WHERE o.legacy AND i."productId" IS NULL GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 300`);
     return json(req, { rows });
   }
   return json(req, { error: 'unknown' }, 400);
