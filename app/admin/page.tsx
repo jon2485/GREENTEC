@@ -1,6 +1,6 @@
 // /admin?am={module}&ac={action}&id={id} – same URL scheme as the UPME admin.
 import { requireAdmin } from '@/lib/auth';
-import { MENU, findMenu, USER_TYPES } from '@/lib/admin/menu';
+import { MENU, findMenu } from '@/lib/admin/menu';
 import { esc, A, card } from '@/lib/admin/ui';
 import { findResource, listScreen, editScreen } from '@/lib/admin/resources';
 import * as P from '@/lib/admin/products';
@@ -54,8 +54,13 @@ async function screen(am: string, ac: string, id: number, sp: Record<string, str
     case 'configs/shutdown_site': return C.shutdownScreen();
     case 'configs/legacy_import': return legacyImportScreen();
     case 'dashboard/index': return C.dashboard();
+    case 'albums/create': return C.albumCreate();
+    case 'ProductProperties/manage_prod_props': return P.propLists();
   }
   if (C.SETTINGS[k]) return C.settingsScreen(k);
+  // legacy "הוספת עמוד / מאמר / תווית" menu items open the empty edit form
+  const rc = ac === 'create' ? findResource(am, 'manage') : null;
+  if (rc) return editScreen(rc, 0);
   const r = findResource(am, ac);
   if (r) {
     if (ac === r.ac) return listScreen(r, sp);
@@ -68,7 +73,8 @@ async function screen(am: string, ac: string, id: number, sp: Record<string, str
 
 function sidebar(am: string, ac: string) {
   return MENU.map((g) => {
-    const open = g.items.some((i) => i.am === am && i.ac === ac) || (g.group === 'מוצרים' && ['products', 'ProductsSets', 'ProductSuppliers'].includes(am)) || (g.group === 'הזמנות' && am === 'orders');
+    if (g.href) return `<div class="adm-nav-group"><a href="${g.href}" class="adm-nav-head adm-nav-link${am === 'dashboard' ? ' active' : ''}"><span>${g.icon}</span> ${g.group}</a></div>`;
+    const open = g.items.some((i) => i.am === am && i.ac === ac) || (g.group === 'מוצרים' && ['products', 'ProductsSets', 'ProductSuppliers', 'ProductProperties', 'ProductVariations'].includes(am)) || (g.group === 'הזמנות' && am === 'orders' && !['user_order_fields', 'statistics'].includes(ac));
     return `<div class="adm-nav-group${open ? ' open' : ''}"><button type="button" class="adm-nav-head" data-nav-toggle><span>${g.icon}</span> ${g.group}</button><ul>${g.items.map((i) => `<li><a href="${A(i.am, i.ac)}" class="${i.am === am && i.ac === ac ? 'active' : ''}">${esc(i.title)}</a></li>`).join('')}</ul></div>`;
   }).join('');
 }
@@ -83,9 +89,9 @@ export default async function Admin({ searchParams }: { searchParams: Promise<Re
   const am = sp.am || 'dashboard', ac = sp.ac || 'index', id = Number(sp.id || 0);
   let body: string;
   try { body = await screen(am, ac, id, sp, user); } catch (e: any) { console.error('[admin]', am, ac, e); body = card('שגיאה', `<pre class="small" dir="ltr">${esc(e?.message || e)}</pre>`); }
-  const title = findMenu(am, ac)?.title || findMenu(am, 'manage')?.title || '';
+  const title = findMenu(am, ac)?.title || findMenu(am, 'manage')?.title || (am === 'admin' && ac === 'profile' ? 'הפרופיל שלי' : '');
   const html = `<div class="adm-shell"><aside class="adm-side" id="admSide"><a href="/admin" class="adm-brand"><img src="/t/assets/images/logo-v.png" alt=""> <span>GREENTEC</span></a><nav>${sidebar(am, ac)}</nav></aside>
-  <div class="adm-main"><header class="adm-top"><button type="button" class="btn btn-sm btn-light d-lg-none" data-side-toggle>☰</button><div class="adm-crumb">${title ? esc(title) : 'לוח בקרה'}</div><div class="ms-auto d-flex align-items-center gap-2"><a href="/" target="_blank" class="btn btn-sm btn-light">לאתר ↗</a><span class="small text-muted d-none d-md-inline">${esc(user.name || user.email)} · ${esc(USER_TYPES.find(([k]) => k === user.type)?.[1] || '')}</span><a href="/admin/adminAjax/admin/logout" class="btn btn-sm btn-light">יציאה</a></div></header>
+  <div class="adm-main"><header class="adm-top"><button type="button" class="btn btn-sm btn-light d-lg-none" data-side-toggle>☰</button><div class="adm-crumb">${title ? esc(title) : 'מערכת ניהול'}</div><nav class="adm-quick d-none d-xl-flex gap-1"><a href="${A('products', 'manage')}">ניהול מוצרים</a><a href="${A('user', 'manage')}">ניהול משתמשים</a><a href="${A('orders', 'manage')}">ניהול הזמנות</a></nav><div class="ms-auto dropdown adm-usermenu"><button type="button" class="btn btn-sm btn-light" data-usermenu aria-expanded="false">${esc(user.name || user.email)} ▾</button><div class="adm-usermenu-list" hidden><a href="${A('admin', 'profile')}">הפרופיל שלי</a><a href="/" target="_blank">צפייה באתר</a><a href="/admin/adminAjax/admin/logout">התנתקות</a></div></div></header>
   <main class="adm-content">${body}</main></div></div><div class="adm-toast" id="admToast"></div>`;
   return <div dangerouslySetInnerHTML={{ __html: html }} />;
 }

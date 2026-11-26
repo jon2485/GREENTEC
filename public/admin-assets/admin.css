@@ -63,3 +63,12 @@ tr.dragging { opacity: .4; }
   .adm-content { padding: 14px; }
 }
 @media print { .adm-side, .adm-top, .adm-filters, .btn { display: none !important; } }
+/* legacy-style top bar: quick links + user menu (הפרופיל שלי · צפייה באתר · התנתקות) */
+.adm-nav-link { display: block; text-decoration: none; }
+.adm-nav-link.active { color: #fff; }
+.adm-quick a { color: #5e6278; text-decoration: none; font-size: 13.5px; padding: 6px 10px; border-radius: 6px; }
+.adm-quick a:hover { background: #f1f1f4; color: #181c32; }
+.adm-usermenu { position: relative; }
+.adm-usermenu-list { position: absolute; inset-inline-end: 0; top: calc(100% + 6px); background: #fff; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.12); min-width: 170px; padding: 6px 0; z-index: 1030; }
+.adm-usermenu-list a { display: block; padding: 8px 16px; color: #181c32; text-decoration: none; font-size: 14px; }
+.adm-usermenu-list a:hover { background: #f5f8fa; }

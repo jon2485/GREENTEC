@@ -64,9 +64,11 @@ export async function menuItemsSave(id: number, f: FormData) {
 // ---------- A32 גלריות ----------
 export async function albumsManage() {
   const albums = await db.album.findMany({ orderBy: { id: 'asc' }, include: { _count: { select: { images: true } } } });
-  return card('גלריות', table(['ID', 'שם', 'תמונות', 'מידות', ''], albums.map((a) => [String(a.id), esc(a.title), String(a._count.images), `${a.imageWidth}×${a.imageHeight}`, `<div class="d-flex gap-1">${btn(A('albums', 'images', { id: a.id }), 'ניהול תמונות', 'btn-light-primary')}${actBtn(AJ('albums', 'delete', a.id), 'הסרה', 'להסיר את הגלריה?')}</div>`])) +
+  return card('ניהול גלריות', table(['ID', 'שם', 'תמונות', 'מידות', 'פעולות'], albums.map((a) => [String(a.id), esc(a.title), String(a._count.images), `${a.imageWidth}×${a.imageHeight}`, `<div class="d-flex gap-1">${btn(A('albums', 'images', { id: a.id }), 'ניהול תמונות', 'btn-light-primary')}${actBtn(AJ('albums', 'delete', a.id), 'הסרה', 'להסיר את הגלריה?')}</div>`])) +
     `<form data-ajax action="${AJ('albums', 'create')}" class="d-flex gap-2 mt-3"><input class="form-control form-control-sm" style="max-width:260px" name="title" placeholder="שם גלריה חדשה" required><button class="btn btn-sm btn-success">+ הוספה</button></form>`);
 }
+/** "הוספת גלריה" (legacy menu item): name, then the images screen */
+export const albumCreate = () => card('הוספת גלריה', `<form data-ajax action="${AJ('albums', 'create')}">${fText('title', 'שם *', '', 'text', 'required')}<button class="btn btn-primary">שמירה</button></form>`);
 export async function albumImages(id: number) {
   const a = await db.album.findUnique({ where: { id }, include: { images: { orderBy: { sort: 'asc' } } } }); if (!a) return card('גלריה', 'לא נמצא');
   const folder = `media/albums/${id}`;
@@ -131,9 +133,9 @@ export async function dashboard() {
     db.user.count(), db.order.findMany({ where: { deleted: false }, orderBy: { id: 'desc' }, take: 8 }),
   ]);
   const tile = (n: string, l: string, href: string) => `<div class="col-6 col-lg-3"><a class="adm-tile" href="${href}"><div class="adm-tile-n">${n}</div><div class="adm-tile-l">${l}</div></a></div>`;
-  return `<div class="row g-3 mb-4">${tile(products.toLocaleString('he-IL'), 'מוצרים מפורסמים', A('products', 'manage'))}${tile(orders30.toLocaleString('he-IL'), 'הזמנות ב־30 יום', A('orders', 'manage'))}${tile(shekel(paid30._sum.total || 0), 'מחזור ששולם ב־30 יום', A('orders', 'statistics'))}${tile(users.toLocaleString('he-IL'), 'משתמשים', A('user', 'manage'))}</div>` +
+  return `<h1 class="h4 mb-3">מערכת ניהול</h1><div class="row g-3 mb-4">${tile(products.toLocaleString('he-IL'), 'מוצרים מפורסמים', A('products', 'manage'))}${tile(orders30.toLocaleString('he-IL'), 'הזמנות ב־30 יום', A('orders', 'manage'))}${tile(shekel(paid30._sum.total || 0), 'מחזור ששולם ב־30 יום', A('orders', 'statistics'))}${tile(users.toLocaleString('he-IL'), 'משתמשים', A('user', 'manage'))}</div>` +
     card('קבצים דיגיטליים', `<p class="mb-1">מוצרים עם קובץ דיגיטלי: <b>${digital.toLocaleString('he-IL')}</b></p><p class="mb-0">מוצרים עם מחיר הורדה בלי קובץ: <b>${missing.toLocaleString('he-IL')}</b> ${btn(A('products', 'manage', { digital: '0' }), 'הצגה', 'btn-light')}</p>`) +
-    card('הזמנות אחרונות', table(['מספר', 'שם', 'תאריך', 'סה״כ', 'תשלום'], last.map((o) => [`<a href="${A('orders', 'view', { id: o.id })}">${o.id}</a>`, esc(o.firstName + ' ' + o.lastName), dt(o.createdAt), shekel(o.total), badge(o.paymentStatus, o.paymentStatus === 'completed' ? 'success' : 'warning')])));
+    card('הזמנות אחרונות', table(['מספר הזמנה', 'שם מלא', 'תאריך יצירה', 'תאריך תשלום', 'סה"כ לתשלום'], last.map((o) => [`<a href="${A('orders', 'view', { id: o.id })}">${esc(o.orderNumber || String(o.id))}</a>`, esc(o.firstName + ' ' + o.lastName), dt(o.createdAt), dt(o.paidAt), shekel(o.total)])));
 }
 export const shutdownScreen = () => card('כיבוי האתר', '<div class="alert alert-warning m-0">המסך הזה לא נבנה בכוונה. לפי ההנחיות, "כיבוי האתר" ייבנה רק באישור מפורש של בעל האתר.</div>');
 export const googleSearches = async () => { const v = (await db.setting.findUnique({ where: { key: 'gsc_report' } }))?.value; return card('חיפושים בגוגל', v ? v : '<div class="adm-note">הדוח נשען על Google Search Console (60 יום). החיבור ל־Search Console API יוגדר בהמשך, עם הרשאה מחשבון הגוגל של האתר. עד אז אפשר לצפות בנתונים ישירות ב־Search Console.</div>'); };

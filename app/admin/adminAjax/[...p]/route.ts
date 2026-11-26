@@ -174,9 +174,24 @@ export async function GET(req: Request, { params }: { params: Promise<{ p: strin
     if (!storageReady()) return new NextResponse('אחסון לא הוגדר', { status: 503 });
     return NextResponse.redirect(await signedDownload(key, key.split('/').pop() || 'file'));
   }
+  const csvOut = (body: string, name: string) => new NextResponse(body, { headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="${name}"` } });
+  const q = (key: string) => url.searchParams.getAll(key).join(',');
   if (k(mod, action) === 'ProductsDigitalDownloads/export') {
-    const csv = (await O.reportDigital(Object.fromEntries(url.searchParams), true)) as string;
-    return new NextResponse(csv, { headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="digital-downloads.csv"` } });
+    const sp = { ...Object.fromEntries(url.searchParams), vendor: q('vendor') };
+    if (url.searchParams.get('format') === 'print') return new NextResponse(await O.reportDigital(sp, 'print'), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    return csvOut(await O.reportDigital(sp, 'csv'), 'digital-files.csv');
+  }
+  const cell = (x: any) => `"${String(x ?? '').replace(/"/g, '""')}"`;
+  const day = (d: any) => (d ? new Date(d).toISOString().slice(0, 10) : '');
+  if (k(mod, action) === 'user/orders_export') {
+    const rows = await O.userOrdersRows(Object.fromEntries(url.searchParams));
+    return csvOut('\ufeffID,משתמש,מייל,הרשמה,גלישה אחרונה,הזמנות,הזמנה אחרונה\n' + rows.map((u) => [u.id, u.name, u.email, day(u.createdAt), day(u.lastSeen), u._count.orders, day(u.orders[0]?.createdAt)].map(cell).join(',')).join('\n'), 'user-orders.csv');
+  }
+  if (k(mod, action) === 'user/export') {
+    const sp = Object.fromEntries(url.searchParams); const where: any = {};
+    if (sp.uid) where.id = +sp.uid; if (sp.email) where.email = { contains: sp.email, mode: 'insensitive' }; if (sp.name) where.name = { contains: sp.name, mode: 'insensitive' }; if (sp.phone) where.phone = { contains: sp.phone }; if (sp.type) where.type = +sp.type;
+    const rows = await db.user.findMany({ where, orderBy: { id: 'asc' } });
+    return csvOut('\ufeffID,שם משתמש (כתובת מייל),שם מלא,טלפון,פעיל,last active,תאריך הרשמה\n' + rows.map((u) => [u.id, u.email, u.name, u.phone, u.active ? 1 : 0, day(u.lastSeen), day(u.createdAt)].map(cell).join(',')).join('\n'), 'users.csv');
   }
   return NextResponse.json(err('GET לא נתמך'), { status: 405 });
 }

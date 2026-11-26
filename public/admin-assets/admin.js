@@ -161,3 +161,21 @@
   document.addEventListener('DOMContentLoaded', function () { $$('[data-sortable]').forEach(sortable); openHashTab(); });
   if (document.readyState !== 'loading') { $$('[data-sortable]').forEach(sortable); setTimeout(openHashTab, 50); }
 })();
+// user menu in the top bar
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-usermenu]');
+  document.querySelectorAll('.adm-usermenu-list').forEach(function (l) { if (!b || l !== b.nextElementSibling) l.hidden = true; });
+  if (b) { var l = b.nextElementSibling; l.hidden = !l.hidden; b.setAttribute('aria-expanded', String(!l.hidden)); }
+});
+// A46 קבצים דיגיטליים: "תצוגה" shows the sales lines; ticked lines are left out of the PDF / Excel
+document.addEventListener('change', function (e) {
+  var f = e.target.closest('form[data-digital-report]'); if (!f) return;
+  if (e.target.matches('[data-digital-show]')) {
+    var p = new URLSearchParams(new FormData(f)); p.delete('format'); p.set('am', 'ProductsDigitalDownloads'); p.set('ac', 'pdd_statistics');
+    if (e.target.checked) p.set('show', '1'); else p.delete('show');
+    var v = p.getAll('vendor').join(','); p.delete('vendor'); if (v) p.set('vendor', v);
+    location.href = '/admin?' + p.toString(); return;
+  }
+  if (e.target.matches('[data-exclude-all]')) f.querySelectorAll('[data-exclude-row]').forEach(function (c) { c.checked = e.target.checked; });
+  if (e.target.matches('[data-exclude-row], [data-exclude-all]')) f.querySelector('input[name=ex]').value = [].map.call(f.querySelectorAll('[data-exclude-row]:checked'), function (c) { return c.value; }).join(',');
+});

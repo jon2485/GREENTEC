@@ -15,6 +15,7 @@ const str = (v: any) => String(v ?? '').trim();
 export async function ordersManage(sp: Record<string, string>, deleted = false) {
   const where: any = { deleted };
   if (sp.oid) where.id = +sp.oid;
+  if (sp.onum) where.orderNumber = { contains: sp.onum };
   if (sp.name) where.OR = [{ firstName: { contains: sp.name, mode: 'insensitive' } }, { lastName: { contains: sp.name, mode: 'insensitive' } }, { email: { contains: sp.name, mode: 'insensitive' } }, { phone: { contains: sp.name } }];
   if (sp.pm) where.paymentMethod = +sp.pm;
   if (sp.ship) where.shippingMethodId = +sp.ship;
@@ -27,18 +28,18 @@ export async function ordersManage(sp: Record<string, string>, deleted = false) 
     db.orderStatus.findMany({ orderBy: { id: 'asc' } }), db.shippingMethod.findMany({ orderBy: { sort: 'asc' } }),
   ]);
   const stOpts: Opt[] = statuses.map((s) => [s.id, s.title]);
-  const filters = filterBar('orders', deleted ? 'deleted_list' : 'manage', fcol('oid', 'מספר הזמנה', sp.oid, 'number', 'col-6 col-md-1') + fcol('name', 'שם / מייל / טלפון', sp.name) +
+  const filters = filterBar('orders', deleted ? 'deleted_list' : 'manage', fcol('oid', 'ID', sp.oid, 'number', 'col-6 col-md-1') + fcol('onum', 'מספר הזמנה', sp.onum) + fcol('name', 'שם מלא / מייל / טלפון', sp.name) +
     fcolSel('pm', 'שיטת תשלום', sp.pm, PAY_METHODS) + fcolSel('ship', 'שיטת משלוח', sp.ship, ships.map((s) => [s.id, s.name])) + fcolSel('ps', 'מצב תשלום', sp.ps, PAY_STATUS) + fcolSel('us', 'מצב הזמנה', sp.us, stOpts) +
     fcol('from', 'מתאריך', sp.from, 'date') + fcol('to', 'עד תאריך', sp.to, 'date'));
   const qs = Object.fromEntries(Object.entries(sp).filter(([k]) => !['page', 'am', 'ac'].includes(k)));
   const shipName = (id: number | null) => ships.find((s) => s.id === id)?.name || '';
-  const list = table([deleted ? '' : '<input type="checkbox" class="form-check-input" data-check-all>', 'מספר', 'שם', 'תאריך', 'סה״כ', 'שיטת תשלום', 'משלוח', 'מצב תשלום', 'מצב הזמנה', 'עיר', 'טלפון', ''], rows.map((o) => [
-    deleted ? '' : `<input type="checkbox" class="form-check-input" name="sel" value="${o.id}" form="bulkForm">`, `<a href="${A('orders', 'view', { id: o.id })}">${o.id}</a>${o.isTest ? ' ' + badge('בדיקה', 'info') : ''}`,
+  const list = table([deleted ? '' : '<input type="checkbox" class="form-check-input" data-check-all>', 'ID', 'מספר הזמנה', 'שם מלא', 'תאריך יצירה', 'סה"כ לתשלום', 'שיטת תשלום', 'משלוחים', 'מצב תשלום', 'מצב הזמנה', 'עיר', 'טלפון', 'פעולות'], rows.map((o) => [
+    deleted ? '' : `<input type="checkbox" class="form-check-input" name="sel" value="${o.id}" form="bulkForm">`, `<a href="${A('orders', 'view', { id: o.id })}">${o.id}</a>`, `<a href="${A('orders', 'view', { id: o.id })}">${esc(o.orderNumber || String(o.id))}</a>${o.isTest ? ' ' + badge('בדיקה', 'info') : ''}`,
     esc(`${o.firstName} ${o.lastName}`), dt(o.createdAt), shekel(o.total), methodLabel(o.paymentMethod), esc(shipName(o.shippingMethodId)),
     badge(payLabel(o.paymentStatus), payColor[o.paymentStatus] || 'secondary'), esc(statuses.find((s) => s.id === o.userStatusId)?.title || ''), esc(o.city), `<span dir="ltr">${esc(o.phone)}</span>`,
     `<div class="d-flex gap-1">${btn(A('orders', 'view', { id: o.id }), 'צפייה', 'btn-light-primary')}${o.userId ? btn(A('user', 'edit_user', { id: o.userId }), 'משתמש', 'btn-light') : ''}${deleted ? actBtn(AJ('orders', 'restore', o.id), 'שחזור', '', 'btn-light-primary') : ''}</div>`,
   ])) + pager(A('orders', deleted ? 'deleted_list' : 'manage', qs), page, Math.ceil(total / per), total);
-  const bulk = deleted ? '' : `<form id="bulkForm" data-ajax action="${AJ('orders', 'bulk_status')}" class="d-flex gap-2 align-items-end mb-3 flex-wrap"><div><label class="form-label small mb-1">שינוי סטטוס גורף למסומנים</label><select class="form-select form-select-sm" name="userStatusId"><option value="">— מצב הזמנה —</option>${stOpts.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}</select></div><div><select class="form-select form-select-sm" name="paymentStatus"><option value="">— מצב תשלום —</option>${PAY_STATUS.map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></div><button class="btn btn-sm btn-primary">עדכון</button></form>`;
+  const bulk = deleted ? '' : `<form id="bulkForm" data-ajax action="${AJ('orders', 'bulk_status')}" class="d-flex gap-2 align-items-end mb-3 flex-wrap"><div><label class="form-label small mb-1">שינוי סטטוס גורף למסומנים</label><select class="form-select form-select-sm" name="userStatusId"><option value="">— מצב הזמנה —</option>${stOpts.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}</select></div><div><select class="form-select form-select-sm" name="paymentStatus"><option value="">— מצב תשלום —</option>${PAY_STATUS.map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></div><button class="btn btn-sm btn-primary">שינוי סטטוס</button></form>`;
   return card(deleted ? 'הזמנות שנמחקו' : 'ניהול הזמנות', filters + bulk + list);
 }
 export async function bulkStatus(f: FormData) {
@@ -121,7 +122,8 @@ export async function orderCustomerView(id: number) {
 
 export async function abandonedCarts() {
   const rows = await db.abandonedCart.findMany({ orderBy: { updatedAt: 'desc' }, take: 500 });
-  return card(`עגלות נטושות (${rows.length})`, table(['ID', 'מוצרים', 'מייל', 'משתמש', 'תאריך', ''], rows.map((c) => { let items: any[] = []; try { items = JSON.parse(c.items); } catch {} return [String(c.id), items.map((x) => esc(x.name || x.id)).join('<br>'), esc(c.email), c.userId ? `<a href="${A('user', 'edit_user', { id: c.userId })}">#${c.userId}</a>` : '', dt(c.updatedAt), actBtn(AJ('orders', 'remove_cart', c.id), 'הסרה', 'לרוקן את העגלה?')]; })));
+  const us = await db.user.findMany({ where: { id: { in: rows.map((r) => r.userId).filter((x): x is number => !!x) } }, select: { id: true, name: true } });
+  return card(`עגלות נטושות (${rows.length})`, table(['id', 'מוצרים', 'שם', 'שם משתמש', 'תאריך', ''], rows.map((c) => { let items: any[] = []; try { items = JSON.parse(c.items); } catch {} return [String(c.id), items.map((x) => esc(x.name || x.id)).join('<br>'), c.userId ? `<a href="${A('user', 'edit_user', { id: c.userId })}">${esc(us.find((u) => u.id === c.userId)?.name || '#' + c.userId)}</a>` : '', `<span dir="ltr">${esc(c.email)}</span>`, dt(c.updatedAt), actBtn(AJ('orders', 'remove_cart', c.id), 'הסרה', 'לרוקן את העגלה?')]; })));
 }
 
 // ---------- משתמשים ----------
@@ -131,9 +133,9 @@ export async function usersManage(sp: Record<string, string>) {
   const per = 50; const page = Math.max(1, +sp.page || 1);
   const [rows, total] = await Promise.all([db.user.findMany({ where, orderBy: { id: 'desc' }, skip: (page - 1) * per, take: per }), db.user.count({ where })]);
   const qs = Object.fromEntries(Object.entries(sp).filter(([k]) => !['page', 'am', 'ac'].includes(k)));
-  return card('ניהול משתמשים', filterBar('user', 'manage', fcol('uid', 'ID', sp.uid, 'number', 'col-4 col-md-1') + fcol('email', 'מייל', sp.email) + fcol('name', 'שם', sp.name) + fcol('phone', 'טלפון', sp.phone) + fcolSel('type', 'סוג', sp.type, USER_TYPES)) +
-    table(['ID', 'מייל', 'שם', 'טלפון', 'סוג', 'פעיל', 'פעילות אחרונה', 'הרשמה', ''], rows.map((u) => [String(u.id), `<span dir="ltr">${esc(u.email)}</span>`, esc(u.name), `<span dir="ltr">${esc(u.phone)}</span>`, esc(USER_TYPES.find(([k]) => k === u.type)?.[1] || u.type), u.active ? '✓' : '✗', dt(u.lastSeen), dt(u.createdAt, false), btn(A('user', 'edit_user', { id: u.id }), 'כרטיס', 'btn-light-primary')])) +
-    pager(A('user', 'manage', qs), page, Math.ceil(total / per), total), btn(A('admin', 'createUser'), '+ הוספת משתמש'));
+  return card('ניהול משתמשים', filterBar('user', 'manage', fcol('uid', 'ID', sp.uid, 'number', 'col-4 col-md-1') + fcol('email', 'שם משתמש (כתובת מייל)', sp.email) + fcol('name', 'שם מלא', sp.name) + fcol('phone', 'טלפון', sp.phone) + fcolSel('type', 'סוג', sp.type, USER_TYPES)) +
+    table(['ID', 'שם משתמש (כתובת מייל)', 'שם מלא', 'טלפון', 'סוג', 'פעיל', 'last active', 'תאריך הרשמה', 'פעולות'], rows.map((u) => [String(u.id), `<span dir="ltr">${esc(u.email)}</span>`, esc(u.name), `<span dir="ltr">${esc(u.phone)}</span>`, esc(USER_TYPES.find(([k]) => k === u.type)?.[1] || u.type), u.active ? '✓' : '✗', dt(u.lastSeen), dt(u.createdAt, false), btn(A('user', 'edit_user', { id: u.id }), 'כרטיס', 'btn-light-primary')])) +
+    pager(A('user', 'manage', qs), page, Math.ceil(total / per), total), btn(AJ('user', 'export') + '?' + new URLSearchParams(qs as any).toString(), 'ייצוא', 'btn-light') + ' ' + btn(A('admin', 'createUser'), 'הוספת משתמש'));
 }
 export async function userEdit(id: number) {
   const u = await db.user.findUnique({ where: { id }, include: { orders: { orderBy: { id: 'desc' }, take: 100 }, credits: { orderBy: { id: 'desc' } }, grants: { include: { product: { select: { id: true, name: true } } }, orderBy: { id: 'desc' } } } });
@@ -160,26 +162,45 @@ export const createUser = () => card('הוספת משתמש', form(AJ('user', 's
 export const profile = (u: any) => card('הפרופיל שלי', form(AJ('admin', 'profile'), fText('email', 'מייל', u.email, 'email') + fText('name', 'שם', u.name) + fText('password', 'סיסמה חדשה (ריק = ללא שינוי)', '', 'password', 'autocomplete="new-password"')));
 
 // ---------- דוחות ----------
-export async function reportDigital(sp: Record<string, string>, csv = false) {
-  const from = sp.from ? new Date(sp.from) : new Date(Date.now() - 30 * 864e5); const to = sp.to ? new Date(sp.to + 'T23:59:59') : new Date();
-  const [sups, vendors] = await Promise.all([db.supplier.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true } }), db.user.findMany({ where: { type: 80 }, select: { id: true, name: true, email: true } })]);
-  const pWhere: any = {}; if (sp.sup) pWhere.suppliers = { some: { supplierId: +sp.sup } }; if (sp.vendor) pWhere.vendorUserId = +sp.vendor;
-  const pIds = sp.sup || sp.vendor ? (await db.product.findMany({ where: pWhere, select: { id: true } })).map((p) => p.id) : null;
-  const logs = await db.downloadLog.groupBy({ by: ['productId'], where: { createdAt: { gte: from, lte: to }, ...(pIds ? { productId: { in: pIds } } : {}) }, _count: { _all: true } });
-  const users = await db.downloadLog.groupBy({ by: ['productId', 'userId'], where: { createdAt: { gte: from, lte: to }, ...(pIds ? { productId: { in: pIds } } : {}) } });
-  const prods = await db.product.findMany({ where: { id: { in: logs.map((l) => l.productId) } }, select: { id: true, name: true, suppliers: { select: { supplier: { select: { name: true } } } } } });
-  const uniq = new Map<number, number>(); for (const u of users) uniq.set(u.productId, (uniq.get(u.productId) || 0) + 1);
-  const rows = logs.map((l) => { const p = prods.find((x) => x.id === l.productId); return { id: l.productId, name: p?.name || '', sup: p?.suppliers.map((s) => s.supplier.name).join(', ') || '', n: l._count._all, u: uniq.get(l.productId) || 0 }; }).sort((a, b) => b.n - a.n);
-  if (csv) return '﻿מזהה,מוצר,יצרן,הורדות,משתמשים ייחודיים\n' + rows.map((r) => [r.id, r.name, r.sup, r.n, r.u].map((x) => `"${String(x).replace(/"/g, '""')}"`).join(',')).join('\n');
-  const iso = (d: Date) => d.toISOString().slice(0, 10);
-  const q = { from: iso(from), to: iso(to), sup: sp.sup, vendor: sp.vendor };
-  return card('דוח קבצים דיגיטליים', filterBar('ProductsDigitalDownloads', 'pdd_statistics', fcol('from', 'מתאריך', iso(from), 'date') + fcol('to', 'עד תאריך', iso(to), 'date') + fcolSel('sup', 'יצרן', sp.sup, sups.map((s) => [s.id, s.name]), 'col-12 col-md-3') + fcolSel('vendor', 'משתמש ספק', sp.vendor, vendors.map((v) => [v.id, v.name || v.email]))) +
-    `<p>סה״כ הורדות: <b>${rows.reduce((s, r) => s + r.n, 0)}</b> · מוצרים: ${rows.length}</p>` + table(['מזהה', 'מוצר', 'יצרן', 'הורדות', 'משתמשים ייחודיים'], rows.map((r) => [String(r.id), esc(r.name), esc(r.sup), String(r.n), String(r.u)])),
-    btn(AJ('ProductsDigitalDownloads', 'export') + '?' + new URLSearchParams(Object.fromEntries(Object.entries(q).filter(([, v]) => v)) as any).toString(), 'ייצוא Excel (CSV)', 'btn-light') + '<button class="btn btn-sm btn-light" onclick="print()">PDF / הדפסה</button>');
+// A46 – same as the legacy report: every PAID line of a digital album (download / album + download) of a manufacturer
+// or a vendor user, by payment date – the basis for artists' royalties. "תצוגה" shows the lines; ticked lines are left out of the PDF / Excel.
+export async function digitalSales(sp: Record<string, string>) {
+  const vendors = String(sp.vendor || '').split(',').map(Number).filter((n) => n > 0);
+  const pWhere: any = {}; if (+sp.sup) pWhere.suppliers = { some: { supplierId: +sp.sup } }; if (vendors.length) pWhere.vendorUserId = { in: vendors };
+  const paid: any = {}; if (sp.from) paid.gte = new Date(sp.from); if (sp.to) paid.lte = new Date(sp.to + 'T23:59:59');
+  const ex = new Set(String(sp.ex || '').split(',').map(Number).filter((n) => n > 0));
+  const items = await db.orderItem.findMany({
+    where: { mode: { in: ['digital', 'both'] }, order: { paymentStatus: 'completed', deleted: false, isTest: false, ...(sp.from || sp.to ? { paidAt: paid } : {}) }, ...(+sp.sup || vendors.length ? { product: pWhere } : {}) },
+    include: { order: { select: { id: true, orderNumber: true, paidAt: true } }, product: { select: { id: true, sku: true } } }, orderBy: { order: { paidAt: 'asc' } }, take: 20000,
+  });
+  return items.map((i) => ({ line: i.id, name: i.name, id: i.productId || 0, sku: i.product?.sku || i.sku, qty: i.quantity, price: Number(i.price), paidAt: i.order.paidAt, order: i.order.orderNumber || String(i.order.id), orderId: i.order.id, excluded: ex.has(i.id) }));
+}
+export async function reportDigital(sp: Record<string, string>, fmt: '' | 'csv' | 'print' = '') {
+  const rows = await digitalSales(sp);
+  const keep = rows.filter((r) => !r.excluded);
+  const d = (x: Date | null) => (x ? new Date(x).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' }).replace(',', '') : '');
+  const sum = keep.reduce((a, r) => a + r.price * r.qty, 0), qty = keep.reduce((a, r) => a + r.qty, 0);
+  if (fmt === 'csv') return '\ufeffשם,id,מק"ט,כמות,מחיר,תאריך תשלום,מספר הזמנה\n' + keep.map((r) => [r.name, r.id, r.sku, r.qty, r.price.toFixed(2), d(r.paidAt), r.order].map((x) => `"${String(x).replace(/"/g, '""')}"`).join(',')).join('\n') + `\n"סה""כ",,,${qty},${sum.toFixed(2)},,`;
+  const sup = +sp.sup ? (await db.supplier.findUnique({ where: { id: +sp.sup }, select: { name: true } }))?.name || '' : '';
+  const head = `<tr><th>שם</th><th>id</th><th>מק"ט</th><th>כמות</th><th>מחיר</th><th>תאריך תשלום</th><th>מספר הזמנה</th></tr>`;
+  const line = (r: any) => `<td>${esc(r.name)}</td><td>${r.id || ''}</td><td dir="ltr">${esc(r.sku)}</td><td>${r.qty}</td><td>${r.price.toFixed(2)}</td><td>${d(r.paidAt)}</td><td dir="ltr">${esc(r.order)}</td>`;
+  if (fmt === 'print') return `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>קבצים דיגיטליים${sup ? ' – ' + esc(sup) : ''}</title><style>body{font-family:Arial,sans-serif;margin:24px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #ccc;padding:5px 7px;text-align:right}th{background:#f2f2f2}h1{font-size:18px}</style></head><body onload="print()"><h1>קבצים דיגיטליים${sup ? ' – ' + esc(sup) : ''}</h1><p>${sp.from ? 'מתאריך ' + esc(sp.from) + ' ' : ''}${sp.to ? 'עד תאריך ' + esc(sp.to) : ''}</p><table><thead>${head}</thead><tbody>${keep.map((r) => '<tr>' + line(r) + '</tr>').join('')}<tr><th>סה"כ</th><th></th><th></th><th>${qty}</th><th>${sum.toFixed(2)}</th><th></th><th></th></tr></tbody></table></body></html>`;
+  const [sups, vendorUsers] = await Promise.all([db.supplier.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true } }), db.user.findMany({ where: { type: 80 }, select: { id: true, name: true, email: true }, orderBy: { name: 'asc' } })]);
+  const vSel = new Set(String(sp.vendor || '').split(','));
+  const show = sp.show === '1';
+  const tbl = show ? `<div class="mb-2 small text-muted">${rows.length} שורות · סה"כ ${qty} יח' · ${shekel(sum)}. שורה מסומנת לא תיכלל בקובץ.</div><div class="table-responsive"><table class="table table-sm table-hover align-middle"><thead><tr><th><input type="checkbox" class="form-check-input" data-exclude-all title="סימון הכל"></th>${head.slice(4)}</thead><tbody>${rows.map((r) => `<tr><td><input type="checkbox" class="form-check-input" data-exclude-row value="${r.line}"${r.excluded ? ' checked' : ''}></td>${line(r).replace(`<td>${esc(r.name)}</td>`, `<td><a href="${A('orders', 'view', { id: r.orderId })}">${esc(r.name)}</a></td>`)}</tr>`).join('')}</tbody></table></div>` : '';
+  const f = `<form method="get" action="${AJ('ProductsDigitalDownloads', 'export')}" target="_blank" data-digital-report>
+<div class="row mb-3"><label class="col-md-2 col-form-label">מתאריך:</label><div class="col-md-4"><input type="date" class="form-control" name="from" value="${esc(sp.from || '')}"></div></div>
+<div class="row mb-3"><label class="col-md-2 col-form-label">עד תאריך:</label><div class="col-md-4"><input type="date" class="form-control" name="to" value="${esc(sp.to || '')}"></div></div>
+<div class="row mb-3"><label class="col-md-2 col-form-label">יצרן:</label><div class="col-md-4"><select class="form-select" name="sup"><option value="0">בחר</option>${sups.map((s) => `<option value="${s.id}"${+sp.sup === s.id ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}</select></div></div>
+<div class="row mb-3"><label class="col-md-2 col-form-label">משתמש ספק:</label><div class="col-md-4"><select class="form-select" name="vendor" multiple size="4">${vendorUsers.map((v) => `<option value="${v.id}"${vSel.has(String(v.id)) ? ' selected' : ''}>${esc(v.name || v.email)}</option>`).join('')}</select></div></div>
+<input type="hidden" name="ex" value="${esc(sp.ex || '')}"><hr><div class="text-center"><label class="form-check-label"><input type="checkbox" class="form-check-input" data-digital-show${show ? ' checked' : ''}> &nbsp;תצוגה</label></div>${tbl}<hr>
+<div class="row"><div class="col-md-2"></div><div class="col-md-10 d-flex gap-2"><button class="btn btn-primary" name="format" value="print">Pdf</button><button class="btn btn-primary" name="format" value="csv">Excel</button></div></div></form>`;
+  return card('קבצים דיגיטליים', f);
 }
 export async function reportSearches() {
-  const rows = await db.searchLog.groupBy({ by: ['term'], _sum: { count: true }, _max: { createdAt: true }, orderBy: { _sum: { count: 'desc' } }, take: 2000 });
-  return card('חיפושים באתר', table(['מילה', 'כמות', 'חיפוש אחרון'], rows.map((r) => [esc(r.term), String(r._sum.count || 0), dt(r._max.createdAt)])));
+  const rows = await db.searchLog.groupBy({ by: ['term'], where: { createdAt: { gte: new Date(Date.now() - 92 * 864e5) } }, _sum: { count: true }, _max: { createdAt: true }, orderBy: { _sum: { count: 'desc' } }, take: 2000 });
+  return card('שאילתות חיפוש באתר - 3 חודשים אחרונים', table(['שם', 'כמות', 'חיפוש אחרון'], rows.map((r) => [esc(r.term), String(r._sum.count || 0), dt(r._max.createdAt)])));
 }
 export async function reportWishlist() {
   const rows = await db.wishlist.groupBy({ by: ['productId'], _count: { _all: true }, orderBy: { _count: { productId: 'desc' } }, take: 1000 });
@@ -187,25 +208,46 @@ export async function reportWishlist() {
   return card('רשימת משאלות', table(['מוצר', 'כמות'], rows.map((r) => [`<a href="${A('products', 'edit', { id: r.productId })}">${esc(ps.find((p) => p.id === r.productId)?.name || r.productId)}</a>`, String(r._count._all)])));
 }
 export async function reportOrderStats(sp: Record<string, string>) {
-  const rows = await db.orderItem.groupBy({ by: ['productId', 'name'], where: { order: { paymentStatus: 'completed', deleted: false } }, _sum: { quantity: true }, orderBy: { _sum: { quantity: 'desc' } }, take: 300 });
+  const since = new Date(Date.now() - 92 * 864e5); // legacy: the best sellers of the last 3 months
+  const rows = await db.orderItem.groupBy({ by: ['productId', 'name'], where: { order: { paymentStatus: 'completed', deleted: false, paidAt: { gte: since } } }, _sum: { quantity: true }, orderBy: { _sum: { quantity: 'desc' } }, take: 300 });
   const [count, sum] = await Promise.all([db.order.count({ where: { paymentStatus: 'completed', deleted: false } }), db.order.aggregate({ where: { paymentStatus: 'completed', deleted: false }, _sum: { total: true } })]);
-  return card('סטטיסטיקות הזמנות', `<p>הזמנות ששולמו: <b>${count}</b> · מחזור: <b>${shekel(sum._sum.total || 0)}</b></p>` + table(['שם', 'כמות'], rows.map((r) => [r.productId ? `<a href="${A('products', 'edit', { id: r.productId })}">${esc(r.name)}</a>` : esc(r.name), String(r._sum.quantity)])));
+  return card('סטטיסטיקה', `<p>הזמנות ששולמו (סה"כ): <b>${count}</b> · מחזור: <b>${shekel(sum._sum.total || 0)}</b></p><h3 class="h6 mt-3">המוצרים הנמכרים ביותר (3 חודשים אחרונים)</h3>` + table(['שם', 'כמות'], rows.map((r) => [r.productId ? `<a href="${A('products', 'edit', { id: r.productId })}">${esc(r.name)}</a>` : esc(r.name), String(r._sum.quantity)])));
 }
 export async function reportProducts() {
   const stats = await db.productStat.findMany({ orderBy: { views: 'desc' }, take: 300 });
   const ids2 = stats.map((s) => s.productId);
-  const [ps, orders] = await Promise.all([db.product.findMany({ where: { id: { in: ids2 } }, select: { id: true, name: true } }), db.orderItem.groupBy({ by: ['productId'], where: { productId: { in: ids2 } }, _count: { _all: true } })]);
-  const paid = await db.orderItem.groupBy({ by: ['productId'], where: { productId: { in: ids2 }, order: { paymentStatus: 'completed' } }, _sum: { quantity: true } });
-  return card('סטטיסטיקת מוצרים', table(['מוצר', 'צפיות', 'סל', 'משאלות', 'הזמנות', 'רכישות'], stats.map((s) => [esc(ps.find((p) => p.id === s.productId)?.name || s.productId), String(s.views), String(s.carts), String(s.wishes), String(orders.find((o) => o.productId === s.productId)?._count._all || 0), String(paid.find((o) => o.productId === s.productId)?._sum.quantity || 0)])));
+  const [ps, orders, paidLines] = await Promise.all([
+    db.product.findMany({ where: { id: { in: ids2 } }, select: { id: true, name: true, sku: true } }),
+    db.orderItem.groupBy({ by: ['productId'], where: { productId: { in: ids2 } }, _count: { _all: true } }),
+    db.orderItem.findMany({ where: { productId: { in: ids2 }, order: { paymentStatus: 'completed', deleted: false } }, select: { productId: true, quantity: true, price: true } }),
+  ]);
+  const bought = new Map<number, { q: number; t: number }>();
+  for (const l of paidLines) { const b = bought.get(l.productId!) || { q: 0, t: 0 }; b.q += l.quantity; b.t += Number(l.price) * l.quantity; bought.set(l.productId!, b); }
+  // legacy columns; views / cart / wishlist counters are cumulative (the new site counts them from launch)
+  return card('סטטיסטיקת מוצרים', table(['שם המוצר', 'מק"ט', 'צפיות', 'סל קניות', 'רשימת משאלות', 'הזמנות', 'רכישות', 'סה"כ לתשלום'], stats.map((s) => { const p = ps.find((x) => x.id === s.productId); const b = bought.get(s.productId); return [p ? `<a href="${A('products', 'edit', { id: p.id })}">${esc(p.name)}</a>` : String(s.productId), `<span dir="ltr">${esc(p?.sku || '')}</span>`, String(s.views), String(s.carts), String(s.wishes), String(orders.find((o) => o.productId === s.productId)?._count._all || 0), String(b?.q || 0), shekel(b?.t || 0)]; })));
+}
+// A42 – legacy filters: registration, last visit, number of orders, last order; export to Excel (CSV)
+export async function userOrdersRows(sp: Record<string, string>) {
+  const range = (a?: string, b?: string) => (a || b ? { ...(a ? { gte: new Date(a) } : {}), ...(b ? { lte: new Date(b + 'T23:59:59') } : {}) } : undefined);
+  const where: any = {}; const reg = range(sp.reg_from, sp.reg_to); if (reg) where.createdAt = reg; const seen = range(sp.seen_from, sp.seen_to); if (seen) where.lastSeen = seen;
+  const users = await db.user.findMany({ where, orderBy: { id: 'desc' }, select: { id: true, name: true, email: true, createdAt: true, lastSeen: true, _count: { select: { orders: true } }, orders: { orderBy: { id: 'desc' }, take: 1, select: { createdAt: true } } } });
+  const lo = range(sp.last_from, sp.last_to);
+  return users.filter((u) => (sp.n_from === undefined || sp.n_from === '' || u._count.orders >= +sp.n_from) && (sp.n_to === undefined || sp.n_to === '' || u._count.orders <= +sp.n_to) &&
+    (!lo || (u.orders[0] && (!lo.gte || u.orders[0].createdAt >= lo.gte) && (!lo.lte || u.orders[0].createdAt <= lo.lte))));
 }
 export async function reportUserOrders(sp: Record<string, string>) {
   const per = 100; const page = Math.max(1, +sp.page || 1);
-  const [rows, total] = await Promise.all([db.user.findMany({ orderBy: { id: 'desc' }, skip: (page - 1) * per, take: per, include: { _count: { select: { orders: true } }, orders: { orderBy: { id: 'desc' }, take: 1, select: { createdAt: true } } } }), db.user.count()]);
-  return card('הזמנות משתמשים', table(['ID', 'משתמש', 'הרשמה', 'גלישה אחרונה', 'הזמנות', 'הזמנה אחרונה'], rows.map((u) => [String(u.id), `<a href="${A('user', 'edit_user', { id: u.id })}">${esc(u.name || u.email)}</a>`, dt(u.createdAt, false), dt(u.lastSeen), String(u._count.orders), dt(u.orders[0]?.createdAt, false)])) + pager(A('user', 'orders_reports'), page, Math.ceil(total / per), total));
+  const all = await userOrdersRows(sp); const rows = all.slice((page - 1) * per, page * per);
+  const qs = Object.fromEntries(Object.entries(sp).filter(([k, v]) => !['page', 'am', 'ac', 'pam'].includes(k) && v));
+  const filters = filterBar('user', 'orders_reports', fcol('reg_from', 'הרשמה מתאריך', sp.reg_from, 'date') + fcol('reg_to', 'הרשמה עד', sp.reg_to, 'date') + fcol('seen_from', 'גלישה אחרונה מ', sp.seen_from, 'date') + fcol('seen_to', 'גלישה אחרונה עד', sp.seen_to, 'date') +
+    fcol('n_from', 'הזמנות מ', sp.n_from, 'number', 'col-6 col-md-1') + fcol('n_to', 'הזמנות עד', sp.n_to, 'number', 'col-6 col-md-1') + fcol('last_from', 'הזמנה אחרונה מ', sp.last_from, 'date') + fcol('last_to', 'הזמנה אחרונה עד', sp.last_to, 'date'));
+  return card('הזמנות משתמשים', filters + `<div class="mb-2">${btn(AJ('user', 'orders_export') + '?' + new URLSearchParams(qs as any).toString(), 'ייצוא', 'btn-light')} <span class="small text-muted">${all.length} משתמשים</span></div>` +
+    table(['ID', 'משתמש', 'הרשמה', 'גלישה אחרונה', 'הזמנות', 'הזמנה אחרונה'], rows.map((u) => [String(u.id), `<a href="${A('user', 'edit_user', { id: u.id })}">${esc(u.name || u.email)}</a>`, dt(u.createdAt, false), dt(u.lastSeen), String(u._count.orders), dt(u.orders[0]?.createdAt, false)])) +
+    pager(A('user', 'orders_reports', qs), page, Math.ceil(all.length / per), all.length));
 }
 export async function reportCampaigns() {
   const camps = await db.campaign.findMany();
   const rows: string[][] = [];
   for (const c of camps) { if (!c.code) continue; const os = await db.order.findMany({ where: { landingPage: { contains: c.code }, paymentStatus: 'completed' }, take: 200, orderBy: { id: 'desc' } }); for (const o of os) rows.push([esc(c.name), `<a href="${A('orders', 'view', { id: o.id })}">${o.id}</a>`, dt(o.paidAt), shekel(o.total)]); }
-  return card('סטטיסטיקת קמפיינים', `<p class="small text-muted">הזמנות ששולמו שעמוד הנחיתה שלהן מכיל את קוד הקמפיין.</p>` + table(['קמפיין', 'הזמנה', 'תאריך תשלום', 'סכום'], rows));
+  return card('סטטיסטיקה', `<p class="small text-muted">הזמנות ששולמו שעמוד הנחיתה שלהן מכיל את קוד הקמפיין.</p>` + table(['קמפיינים', 'מספר הזמנה', 'תאריך תשלום', 'סה"כ לתשלום'], rows));
 }

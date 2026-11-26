@@ -39,9 +39,9 @@ export async function productsManage(sp: Record<string, string>) {
   const filters = filterBar('products', 'manage', fcol('pid', 'ID', sp.pid, 'number', 'col-4 col-md-1') + fcol('name', 'שם', sp.name) + fcol('sku', 'מק״ט', sp.sku) + fcolSel('cat', 'קטגוריה', sp.cat, cats, 'col-12 col-md-3') +
     fcol('pmin', 'ממחיר', sp.pmin, 'number', 'col-3 col-md-1') + fcol('pmax', 'עד מחיר', sp.pmax, 'number', 'col-3 col-md-1') + fcolSel('status', 'סטטוס', sp.status, STATUS, 'col-6 col-md-1') +
     fcolSel('digital', 'קובץ דיגיטלי', sp.digital, [['1', 'קיים'], ['0', 'חסר']], 'col-6 col-md-1') + fcolSel('sort', 'מיון', sp.sort, [['id', 'חדש'], ['name', 'שם'], ['sort', 'סידור'], ['upd', 'עודכן']], 'col-6 col-md-1'));
-  const quick = `<form data-ajax action="${AJ('products', 'create_quickly')}" class="row g-2 align-items-end mb-3 adm-quick"><div class="col-12 col-md-4"><input class="form-control form-control-sm" name="name" placeholder="שם המוצר החדש" required></div><div class="col-12 col-md-4"><select class="form-select form-select-sm" name="categoryId">${cats.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}</select></div><div class="col-auto"><button class="btn btn-sm btn-success">+ הוספת מוצר מהירה</button></div></form>`;
+  const quick = `<form data-ajax action="${AJ('products', 'create_quickly')}" class="row g-2 align-items-end mb-3 adm-quick"><div class="col-12 col-md-4"><input class="form-control form-control-sm" name="name" placeholder="שם המוצר החדש" required></div><div class="col-12 col-md-4"><select class="form-select form-select-sm" name="categoryId">${cats.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}</select></div><div class="col-auto"><button class="btn btn-sm btn-success">הוספת מוצר</button></div></form>`;
   const qs = Object.fromEntries(Object.entries(sp).filter(([k]) => k !== 'page' && k !== 'am' && k !== 'ac'));
-  const body = quick + filters + table(['ID', '', 'שם', 'קטגוריה', 'מחיר', 'סטטוס', 'מק״ט', 'סידור', 'דף הבית', ''], rows.map((p) => [
+  const body = quick + filters + table(['ID', '', 'שם המוצר', 'קטגוריה', 'מחיר', 'סטטוס', 'מק"ט', 'סידור', 'הצג בדף הבית', 'פעולות'], rows.map((p) => [
     String(p.id), p.mainImage ? `<img src="${esc(p.mainImage)}" class="adm-thumb-sm" alt="" loading="lazy">` : '',
     `<a href="${A('products', 'edit', { id: p.id })}">${esc(p.name)}</a>${p.isSet ? ' ' + badge('מארז', 'info') : ''}${p.digitalFile ? ' ' + badge('קובץ', 'success') : ''}`,
     esc(p.categories[0]?.category.name || ''), fromPrice(p), p.status === 1 ? badge('מפורסם', 'success') : badge('לא מפורסם'), esc(p.sku),
@@ -208,11 +208,19 @@ export async function categoryEdit(id: number | null) {
   const c: any = !isNew ? await db.category.findUnique({ where: { id } }) : { filterPrice: true, filterSupplier: true, bundlesFirst: true, robots: 'all' };
   if (!c) return card('עריכת קטגוריה', 'לא נמצא');
   const cats = await catOpts();
-  const inner = (!isNew ? '' : fText('id', 'מזהה (ID)', '', 'number', 'required')) + fText('name', 'שם *', c.name, 'text', 'required') + (id === 0 ? '' : fSelect('parentId', 'קטגוריית אב', c.parentId ?? '', [['', '— ראשי (ללא הורה) —'], ...cats.filter(([k]) => +k !== id)])) +
+  // same tabs as the legacy "ניהול קטגוריה" screen: כללי · תמונות · SEO · הגדרות עיצוביות · פילטרים · שונות
+  const general = (!isNew ? '' : fText('id', 'מזהה (ID)', '', 'number', 'required')) + fText('name', 'שם *', c.name, 'text', 'required') + (id === 0 ? '' : fSelect('parentId', 'קטגוריית אב', c.parentId ?? '', [['', '— ראשי (ללא הורה) —'], ...cats.filter(([k]) => +k !== id)])) +
     fArea('content', 'תיאור', c.content, 8, true) + fArea('shortContent', 'תיאור מקוצר', c.shortContent, 3) + fSelect('productsOrder', 'סדר מוצרים', c.productsOrder, ORDERS) +
-    `<div class="row"><div class="col-md-4">${fBool('showInMenu', 'הצג בתפריט', c.showInMenu)}${fBool('hideChildCats', 'הסתר מוצרים של קטגוריות משנה', c.hideChildCats)}${fBool('closed', 'נעול', c.closed)}</div><div class="col-md-4">${fBool('bundlesFirst', 'מארזים לפני מוצרים בודדים', c.bundlesFirst)}${fBool('filterPrice', 'פילטר מחיר', c.filterPrice)}${fBool('filterSupplier', 'פילטר יצרן', c.filterSupplier)}</div></div>` +
-    fText('url', 'קישור', c.url) + `<div class="row"><div class="col-md-4">${fText('profit', 'רווח', c.profit)}</div><div class="col-md-4">${fText('oldId', 'old id', c.oldId)}</div><div class="col-md-4">${fText('sort', 'סדר', c.sort ?? 0, 'number')}</div></div>` +
-    fImage('image', 'תמונה', c.image, 'media/categories') + fImage('topImage', 'תמונה עליונה', c.topImage, 'media/categories') + fArea('header', 'header', c.header, 3) + '<h5 class="mt-4 border-top pt-3">SEO</h5>' + seoFields(c);
+    `<div class="row"><div class="col-md-4">${fBool('showInMenu', 'הצג בתפריט', c.showInMenu)}${fBool('hideChildCats', 'הסתר מוצרים של קטגוריות משנה', c.hideChildCats)}${fBool('closed', 'נעול', c.closed)}</div><div class="col-md-4">${fBool('bundlesFirst', 'מארזים לפני מוצרים בודדים', c.bundlesFirst)}</div></div>` +
+    fText('url', 'קישור', c.url) + `<div class="row"><div class="col-md-4">${fText('profit', 'רווח', c.profit)}</div><div class="col-md-4">${fText('oldId', 'cat old id', c.oldId)}</div><div class="col-md-4">${fText('sort', 'סדר', c.sort ?? 0, 'number')}</div></div>`;
+  const inner = tabs('cat', [
+    ['general', 'כללי', general],
+    ['images', 'תמונות', fImage('image', 'תמונה ראשית', c.image, 'media/categories')],
+    ['seo', 'SEO', seoFields(c)],
+    ['design', 'הגדרות עיצוביות', fImage('topImage', 'תמונה עליונה', c.topImage, 'media/categories')],
+    ['filters', 'פילטרים', fBool('filterPrice', 'מחיר', c.filterPrice) + fBool('filterSupplier', 'יצרן', c.filterSupplier)],
+    ['misc', 'שונות', fArea('header', 'header', c.header, 3)],
+  ]);
   return card(!isNew ? `עריכת קטגוריה #${id} · ${esc(c.name)}` : 'הוספת קטגוריה', form(AJ('products', 'save_cat', isNew ? 'new' : id), inner), btn(A('products', 'manage_cat'), 'חזרה', 'btn-light') + (!isNew ? btn(A('products', 'cat_items', { id }), 'סידור פריטים', 'btn-light') : ''));
 }
 export async function categorySave(id: number | null, f: FormData) {
@@ -259,8 +267,8 @@ export async function supplierItemsSave(id: number, f: FormData) {
 export async function setsManage(sp: Record<string, string>) {
   const where: any = { isSet: true, status: { gte: 0 } }; if (sp.q) where.name = { contains: sp.q, mode: 'insensitive' };
   const [rows, cats] = await Promise.all([db.product.findMany({ where, orderBy: { id: 'desc' }, include: { bundleItems: { select: { productId: true } } } }), catOpts()]);
-  const create = `<form data-ajax action="${AJ('ProductsSets', 'create')}" class="row g-2 align-items-end mb-3"><div class="col-md-4"><input class="form-control form-control-sm" name="name" placeholder="שם המארז" required></div><div class="col-md-4"><select class="form-select form-select-sm" name="categoryId">${cats.map(([k, l]) => `<option value="${k}"${+k === 61 ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></div><div class="col-auto"><button class="btn btn-sm btn-success">+ יצירת סט</button></div></form>`;
-  return card(`ניהול סט מוצרים (${rows.length})`, create + table(['ID', 'שם', 'רכיבים', 'קובץ עצמי', ''], rows.map((p) => [String(p.id), esc(p.name), String(p.bundleItems.length), p.digitalFile ? '✓' : '', `<div class="d-flex gap-1">${btn(A('ProductsSets', 'manage_rels', { id: p.id }), 'מוצרים', 'btn-light-primary')}${btn(A('products', 'edit', { id: p.id }), 'עריכה', 'btn-light')}</div>`])));
+  const create = `<form data-ajax action="${AJ('ProductsSets', 'create')}" class="row g-2 align-items-end mb-3"><div class="col-md-4"><input class="form-control form-control-sm" name="name" placeholder="שם המארז" required></div><div class="col-md-4"><select class="form-select form-select-sm" name="categoryId">${cats.map(([k, l]) => `<option value="${k}"${+k === 61 ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></div><div class="col-auto"><button class="btn btn-sm btn-success">הוספת מוצר</button></div></form>`;
+  return card(`ניהול סט מוצרים (${rows.length})`, create + table(['ID', 'שם', 'רכיבים', 'קובץ עצמי', 'פעולות'], rows.map((p) => [String(p.id), esc(p.name), String(p.bundleItems.length), p.digitalFile ? '✓' : '', `<div class="d-flex gap-1">${btn(A('ProductsSets', 'manage_rels', { id: p.id }), 'מוצרים', 'btn-light-primary')}${btn(A('products', 'edit', { id: p.id }), 'עריכה', 'btn-light')}</div>`])));
 }
 export async function setRels(id: number) {
   const p = await db.product.findUnique({ where: { id }, include: { bundleItems: { orderBy: { sort: 'asc' }, include: { product: { select: { id: true, name: true, digitalFile: true } } } } } });
@@ -291,11 +299,11 @@ export async function inventory(sp: Record<string, string>) {
 }
 export async function inventoryV() {
   const rows = await db.product.findMany({ where: { variations: { some: {} } }, include: { variations: true }, orderBy: { id: 'desc' } });
-  return card(`מלאי וריאציות (${rows.length})`, table(['מוצר', 'וריאציות', 'כמות', ''], rows.map((p) => [esc(p.name), p.variations.map((v) => `${esc(v.group)}: ${esc(v.value)}`).join('<br>'), p.variations.map((v) => v.quantity ?? '—').join('<br>'), btn(A('products', 'edit', { id: p.id }) + '#vars', 'לשונית וריאציות', 'btn-light')])));
+  return card(`מלאי (${rows.length})`, table(['שם המוצר', 'וריאציות', 'כמות', 'פעולות'], rows.map((p) => [esc(p.name), p.variations.map((v) => `${esc(v.group)}: ${esc(v.value)}`).join('<br>'), p.variations.map((v) => v.quantity ?? '—').join('<br>'), btn(A('products', 'edit', { id: p.id }) + '#vars', 'לשונית וריאציות', 'btn-light')])));
 }
 export async function recycleBin() {
   const rows = await db.product.findMany({ where: { status: -1 }, orderBy: { updatedAt: 'desc' } });
-  return card(`סל מחזור (${rows.length})`, table(['ID', 'שם', 'מחיר', 'מק״ט', ''], rows.map((p) => [String(p.id), esc(p.name), fromPrice(p), esc(p.sku), `<div class="d-flex gap-1">${actBtn(AJ('products', 'restore', p.id), 'שחזור', '', 'btn-light-primary')}</div>`])),
+  return card(`סל מחזור (${rows.length})`, table(['ID', 'שם המוצר', 'מחיר', 'מק"ט', 'פעולות'], rows.map((p) => [String(p.id), esc(p.name), fromPrice(p), esc(p.sku), `<div class="d-flex gap-1">${actBtn(AJ('products', 'restore', p.id), 'שחזור', '', 'btn-light-primary')}</div>`])),
     rows.length ? '<span class="text-muted small">מחיקה לצמיתות אינה זמינה כדי לשמור על היסטוריית הזמנות ו־SEO</span>' : '');
 }
 export async function bulkPrice(sp: Record<string, string>) {
@@ -344,7 +352,7 @@ export async function propLists() {
   const listForm = (l: any) => card(esc(l.name), `<form data-ajax action="${AJ('ProductProperties', 'save_list', l.id)}">${fText('name', 'שם הרשימה', l.name)}<div data-rows="g${l.id}">${l.groups.map((g: any) => groupRow(g)).join('')}</div><template data-tpl="g${l.id}">${groupRow({ name: '', alias: '', kind: 'select', required: false, items: [] })}</template><button type="button" class="btn btn-sm btn-light" data-add-row="g${l.id}">+ קבוצה</button><div class="adm-savebar"><button class="btn btn-primary">שמירה</button></div></form>`, actBtn(AJ('ProductProperties', 'delete_list', l.id), 'הסרה', 'להסיר את הרשימה?'));
   const groupRow = (g: any) => `<div class="border rounded p-2 mb-2" data-row><div class="row g-2"><div class="col-md-3"><input class="form-control form-control-sm" name="g_name" value="${esc(g.name)}" placeholder="שם קבוצה"></div><div class="col-md-2"><input class="form-control form-control-sm" name="g_alias" value="${esc(g.alias)}" placeholder="alias"></div><div class="col-md-2"><select class="form-select form-select-sm" name="g_kind">${[['text', 'טקסט'], ['select', 'בחירה'], ['multi', 'בחירה מרובה']].map(([k, l]) => `<option value="${k}"${g.kind === k ? ' selected' : ''}>${l}</option>`).join('')}</select></div><div class="col-md-2"><select class="form-select form-select-sm" name="g_required"><option value="0">לא חובה</option><option value="1"${g.required ? ' selected' : ''}>חובה</option></select></div><div class="col-md-3 text-end"><button type="button" class="btn btn-sm btn-light-danger" data-remove-row>מחיקת קבוצה</button></div></div>
     <textarea class="form-control form-control-sm mt-2" name="g_items" rows="3" placeholder="פריט|מחיר|ברירת מחדל(1) – שורה לכל פריט">${esc(g.items.map((i: any) => `${i.name}|${Number(i.price)}${i.isDefault ? '|1' : ''}`).join('\n'))}</textarea></div>`;
-  return `<div class="mb-3"><form data-ajax action="${AJ('ProductProperties', 'save_list', 0)}" class="d-flex gap-2"><input class="form-control form-control-sm" style="max-width:280px" name="name" placeholder="שם רשימה חדשה" required><button class="btn btn-sm btn-success">+ הוספת רשימה</button></form></div>` + (lists.map(listForm).join('') || card('תכונות מוצר', '<p class="text-muted">אין רשימות עדיין.</p>'));
+  return `<h1 class="h4 mb-3">רשימת תכונות מוצר</h1><div class="mb-3"><form data-ajax action="${AJ('ProductProperties', 'save_list', 0)}" class="d-flex gap-2"><input class="form-control form-control-sm" style="max-width:280px" name="name" placeholder="שם רשימה חדשה" required><button class="btn btn-sm btn-success">הוספה</button></form></div>` + (lists.map(listForm).join('') || card('תכונות מוצר', '<p class="text-muted">אין רשימות עדיין.</p>'));
 }
 export async function propListSave(id: number, f: FormData) {
   const name = str(f.get('name')); if (!name) return { status: 'error', message: 'שם חובה' };
