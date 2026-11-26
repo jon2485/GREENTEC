@@ -1,6 +1,7 @@
 #!/bin/bash
 cd /home/claude/gt-test && set -a; . ./.env.local; set +a
 export CHROME_PATH=/usr/bin/google-chrome BASE_URL=http://localhost:3100 STAGING_BASE_URL=http://localhost:3101 SHOWCASE_TOKEN=e2e-showcase-token-0123456789abcdefXYZ PROD_BASE_URL=http://localhost:3102
+psql "$DATABASE_URL" -q -f /home/claude/greentec/tools/e2e-local/fixtures.sql >/dev/null
 timeout 1200 npx playwright test --reporter=json "$@" 2>/dev/null > /tmp/pw.json
 python3 - <<'PY'
 import json,re

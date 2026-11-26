@@ -1,4 +1,4 @@
-import { test, expect, db, open, clean, productUrl } from './helpers';
+import { test, expect, db, open, clean, productUrl, enc } from './helpers';
 
 test.describe('דף הבית וניווט', () => {
   test('דף הבית נטען בלי שגיאות, עם סליידר ומוצרים', async ({ page, watch }) => {
@@ -191,5 +191,27 @@ test.describe('מובייל', () => {
       const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(over, `horizontal overflow on ${decodeURIComponent(u)}`).toBeLessThanOrEqual(1);
     }
+  });
+});
+
+test.describe('רשת איטית', () => {
+  // On a slow connection React used to hydrate a half-loaded page (error #418), rebuild it on the client and
+  // leave the template scripts' buttons/carousels bound to detached elements.
+  test('עמוד מוצר ועמוד תוכן ברשת איטית: בלי שגיאת hydration והכפתורים עובדים', async ({ page, context, watch }) => {
+    test.setTimeout(180_000);
+    const p = await db.product.findFirst({ where: { status: 1, quantity: null, digitalPrice: { gt: 0 } }, orderBy: { id: 'desc' } });
+    const urls = ['/' + enc('אודות'), productUrl(p!.urlPath)];
+    for (const u of urls) await page.goto(u); // warm the JS cache, as for a returning visitor
+    const cdp = await context.newCDPSession(page);
+    await cdp.send('Network.enable');
+    await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 40, downloadThroughput: 40 * 1024, uploadThroughput: 40 * 1024 });
+    watch.jsErrors.length = 0;
+    for (const u of urls) { await page.goto(u, { timeout: 90_000 }); await page.waitForTimeout(1500); }
+    expect(watch.jsErrors, 'JS errors on a slow connection').toEqual([]);
+    await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
+    const add = page.locator('.pp-addbtn').first();
+    const req = page.waitForRequest((r) => r.url().includes('/api/cart') && r.method() === 'POST', { timeout: 10_000 });
+    await add.click();
+    await req;
   });
 });
