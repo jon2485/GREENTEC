@@ -84,6 +84,21 @@ test.describe('ייבוא משתמשים והזמנות מהאתר הישן', ()
       await r1.locator('a', { hasText: 'צפייה' }).click();
       await expect(page.locator(`a.dl-btn[href="/api/download/${prod!.id}"]`)).toHaveCount(1);
 
+      // purchase type from the legacy supplier view: not "[מוצר דיגיטלי]" → physical copy, the download right goes;
+      // a later re-import keeps the confirmed type; marked again → digital and the right is back
+      const line = { o: O1, n: prod!.name, q: 1, p: Number(prod!.digitalPrice) };
+      const dry = await (await post('lineModes', [{ ...line, d: 0 }], true)).json();
+      expect(dry.preview[0]).toEqual({ 'digital→physical': 1 });
+      await post('lineModes', [{ ...line, d: 0 }]);
+      expect((await db.orderItem.findFirst({ where: { orderId: O1 } }))?.mode).toBe('physical');
+      expect(await db.downloadGrant.count({ where: { userId: u!.id, productId: prod!.id } })).toBe(0);
+      await post('orders', [order(O1, L2, 'הסתיים', 'הרכישה הדיגיטלית הושלמה!', [{ pid: prod!.id, name: prod!.name, price: Number(prod!.digitalPrice) }])]);
+      expect((await db.orderItem.findFirst({ where: { orderId: O1 } }))?.mode).toBe('physical');
+      await post('lineModes', [{ ...line, d: 1 }]);
+      expect((await db.orderItem.findFirst({ where: { orderId: O1 } }))?.mode).toBe('digital');
+      expect(await db.downloadGrant.count({ where: { userId: u!.id, productId: prod!.id } })).toBe(1);
+      expect((await db.orderItem.findFirst({ where: { orderId: O1 } }))?.supplierStatus).toBe(true);
+
       // the totals endpoint answers with counts only
       const sum = await (await request.get('/api/migrate/personal?what=summary', { headers: { 'x-migration-token': TOKEN } })).json();
       expect(sum.orders).toBeGreaterThanOrEqual(3);

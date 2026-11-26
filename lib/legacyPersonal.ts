@@ -5,7 +5,7 @@
 import { db } from './db';
 import { grantForOrder } from './orders';
 
-export type Kind = 'users' | 'orders' | 'carts' | 'supplierPaid';
+export type Kind = 'users' | 'orders' | 'carts' | 'supplierPaid' | 'lineModes';
 export type Report = { created: number; updated: number; skipped: number; failed: number; reasons: Record<string, number>; notes: string[] };
 export const emptyReport = (): Report => ({ created: 0, updated: 0, skipped: 0, failed: 0, reasons: {}, notes: [] });
 const why = (r: Report, reason: string) => { r.reasons[reason] = (r.reasons[reason] || 0) + 1; };
@@ -223,7 +223,7 @@ export async function importOrders(recs: any[], dry = false) {
       };
       if (existing) { await db.order.update({ where: { id: o.id }, data }); r.updated++; } else { await db.order.create({ data: { id: o.id, ...data } }); r.created++; }
       // re-import keeps what the new site added to the lines: the legacy line id and the "שולם לספק" tick
-      const before = await db.orderItem.findMany({ where: { orderId: o.id }, orderBy: { id: 'asc' }, select: { legacyItemId: true, supplierStatus: true, productId: true, price: true, quantity: true } });
+      const before = await db.orderItem.findMany({ where: { orderId: o.id }, orderBy: { id: 'asc' }, select: { legacyItemId: true, supplierStatus: true, productId: true, price: true, quantity: true, mode: true, modeLocked: true } });
       const lineKey = (x: any) => `${x.productId ?? ''}|${Number(x.price).toFixed(2)}|${x.quantity}`;
       const byId = new Map(before.filter((b) => b.legacyItemId).map((b) => [b.legacyItemId, b]));
       const byKey = new Map<string, typeof before>(); for (const b of before) { const k = lineKey(b); byKey.set(k, [...(byKey.get(k) || []), b]); }
@@ -231,7 +231,8 @@ export async function importOrders(recs: any[], dry = false) {
         let old = i.legacyItemId ? byId.get(i.legacyItemId) : undefined;
         if (!old) { const list = byKey.get(lineKey(i)); old = list?.shift(); }
         const legacyItemId = i.legacyItemId ?? old?.legacyItemId ?? null;
-        return { orderId: o.id!, legacyItemId, lineStatus: i.lineStatus || '', productId: i.productId, name: i.name, sku: i.sku, mode: i.mode, quantity: i.quantity, origPrice: i.origPrice, price: i.price, exists: i.exists || !i.legacyProductId,
+        const lock = !!old?.modeLocked && old.productId === i.productId;
+        return { orderId: o.id!, legacyItemId, lineStatus: i.lineStatus || '', productId: i.productId, name: i.name, sku: i.sku, mode: lock ? old!.mode : i.mode, modeLocked: lock, quantity: i.quantity, origPrice: i.origPrice, price: i.price, exists: i.exists || !i.legacyProductId,
           supplierStatus: !!old?.supplierStatus || (!!legacyItemId && supplierPaid.has(legacyItemId)) };
       });
       await db.$transaction([db.orderItem.deleteMany({ where: { orderId: o.id } }), db.orderItem.createMany({ data: rows })]);
@@ -319,4 +320,39 @@ export async function importSupplierPaid(recs: any[], dry = false) {
   for (const [id, li] of setId) await db.orderItem.update({ where: { id }, data: { legacyItemId: li } });
   r.created = tick.length; // newly ticked lines
   return { report: r, preview: [] };
+}
+
+// ---------------- purchase type from the legacy supplier view ----------------
+// /user/profile → "רכישות למוצרים שלי" marks every download line "[מוצר דיגיטלי]" – the only place the legacy site states
+// the purchase type of a line. records: {o: order id, n: product name as shown, q, p, d: 1 = "[מוצר דיגיטלי]"}.
+// Not marked = a physical copy (a line with "כולל מוצר פיזי" stays album + download). Dry run → how the inference did.
+export async function importLineModes(recs: any[], dry = false) {
+  const r = emptyReport(); const conf: Record<string, number> = {};
+  const orderIds = [...new Set(recs.map((x) => int(x?.o)).filter((n): n is number => !!n))];
+  const items = await db.orderItem.findMany({ where: { orderId: { in: orderIds } }, orderBy: { id: 'asc' }, select: { id: true, orderId: true, name: true, price: true, quantity: true, mode: true, productId: true, product: { select: { name: true } }, order: { select: { userId: true, paymentStatus: true } } } });
+  const byOrder = new Map<number, typeof items>(); for (const it of items) byOrder.set(it.orderId, [...(byOrder.get(it.orderId) || []), it]);
+  const used = new Set<number>(); const changes: { it: (typeof items)[number]; mode: string }[] = [];
+  for (const x of recs) {
+    const o = int(x?.o), q = int(x?.q) || 1, p = num(x?.p), n = nameKey(x?.n);
+    const free = ((o && byOrder.get(o)) || []).filter((it) => !used.has(it.id));
+    const same = (it: any) => nameKey(it.name) === n || nameKey(it.product?.name) === n;
+    const hit = free.find((it) => same(it) && it.quantity === q && p !== null && Math.abs(Number(it.price) - p) < 0.01) || free.find(same);
+    if (!hit) { r.skipped++; why(r, o && byOrder.get(o) ? 'לא נמצאה שורה תואמת בהזמנה' : 'ההזמנה לא קיימת באתר החדש'); continue; }
+    used.add(hit.id);
+    const truth = x?.d ? 'digital' : hit.mode === 'both' ? 'both' : 'physical';
+    conf[`${hit.mode || '?'}→${truth}`] = (conf[`${hit.mode || '?'}→${truth}`] || 0) + 1;
+    changes.push({ it: hit, mode: truth });
+  }
+  if (dry) return { report: r, preview: [conf] };
+  for (const { it, mode } of changes) {
+    await db.orderItem.update({ where: { id: it.id }, data: { mode, modeLocked: true } });
+    if (mode !== it.mode) { r.updated++; if (it.order.userId && it.productId && it.order.paymentStatus === 'completed') { if (mode === 'physical') await revokeIfOrphan(it.order.userId, it.productId); else await grantForOrder(it.orderId); } }
+    else r.created++; // confirmed as it was
+  }
+  return { report: r, preview: [conf] };
+}
+async function revokeIfOrphan(userId: number, productId: number) {
+  const still = await db.orderItem.count({ where: { productId, mode: { in: ['digital', 'both'] }, order: { userId, paymentStatus: 'completed', deleted: false } } });
+  const p = await db.product.findUnique({ where: { id: productId }, select: { onlyDigital: true } });
+  if (!still && !p?.onlyDigital) await db.downloadGrant.deleteMany({ where: { userId, productId, orderId: { not: null } } });
 }

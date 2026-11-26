@@ -92,7 +92,7 @@ export async function orderSaveItems(id: number, f: FormData) {
   const keep = iid.filter(Boolean).map(Number);
   const ops: any[] = [db.orderItem.deleteMany({ where: { orderId: id, id: { notIn: keep.length ? keep : [0] } } })];
   nm.forEach((n, i) => {
-    const data = { name: n || 'שורה', sku: sku[i] || '', mode: mode[i] || '', quantity: Math.max(1, +qty[i] || 1), origPrice: +orig[i] || 0, price: +pr[i] || 0, exists: ex[i] !== '0', productId: pid[i] ? +pid[i] : null };
+    const data = { name: n || 'שורה', sku: sku[i] || '', mode: mode[i] || '', modeLocked: true, quantity: Math.max(1, +qty[i] || 1), origPrice: +orig[i] || 0, price: +pr[i] || 0, exists: ex[i] !== '0', productId: pid[i] ? +pid[i] : null };
     ops.push(iid[i] ? db.orderItem.update({ where: { id: +iid[i] }, data }) : db.orderItem.create({ data: { ...data, orderId: id } }));
   });
   for (const p of await db.product.findMany({ where: { id: { in: ids(f.get('addProducts')) } } })) {

@@ -358,6 +358,7 @@ model OrderItem {
   supplierStatus Boolean @default(false) // "סטטוס" in the user card → הזמנות ספק = שולם לספק (admin ticks it, one-way)
   legacyItemId   Int?    // the order line id in the legacy system (itemId) – keys the legacy "שולם לספק" ticks
   lineStatus     String  @default("") // the legacy line status text
+  modeLocked     Boolean @default(false) // mode confirmed (legacy supplier view / admin) – a re-import keeps it
   order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product     Product? @relation(fields: [productId], references: [id])
   @@index([legacyItemId])
