@@ -4,6 +4,8 @@
 // Passwords are never imported – customers set a new one through "שכחתי סיסמה".
 import { db } from './db';
 import { grantForOrder } from './orders';
+import { israelTime } from './tz';
+export { israelTime };
 
 export type Kind = 'users' | 'orders' | 'carts' | 'supplierPaid' | 'lineModes' | 'usersGone' | 'ordersGone';
 export type Report = { created: number; updated: number; skipped: number; failed: number; reasons: Record<string, number>; notes: string[] };
@@ -14,14 +16,6 @@ const note = (r: Report, n: string) => { if (r.notes.length < 30) r.notes.push(n
 const strip = (h: any) => String(h ?? '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#0?39;/g, "'").replace(/\s+/g, ' ').trim();
 const num = (v: any) => { const s = String(v ?? '').replace(/[^\d.\-]/g, ''); return s === '' || s === '-' || isNaN(Number(s)) ? null : Number(s); };
 const int = (v: any) => { const n = num(v); return n === null ? null : Math.trunc(n); };
-// legacy dates are Israel local time (winter +02:00, summer +03:00)
-const JLM = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Jerusalem', hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-const jlmOffset = (t: number) => { const p = Object.fromEntries(JLM.formatToParts(new Date(t)).map((x) => [x.type, x.value])); return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute, +p.second) - t; };
-export function israelTime(y: number, mo: number, d: number, h = 0, mi = 0, s = 0): Date | null {
-  const local = Date.UTC(y, mo - 1, d, h, mi, s); if (isNaN(local)) return null;
-  let t = local - jlmOffset(local - 2 * 3600e3); t = local - jlmOffset(t);
-  return new Date(t);
-}
 export function parseDate(v: any): Date | null {
   const s = strip(v); if (!s) return null;
   let m = s.match(/(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})(?:\D+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);

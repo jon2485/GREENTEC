@@ -143,5 +143,9 @@ See **docs/MIGRATION.md** (owner request 2026-11-23): import everything from the
 - "שולם לספק" (supplier card → הזמנות ספק → סטטוס): the legacy page shows a ticked line without its line id, so ticks are
   matched by order + supplier + product name/price/qty. Re-importing an order keeps the ticks and `legacyItemId`.
 - `Order.trackingCode` = legacy "קישור מעקב הזמנה". Legacy credits and SMS were empty (checked) – nothing to import.
-- At cutover: run the browser sync once more (new orders, changed statuses, new users, ticks), then delete
-  `app/api/migrate/personal` with the other migration routes.
+- Done on staging 2026-11-26 (`tools/legacy-sync/`): orders, sums per payment status, accounts, supplier lines and ticks
+  identical to the legacy site. Line types are exact for Yossi Klein's products (his supplier view); for other lines they
+  are inferred (~99% on Yossi's lines as a test). 558 legacy lines have no product (deals, coupon lines, deleted items).
+- Legacy admins (type 70) are not in the legacy user list API – never treat them as deleted.
+- At cutover: run the browser sync once more (`run({skipUsers:true, skipOrders:true})`), then delete
+  `app/api/migrate/personal`, `tools/legacy-sync` and the other migration routes.

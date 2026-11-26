@@ -1,4 +1,5 @@
 // Orders (A01–A04), users (A37–A40), reports (A41–A48).
+import { israelDay } from '../tz';
 import { db } from '@/lib/db';
 import { grantForOrder, completeOrder } from '@/lib/orders';
 import { hashPassword } from '@/lib/auth';
@@ -22,7 +23,7 @@ export async function ordersManage(sp: Record<string, string>, deleted = false) 
   if (sp.ship) where.shippingMethodId = +sp.ship;
   if (sp.ps) where.paymentStatus = sp.ps;
   if (sp.us) where.userStatusId = +sp.us;
-  if (sp.from || sp.to) where.createdAt = { ...(sp.from ? { gte: new Date(sp.from) } : {}), ...(sp.to ? { lte: new Date(sp.to + 'T23:59:59') } : {}) };
+  if (sp.from || sp.to) where.createdAt = { ...(sp.from ? { gte: israelDay(sp.from) } : {}), ...(sp.to ? { lte: israelDay(sp.to, true) } : {}) };
   const per = 50; const page = Math.max(1, +sp.page || 1);
   const [rows, total, statuses, ships] = await Promise.all([
     db.order.findMany({ where, orderBy: { id: 'desc' }, skip: (page - 1) * per, take: per }), db.order.count({ where }),
@@ -180,7 +181,7 @@ export const profile = (u: any) => card('הפרופיל שלי', form(AJ('admin'
 export async function digitalSales(sp: Record<string, string>) {
   const vendors = String(sp.vendor || '').split(',').map(Number).filter((n) => n > 0);
   const pWhere: any = {}; if (+sp.sup) pWhere.suppliers = { some: { supplierId: +sp.sup } }; if (vendors.length) pWhere.vendorUserId = { in: vendors };
-  const paid: any = {}; if (sp.from) paid.gte = new Date(sp.from); if (sp.to) paid.lte = new Date(sp.to + 'T23:59:59');
+  const paid: any = {}; if (sp.from) paid.gte = israelDay(sp.from); if (sp.to) paid.lte = israelDay(sp.to, true);
   const ex = new Set(String(sp.ex || '').split(',').map(Number).filter((n) => n > 0));
   const items = await db.orderItem.findMany({
     where: { mode: { in: ['digital', 'both'] }, order: { paymentStatus: 'completed', deleted: false, isTest: false, ...(sp.from || sp.to ? { paidAt: paid } : {}) }, ...(+sp.sup || vendors.length ? { product: pWhere } : {}) },
@@ -241,7 +242,7 @@ export async function reportProducts() {
 }
 // A42 – legacy filters: registration, last visit, number of orders, last order; export to Excel (CSV)
 export async function userOrdersRows(sp: Record<string, string>) {
-  const range = (a?: string, b?: string) => (a || b ? { ...(a ? { gte: new Date(a) } : {}), ...(b ? { lte: new Date(b + 'T23:59:59') } : {}) } : undefined);
+  const range = (a?: string, b?: string) => (a || b ? { ...(a ? { gte: israelDay(a) } : {}), ...(b ? { lte: israelDay(b, true) } : {}) } : undefined);
   const where: any = {}; const reg = range(sp.reg_from, sp.reg_to); if (reg) where.createdAt = reg; const seen = range(sp.seen_from, sp.seen_to); if (seen) where.lastSeen = seen;
   const users = await db.user.findMany({ where, orderBy: { id: 'desc' }, select: { id: true, name: true, email: true, createdAt: true, lastSeen: true, _count: { select: { orders: true } }, orders: { orderBy: { id: 'desc' }, take: 1, select: { createdAt: true } } } });
   const lo = range(sp.last_from, sp.last_to);

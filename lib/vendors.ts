@@ -4,13 +4,14 @@
 // the admin sees the same lines in the user card ("הזמנות ספק", with a סטטוס tick) and reports them by date range
 // (דו"חות → קבצים דיגיטליים → משתמש ספק).
 import { db } from './db';
+import { israelDay } from './tz';
 
 export const VENDOR_TYPES = [50, 80]; // 50 = משתמש פרימיום (what the legacy site uses), 80 = ספק
 export const vendorUsers = () => db.user.findMany({ where: { type: { in: VENDOR_TYPES } }, select: { id: true, name: true, email: true, legacyId: true }, orderBy: { name: 'asc' } });
 
 /** Paid sale lines of the products linked to this user, newest first. */
 export function vendorSalesWhere(userId: number, q: { from?: string; to?: string } = {}) {
-  const paid: any = {}; if (q.from) paid.gte = new Date(q.from + 'T00:00:00+02:00'); if (q.to) paid.lte = new Date(q.to + 'T23:59:59+02:00');
+  const paid: any = {}; if (q.from) paid.gte = israelDay(q.from); if (q.to) paid.lte = israelDay(q.to, true);
   return { product: { vendorUserId: userId }, order: { paymentStatus: 'completed', deleted: false, isTest: false, ...(q.from || q.to ? { paidAt: paid } : {}) } } as const;
 }
 export async function vendorSales(userId: number, q: { from?: string; to?: string; page?: number; per?: number } = {}) {

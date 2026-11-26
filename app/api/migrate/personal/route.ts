@@ -35,7 +35,9 @@ export async function GET(req: Request) {
       db.orderItem.count({ where: { supplierStatus: true } }), db.order.aggregate({ where: { legacy: true }, _max: { id: true } }),
       db.orderItem.groupBy({ by: ['mode'], where: { order: { legacy: true } }, _count: { _all: true } }), db.order.count({ where: { legacy: true, deleted: true } }), db.order.count({ where: { id: { gte: 9_000_000 } } }),
     ]);
-    return json(req, { users, legacyUsers, aliases, orders, deleted, testMoved, maxOrder: maxOrder._max.id, items, modes: modes.map((m) => [m.mode, m._count._all]), grants, credits, carts, paidLines, byPay: byPay.map((x) => ({ s: x.paymentStatus, n: x._count._all, sum: Number(x._sum.total || 0) })) });
+    const vendorProducts = await db.product.count({ where: { vendorLegacyId: { not: null } } }), vendorUnlinked = await db.product.count({ where: { vendorLegacyId: { not: null }, vendorUserId: null } });
+    const paidNoUser = await db.order.count({ where: { legacy: true, paymentStatus: 'completed', userId: null } });
+    return json(req, { users, legacyUsers, aliases, orders, deleted, testMoved, vendorProducts, vendorUnlinked, paidNoUser, maxOrder: maxOrder._max.id, items, modes: modes.map((m) => [m.mode, m._count._all]), grants, credits, carts, paidLines, byPay: byPay.map((x) => ({ s: x.paymentStatus, n: x._count._all, sum: Number(x._sum.total || 0) })) });
   }
   if (what === 'orderStates') { // id → payment status + status id, to find orders that changed in the legacy admin
     const from = +(u.searchParams.get('from') || 0), to = +(u.searchParams.get('to') || 1e9);
