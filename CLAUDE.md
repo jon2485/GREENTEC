@@ -128,3 +128,20 @@ See **docs/MIGRATION.md** (owner request 2026-11-23): import everything from the
   דו"חות → קבצים דיגיטליים with "משתמש ספק" + dates → PDF / Excel. `lib/vendors.ts`, test `tests/e2e/vendor.spec.ts`.
 - TODO after the orders are imported: copy the legacy "סטטוס" ticks (legacy user card → הזמנות ספק, read-only) to `supplierStatus`.
 - Hydration gate also holds `self.__next_f` (page data) until DOMContentLoaded – robust when a cached chunk runs early.
+
+## 11. Customers, orders and history from the legacy site (2026-11-26, owner: "continue exactly where I stopped")
+
+- `app/api/migrate/personal` (MIGRATION_TOKEN, temporary) runs the same import as the admin screen (`lib/legacyPersonal.ts`):
+  kinds `users`, `orders`, `carts` (abandoned carts + deleted orders), `supplierPaid`; `GET ?what=summary|orderStates|supplierLines`
+  returns counts only. The data goes from the owner's browser (legacy admin + its IndexedDB exports) straight to the DB.
+- Users keep the legacy id (`User.legacyId`); a second legacy account with the same e-mail → `LegacyUserAlias` (its orders,
+  downloads and supplier products go to the first account). Orders keep the legacy id; a staging test order that holds a
+  legacy number is moved to 9,000,000 + id. Dates are Israel time (DST aware, `israelTime()`).
+- Line mode: "כולל מוצר פיזי: X" under the legacy line name = album + download (`both`); otherwise prices, then the order
+  status ("הרכישה הדיגיטלית הושלמה!" / "החבילה נשלחה!"). Paid `digital`/`both` lines → DownloadGrant → buttons in
+  /account?tab=orders (per line, per bundle component, "הורדת כל הקבצים") – `lib/orderFiles.ts`.
+- "שולם לספק" (supplier card → הזמנות ספק → סטטוס): the legacy page shows a ticked line without its line id, so ticks are
+  matched by order + supplier + product name/price/qty. Re-importing an order keeps the ticks and `legacyItemId`.
+- `Order.trackingCode` = legacy "קישור מעקב הזמנה". Legacy credits and SMS were empty (checked) – nothing to import.
+- At cutover: run the browser sync once more (new orders, changed statuses, new users, ticks), then delete
+  `app/api/migrate/personal` with the other migration routes.

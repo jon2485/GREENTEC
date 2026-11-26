@@ -48,7 +48,7 @@ test.describe('משתמש ספק', () => {
       const card = a.locator('#supplier');
       await expect(card).toContainText('הזמנות ספק (');
       await expect(card.locator('tbody tr', { hasText: num })).toHaveCount(1);
-      await expect(card.locator('thead')).toContainText('סטטוס');
+      await expect(card.locator('thead')).toContainText('שולם לספק');
       const item = await db.orderItem.findFirst({ where: { orderId: order.id, productId: prod!.id } });
       const [res] = await Promise.all([a.waitForResponse((r) => r.url().includes('update_order_item_status')), card.locator(`[data-supplier-item="${item!.id}"]`).check()]);
       expect((await res.json()).status).toBe('success');

@@ -329,6 +329,7 @@ model Order {
   referrer        String   @default("")
   ip              String   @default("")
   userAgent       String   @default("")
+  trackingCode    String   @default("") // קישור מעקב הזמנה (shipping tracking code)
   isTest          Boolean  @default(false)
   legacy          Boolean  @default(false) // imported from the old system (id = legacy order id)
   orderNumber     String   @default("")
@@ -354,9 +355,12 @@ model OrderItem {
   origPrice   Decimal  @default(0) @db.Decimal(10, 2)
   price       Decimal  @default(0) @db.Decimal(10, 2)
   exists      Boolean  @default(true)
-  supplierStatus Boolean @default(false) // "סטטוס" in the user card → הזמנות ספק (admin ticks it, one-way)
+  supplierStatus Boolean @default(false) // "סטטוס" in the user card → הזמנות ספק = שולם לספק (admin ticks it, one-way)
+  legacyItemId   Int?    // the order line id in the legacy system (itemId) – keys the legacy "שולם לספק" ticks
+  lineStatus     String  @default("") // the legacy line status text
   order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product     Product? @relation(fields: [productId], references: [id])
+  @@index([legacyItemId])
 }
 
 model OrderMemo {
@@ -612,4 +616,9 @@ model ContactMessage { // טופס "צור קשר" (/contact – legacy URL)
   message   String
   handled   Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model LegacyUserAlias { // a second legacy account with the same e-mail: its orders belong to this user
+  legacyId Int @id
+  userId   Int
 }

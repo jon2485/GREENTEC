@@ -120,3 +120,11 @@
     }, 4500);
   })();
 })();
+
+// account → orders: "הורדת כל הקבצים" of a bundle – one signed download after another
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-dl-all]'); if (!b) return;
+  e.preventDefault();
+  var ids = (b.getAttribute('data-dl-all') || '').split(',').filter(Boolean);
+  ids.forEach(function (id, i) { setTimeout(function () { var f = document.createElement('iframe'); f.style.display = 'none'; f.src = '/api/download/' + id; (document.getElementById('gt-overlays') || document.body).appendChild(f); setTimeout(function () { f.remove(); }, 60000); }, i * 1500); });
+});

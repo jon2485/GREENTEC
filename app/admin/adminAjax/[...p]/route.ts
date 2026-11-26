@@ -7,7 +7,7 @@ import * as P from '@/lib/admin/products';
 import * as O from '@/lib/admin/orders';
 import * as C from '@/lib/admin/content';
 import { statusLine } from '@/lib/admin/legacyImport';
-import { importUsers, importOrders, importCarts } from '@/lib/legacyPersonal';
+import { importUsers, importOrders, importCarts, importSupplierPaid } from '@/lib/legacyPersonal';
 import { startImageMigration, imageStatus } from '@/lib/imageMigration';
 import { importLegacyAdmin, loadLegacyAdmin, SECTION_LABELS } from '@/scripts/import-legacy-admin.mjs';
 import { MIGRATE_ORIGINS } from '@/lib/migrate';
@@ -126,7 +126,7 @@ async function handle(mod: string, action: string, id: number, f: FormData, url:
       const kind = String(f.get('kind')); const dry = f.get('dry') === '1';
       let recs: any[]; try { recs = JSON.parse(String(f.get('records') || '[]')); } catch { return err('JSON לא תקין'); }
       if (!Array.isArray(recs) || recs.length > 1000) return err('חבילה לא תקינה');
-      const res = kind === 'users' ? await importUsers(recs, dry) : kind === 'orders' ? await importOrders(recs, dry) : kind === 'carts' ? await importCarts(recs[0], dry) : null;
+      const res = kind === 'users' ? await importUsers(recs, dry) : kind === 'orders' ? await importOrders(recs, dry) : kind === 'carts' ? await importCarts(recs[0], dry) : kind === 'supplierPaid' ? await importSupplierPaid(recs, dry) : null;
       if (!res) return err('סוג לא מוכר');
       return ok('', res);
     }

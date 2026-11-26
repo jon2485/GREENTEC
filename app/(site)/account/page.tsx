@@ -6,6 +6,7 @@ import { esc, thumb, href, shopCard } from '@/lib/render';
 import { money } from '@/lib/format';
 import { cardSelect } from '@/lib/catalog';
 import { hasVendorProducts, vendorSales, dmyhm } from '@/lib/vendors';
+import { orderLineFiles, lineButtonsHtml } from '@/lib/orderFiles';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'האזור האישי | גרינטק', robots: { index: false } };
@@ -32,7 +33,16 @@ export default async function Account({ searchParams }: { searchParams: Promise<
   if (tab === 'downloads') pane = card('ההורדות שלי', `<p class="text-secondary text-center mb-4" style="font-family:Heebo,sans-serif">כל הקבצים הדיגיטליים שרכשת אי־פעם, זמינים להורדה חוזרת בכל עת.</p>
 <div class="downloads-search"><label for="dlSearch" class="visually-hidden">חיפוש בהורדות</label><input id="dlSearch" type="search" placeholder="חיפוש לפי שם אלבום או אמן"></div>
 <div class="downloads-list" id="dlList">${downloads.map((d) => `<div class="download-row"><img src="${esc(thumb(d.product.mainImage))}" alt="${esc(d.product.name)}"><div class="dr-info"><span class="dr-title">${esc(d.product.name)}</span><span class="dr-meta">${d.files.length > 1 ? `מארז · ${d.files.length} קבצים · ` : ''}${d.orderId ? `הזמנה ${d.orderId} · ` : ''}${d.date.toLocaleDateString('he-IL')}</span></div><div class="dr-actions">${d.files.length ? d.files.map((f) => `<a href="/api/download/${f.productId}" class="btn btn-primary">${d.files.length > 1 ? esc(f.name) : 'הורדה'}</a>`).join('') : '<span class="text-secondary">הקובץ יעלה בקרוב</span>'}</div></div>`).join('') || '<p class="text-center">עדיין אין הורדות.</p>'}</div>`);
-  if (tab === 'orders') pane = card('הזמנות', orders.length ? `<div class="table-responsive"><table class="table align-middle text-center font-heebo"><thead><tr><th>מספר</th><th>תאריך</th><th>מוצרים</th><th>סה״כ</th><th>תשלום</th><th>סטטוס</th></tr></thead><tbody>${orders.map((o) => `<tr><td>${o.id}</td><td>${o.createdAt.toLocaleDateString('he-IL')}</td><td class="text-start">${o.items.map((i) => esc(i.name)).join('<br>')}</td><td>${money(o.total)}</td><td>${PAY[o.paymentStatus] || o.paymentStatus}${o.paymentStatus === 'pending' ? `<br><a href="/pay/${o.id}">לתשלום</a>` : ''}</td><td>${esc(statuses.find((s) => s.id === o.userStatusId)?.title || '')}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-center">עדיין אין הזמנות.</p>');
+  if (tab === 'orders') {
+    // every order with its lines; a paid digital line has its download button(s), as on the legacy site
+    const lf = await orderLineFiles(orders.map((o) => o.id));
+    const one = sp.order ? orders.find((o) => String(o.id) === sp.order) : null;
+    const lineHtml = (o: (typeof orders)[number]) => o.items.map((i) => `<div class="order-line"><span>${esc(i.name)}${i.quantity > 1 ? ` × ${i.quantity}` : ''}</span>${lineButtonsHtml(lf.get(o.id)?.find((x) => x.itemId === i.id), o.paymentStatus === 'completed', esc)}</div>`).join('');
+    if (one) {
+      const st = statuses.find((s) => s.id === one.userStatusId)?.title || '';
+      pane = card(`הזמנה ${esc(one.orderNumber || String(one.id))}`, `<p class="text-center font-heebo"><a href="/account?tab=orders">חזרה לכל ההזמנות</a></p><div class="table-responsive"><table class="table align-middle font-heebo"><tbody><tr><th>מספר הזמנה</th><td dir="ltr" class="text-start">${esc(one.orderNumber || String(one.id))}</td></tr><tr><th>תאריך הזמנה</th><td><span dir="ltr">${dmyhm(one.createdAt)}</span></td></tr><tr><th>תשלום</th><td>${PAY[one.paymentStatus] || one.paymentStatus}${one.paymentStatus === 'pending' ? ` · <a href="/pay/${one.id}">לתשלום</a>` : ''}</td></tr><tr><th>סטטוס</th><td>${esc(st)}</td></tr><tr><th>סה״כ</th><td>${money(one.total)}</td></tr></tbody></table></div><h6 class="font-heebo mt-3">מוצרים</h6><div class="order-lines font-heebo">${lineHtml(one)}</div>`);
+    } else pane = card('הזמנות', orders.length ? `<div class="table-responsive"><table class="table align-middle text-center font-heebo gt-orders"><thead><tr><th>מספר הזמנה</th><th>תאריך הזמנה</th><th>מוצרים והורדות</th><th>סה״כ</th><th>תשלום</th><th>סטטוס</th><th></th></tr></thead><tbody>${orders.map((o) => `<tr><td dir="ltr">${esc(o.orderNumber || String(o.id))}</td><td>${o.createdAt.toLocaleDateString('he-IL')}</td><td class="text-start">${lineHtml(o)}</td><td>${money(o.total)}</td><td>${PAY[o.paymentStatus] || o.paymentStatus}${o.paymentStatus === 'pending' ? `<br><a href="/pay/${o.id}">לתשלום</a>` : ''}</td><td>${esc(statuses.find((s) => s.id === o.userStatusId)?.title || '')}</td><td><a href="/account?tab=orders&order=${o.id}">צפייה</a></td></tr>`).join('')}</tbody></table></div>` : '<p class="text-center">עדיין אין הזמנות.</p>');
+  }
   // "משתמש ספק" (as on greentec.co.il → /user/profile → רכישות למוצרים שלי): every paid purchase of the products linked to him
   if (tab === 'sales' && vendor) {
     const vs = await vendorSales(u.id, { page: +sp.page || 1, per: 100, from: sp.from, to: sp.to });
