@@ -41,6 +41,11 @@ test.describe('ייבוא משתמשים והזמנות מהאתר הישן', ()
       const u = await db.user.findFirst({ where: { legacyId: L1 } });
       expect(u?.email).toBe(email);
       expect((await db.legacyUserAlias.findUnique({ where: { legacyId: L2 } }))?.userId).toBe(u!.id);
+      // a broken legacy user name is kept under a placeholder address (its orders must not be lost)
+      await post('users', [card(L1 + 5, 'abc')]);
+      const broken = await db.user.findFirst({ where: { legacyId: L1 + 5 } });
+      expect(broken?.email).toBe(`legacy-${L1 + 5}@no-email.invalid`);
+      expect(broken?.note).toContain('abc');
 
       // orders: paid digital (of the second account), paid physical, unpaid digital
       const ro = await (await post('orders', [
@@ -108,7 +113,7 @@ test.describe('ייבוא משתמשים והזמנות מהאתר הישן', ()
       await db.downloadGrant.deleteMany({ where: { user: { legacyId: L1 } } });
       await db.credit.deleteMany({ where: { user: { legacyId: L1 } } });
       await db.legacyUserAlias.deleteMany({ where: { legacyId: { in: [L1, L2] } } });
-      await db.user.deleteMany({ where: { legacyId: { in: [L1, L2] } } });
+      await db.user.deleteMany({ where: { legacyId: { in: [L1, L2, L1 + 5] } } });
       await db.product.update({ where: { id: prod!.id }, data: { vendorLegacyId: vendorBefore, vendorUserId: vendorUserBefore } });
       await db.$executeRawUnsafe(`SELECT setval(pg_get_serial_sequence('"Order"','id'), GREATEST((SELECT COALESCE(MAX(id),1) FROM "Order"), 1))`);
     }
