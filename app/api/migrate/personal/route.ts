@@ -5,7 +5,7 @@
 // Delete together with the other /api/migrate routes after the move to the new site.
 import { db } from '@/lib/db';
 import { json, preflight, tokenOk, tokenFrom, readBody } from '@/lib/migrate';
-import { importUsers, importOrders, importCarts, importSupplierPaid, importLineModes } from '@/lib/legacyPersonal';
+import { importUsers, importOrders, importCarts, importSupplierPaid, importLineModes, importUsersGone } from '@/lib/legacyPersonal';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   if (!tokenOk(tokenFrom(req, body))) return json(req, { error: 'unauthorized' }, 401);
   const kind = String(body?.kind || ''); const recs = body?.records; const dry = !!body?.dry;
   if (!Array.isArray(recs) || recs.length > 1000) return json(req, { error: 'bad batch' }, 400);
-  const res = kind === 'users' ? await importUsers(recs, dry) : kind === 'orders' ? await importOrders(recs, dry) : kind === 'carts' ? await importCarts(recs[0], dry) : kind === 'supplierPaid' ? await importSupplierPaid(recs, dry) : kind === 'lineModes' ? await importLineModes(recs, dry) : null;
+  const res = kind === 'users' ? await importUsers(recs, dry) : kind === 'orders' ? await importOrders(recs, dry) : kind === 'carts' ? await importCarts(recs[0], dry) : kind === 'supplierPaid' ? await importSupplierPaid(recs, dry) : kind === 'lineModes' ? await importLineModes(recs, dry) : kind === 'usersGone' ? await importUsersGone(recs, dry) : null;
   if (!res) return json(req, { error: 'unknown kind' }, 400);
   // the report has counts and reasons only; previews (personal data) are returned only for dry runs
   return json(req, dry || kind === 'lineModes' ? res : { report: res.report });

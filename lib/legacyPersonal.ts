@@ -5,7 +5,7 @@
 import { db } from './db';
 import { grantForOrder } from './orders';
 
-export type Kind = 'users' | 'orders' | 'carts' | 'supplierPaid' | 'lineModes';
+export type Kind = 'users' | 'orders' | 'carts' | 'supplierPaid' | 'lineModes' | 'usersGone';
 export type Report = { created: number; updated: number; skipped: number; failed: number; reasons: Record<string, number>; notes: string[] };
 export const emptyReport = (): Report => ({ created: 0, updated: 0, skipped: 0, failed: 0, reasons: {}, notes: [] });
 const why = (r: Report, reason: string) => { r.reasons[reason] = (r.reasons[reason] || 0) + 1; };
@@ -359,4 +359,20 @@ async function revokeIfOrphan(userId: number, productId: number) {
   const still = await db.orderItem.count({ where: { productId, mode: { in: ['digital', 'both'] }, order: { userId, paymentStatus: 'completed', deleted: false } } });
   const p = await db.product.findUnique({ where: { id: productId }, select: { onlyDigital: true } });
   if (!still && !p?.onlyDigital) await db.downloadGrant.deleteMany({ where: { userId, productId, orderId: { not: null } } });
+}
+
+// ---------------- accounts deleted in the legacy admin after the export ----------------
+// records: legacy user ids that are gone from the legacy user list. The account is switched off (no login), its orders stay.
+export async function importUsersGone(recs: any[], dry = false) {
+  const r = emptyReport();
+  const ids = [...new Set(recs.map((x) => int(x)).filter((n): n is number => !!n))];
+  const users = await db.user.findMany({ where: { legacyId: { in: ids } }, select: { id: true, note: true, active: true, type: true } });
+  r.skipped = ids.length - users.length;
+  if (dry) return { report: r, preview: [{ 'יכובו': users.length }] };
+  for (const u of users) {
+    if ([69, 70, 99].includes(u.type) && !u.note.includes('נמחק במערכת הישנה')) { /* never switch off an admin automatically */ r.skipped++; why(r, 'מנהל – לא כובה'); continue; }
+    if (!u.active && u.note.includes('נמחק במערכת הישנה')) continue;
+    await db.user.update({ where: { id: u.id }, data: { active: false, note: [u.note, 'נמחק במערכת הישנה'].filter(Boolean).join('\n') } }); r.updated++;
+  }
+  return { report: r, preview: [] };
 }
