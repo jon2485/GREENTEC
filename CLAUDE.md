@@ -149,3 +149,27 @@ See **docs/MIGRATION.md** (owner request 2026-11-23): import everything from the
 - Legacy admins (type 70) are not in the legacy user list API – never treat them as deleted.
 - At cutover: run the browser sync once more (`run({skipUsers:true, skipOrders:true})`), then delete
   `app/api/migrate/personal`, `tools/legacy-sync` and the other migration routes.
+
+## 12. URL / SEO parity with the legacy site (2026-11-27, owner: "super critical – years of Google rankings")
+
+- Full check (browser crawl of the live site, every page compared with staging through `/api/migrate/peek`):
+  5,246 legacy URLs (the legacy site has no sitemap; our sitemap + every internal link), 14,710 image URLs.
+  Result: same status, title, canonical, H1, keywords and robots on every page; legacy redirects copied (14);
+  descriptions differ only where the legacy page had none (generated fallback, by design).
+- Fixed on the way: `/products/category/{id}` (69 indexed Judaica categories without an address), supplier/contact/
+  articles titles (no " | גרינטק"), keywords lost in the export ([REDACTED] → restored from the live pages), robots
+  noindex of 2 pages, 2 supplier names cut at a quote, `/index.php` `/home` `/home/index` `/Articles` → 301,
+  listing pages canonical to page 1 (legacy), `/articles/` keeps its legacy canonical, trailing slashes → 308 in middleware.
+- Images keep their legacy addresses: `/uploads/...`, `/uploads_thumbs/...` are served from the bucket copy
+  (`media/legacy/<path>`, `lib/mediaProxy.ts`, stable URL, 1-year cache); a missing one is fetched once from
+  `LEGACY_IMAGE_ORIGIN`. No expiring signed-URL redirects for public images.
+- Staging noindex is runtime-only (middleware). Never add build-time noindex headers (next.config) – they would
+  survive into production.
+
+### Cutover checklist (SEO)
+1. Final sync of orders (§11). 2. `LEGACY_IMAGE_ORIGIN` = an address of the old server that still works after the DNS
+   move (ask the host), or confirm every image is in the bucket. 3. Remove `STAGING`, `STAGING_USER/PASS`, set
+   `SITE_URL=https://www.greentec.co.il`, redeploy (fresh build). 4. DNS: keep Cloudflare proxy (caching of images).
+5. Right after the switch: re-run the crawl comparison against the live domain, robots.txt (Allow), no X-Robots-Tag,
+   non-www → www, http → https. 6. Search Console: submit /sitemap.xml, watch "Pages" and 404s for two weeks;
+   any old URL that shows up as 404 → add a 301 in the admin (Redirect table).
