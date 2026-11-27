@@ -155,4 +155,24 @@ test.describe('ממשק ניהול', () => {
     const changed = Object.keys(before).filter((k) => !['updatedAt', 'createdAt'].includes(k) && JSON.stringify(after[k]) !== JSON.stringify(before[k]));
     expect(changed.map((k) => `${k}: ${JSON.stringify(before[k])?.slice(0, 60)} → ${JSON.stringify(after[k])?.slice(0, 60)}`), 'fields changed by a no-op save').toEqual([]);
   });
+  test('הסרת קובץ של מוצר שיש לו קונים דורשת אישור', async ({ page }) => {
+    await loginAdmin(page);
+    const g = await db.downloadGrant.findFirst({ where: { product: { digitalFile: { not: '' } } }, include: { product: true } });
+    test.skip(!g, 'no purchased product with a file in this database');
+    const p = g!.product;
+    await page.goto(`/admin?am=products&ac=edit&id=${p.id}`);
+    await expect(page.locator('.alert-warning', { hasText: 'לקוחות' })).toHaveCount(1);
+    const form = page.locator('form').filter({ has: page.locator('[name="name"]') }).first();
+    // without the confirmation the server refuses and the file stays
+    await form.evaluate((f) => { (f.querySelector('input[name=digitalFile]') as HTMLInputElement).value = ''; });
+    const [r1] = await Promise.all([page.waitForResponse((r) => r.url().includes('/adminAjax/') && r.request().method() === 'POST'), form.locator('[type="submit"]').first().click()]);
+    expect((await r1.json()).status).toBe('error');
+    expect((await db.product.findUnique({ where: { id: p.id } }))!.digitalFile).toBe(p.digitalFile);
+    // the button asks first; dismissing keeps the file
+    await page.reload();
+    await page.locator('[data-tab-key="digital"]').first().click();
+    page.once('dialog', (d) => d.dismiss());
+    await page.locator('[data-clear-file][data-buyers]').first().click();
+    expect(await page.locator('input[name=digitalFile]').first().inputValue()).toBe(p.digitalFile);
+  });
 });

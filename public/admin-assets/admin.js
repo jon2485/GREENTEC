@@ -48,7 +48,9 @@
     if (mv) { var row = mv.closest('[data-row]'), d = mv.dataset.move; if (d === 'up' && row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling); if (d === 'down' && row.nextElementSibling) row.parentNode.insertBefore(row.nextElementSibling, row); if (d === 'top') row.parentNode.insertBefore(row, row.parentNode.firstElementChild); return; }
     var all = t.closest('[data-check-all]');
     if (all) { var tb = all.closest('table'); $$('tbody input[type=checkbox]', tb).forEach(function (c) { c.checked = all.checked; }); return; }
-    if (t.closest('[data-clear-file]')) { var bx = t.closest('[data-file-box]'); $('input[type=hidden]', bx).value = ''; $('.adm-file-state', bx).innerHTML = '<span class="badge text-bg-warning">הקובץ יוסר בשמירה</span>'; return; }
+    if (t.closest('[data-clear-file]')) { var cf = t.closest('[data-clear-file]'), nb = +(cf.getAttribute('data-buyers') || 0);
+      if (nb > 0) { if (!confirm('שימו לב: ' + nb + ' לקוחות רכשו את המוצר ומורידים את הקובץ הזה. אם תסירו אותו – הם לא יוכלו להוריד יותר.\n\nלהפסקת מכירה דיגיטלית מספיק למחוק את המחיר בלשונית "מחיר".\n\nלהסיר את הקובץ בכל זאת?')) return; var cr = document.querySelector('input[name=confirmRemoveFile]'); if (cr) cr.value = '1'; }
+      var bx = t.closest('[data-file-box]'); $('input[type=hidden]', bx).value = ''; $('.adm-file-state', bx).innerHTML = '<span class="badge text-bg-warning">הקובץ יוסר בשמירה</span>'; return; }
     var pv = t.closest('[data-html-preview]');
     if (pv) { var ta = pv.closest('.mb-3').querySelector('textarea'); var w = window.open('', '_blank'); w.document.write('<html dir="rtl"><body style="font-family:Heebo,sans-serif;padding:20px">' + ta.value + '</body></html>'); return; }
     var res = t.closest('[data-pick-id]');

@@ -94,12 +94,13 @@ export async function productEdit(id: number) {
   const discTab = fChecks('discounts', 'הנחות', p.discounts.map((d) => d.discountId), discounts.map((d) => [d.id, `${d.name}${d.active ? '' : ' (לא פעילה)'}`]));
   const refItems = p.bundleItems.filter((b) => b.source === 'ref_product').map((b) => b.product);
   const setItems = p.bundleItems.filter((b) => b.source === 'set').map((b) => b.product);
+  const buyers = p.digitalFile ? await fileBuyers(p.id) : 0;
   const fileBox = (field: string, label: string, key: string, accept = '') => `<div class="adm-file mb-3" data-file-box><label class="form-label">${label}</label><input type="hidden" name="${field}" value="${esc(key)}">
     <div class="d-flex align-items-center gap-2 flex-wrap"><span class="adm-file-state">${key ? `${badge('קיים קובץ', 'success')} <code dir="ltr">${esc(key)}</code>` : badge('אין קובץ')}</span>
     <label class="btn btn-sm btn-primary mb-0">העלאת קובץ<input type="file" hidden ${accept} data-bucket-upload="${field}" data-product="${p.id}"></label>
-    ${key ? `<a class="btn btn-sm btn-light" href="${AJ('products', 'file', p.id)}?f=${field}" target="_blank">הורדה לבדיקה</a><button type="button" class="btn btn-sm btn-light-danger" data-clear-file>הסרת הקובץ</button>` : ''}</div>
+    ${key ? `<a class="btn btn-sm btn-light" href="${AJ('products', 'file', p.id)}?f=${field}" target="_blank">הורדה לבדיקה</a><button type="button" class="btn btn-sm btn-light-danger" data-clear-file data-buyers="${field === 'digitalFile' ? buyers : 0}">הסרת הקובץ</button>` : ''}</div>
     <div class="progress mt-2 d-none" style="height:18px"><div class="progress-bar" style="width:0%">0%</div></div><div class="form-text">ההעלאה נעשית ישירות מהדפדפן לאחסון (Bucket). קבצים גדולים מועלים בחלקים. אחרי סיום ההעלאה יש ללחוץ "שמירה".</div></div>`;
-  const digital = fileBox('digitalFile', 'קובץ מלא (RAR/ZIP)', p.digitalFile) + fileBox('sampleFile', 'קובץ דוגמית', p.sampleFile.startsWith('http') ? '' : p.sampleFile, 'accept="audio/*"') +
+  const digital = fileBox('digitalFile', 'קובץ מלא (RAR/ZIP)', p.digitalFile) + (buyers ? `<div class="alert alert-warning py-2 small mb-3"><b>${buyers.toLocaleString('he-IL')} לקוחות</b> רכשו את המוצר ומורידים את הקובץ הזה מהאזור האישי. להפסקת מכירה דיגיטלית – מוחקים את המחיר בלשונית "מחיר", <b>לא את הקובץ</b>.</div>` : '') + '<input type="hidden" name="confirmRemoveFile" value="">' + fileBox('sampleFile', 'קובץ דוגמית', p.sampleFile.startsWith('http') ? '' : p.sampleFile, 'accept="audio/*"') +
     (p.sampleFile.startsWith('http') ? `<div class="mb-3 small">דוגמית מהאתר הישן: <a href="${esc(p.sampleFile)}" target="_blank" dir="ltr">${esc(p.sampleFile)}</a><input type="hidden" name="sampleLegacy" value="${esc(p.sampleFile)}"></div>` : '') +
     fText('previewName', 'שם לדוגמית', p.previewName) + fBool('oneButton', 'כפתור אחד במקום שניים', p.oneButton) + fText('oneButtonTitle', 'כותרת הכפתור', p.oneButtonTitle) + fBool('onlyDigital', 'דיגיטלי בלבד', p.onlyDigital) +
     fPicker('refProducts', 'שימוש בקבצים של מוצרים אחרים (ref_product)', pickItems(refItems), 'הרוכש מקבל גם את הקבצים של המוצרים האלה, בלי להעלות אותם שוב.') +
@@ -139,6 +140,10 @@ export async function productSave(id: number, f: FormData) {
   if (urlPath !== old.urlPath) {
     if (await db.product.findFirst({ where: { urlPath, NOT: { id } } })) return { status: 'error', message: 'הקישור כבר תפוס על ידי מוצר אחר' };
     await db.redirect.upsert({ where: { from: old.urlPath }, create: { from: old.urlPath, to: urlPath }, update: { to: urlPath } });
+  }
+  if (old?.digitalFile && !str(f.get('digitalFile')) && f.get('confirmRemoveFile') !== '1') {
+    const n = await fileBuyers(id);
+    if (n) return { status: 'error', message: `לא נשמר: ${n} לקוחות רכשו את המוצר, והסרת הקובץ תמנע מהם להוריד אותו. להפסקת מכירה דיגיטלית מוחקים את המחיר בלשונית "מחיר". אם בכל זאת צריך להסיר – לחצו שוב "הסרת הקובץ" ואשרו.` };
   }
   const sample = str(f.get('sampleFile')) || str(f.get('sampleLegacy'));
   const data: any = {
@@ -381,4 +386,10 @@ export async function propListSave(id: number, f: FormData) {
     }
   });
   return { status: 'success', message: 'נשמר' };
+}
+
+/** Customers who can download this product's file today (direct purchase or a bundle that contains it). */
+export async function fileBuyers(productId: number) {
+  const r: any[] = await db.$queryRawUnsafe(`SELECT COUNT(DISTINCT g."userId")::int AS n FROM "DownloadGrant" g WHERE g."productId" = $1 OR g."productId" IN (SELECT b."bundleId" FROM "BundleItem" b WHERE b."productId" = $1)`, productId);
+  return Number(r[0]?.n || 0);
 }
