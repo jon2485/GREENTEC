@@ -53,7 +53,7 @@ export async function GET(req: Request) {
   if (what === 'files') { // can every paying customer download what he bought? (counts and product ids only)
     const rows: any[] = await db.$queryRawUnsafe(`SELECT p.id, p."digitalFile" AS f, p."isSet" AS s, COUNT(g.*)::int AS grants, COUNT(DISTINCT g."userId")::int AS users
       FROM "DownloadGrant" g JOIN "Product" p ON p.id = g."productId" GROUP BY p.id`);
-    const comp: any[] = await db.$queryRawUnsafe(`SELECT b."bundleId" AS s, COUNT(*)::int AS n, COUNT(*) FILTER (WHERE c."digitalFile" <> '')::int AS f FROM "BundleItem" b JOIN "Product" c ON c.id = b."productId" GROUP BY 1`).catch(() => [] as any[]);
+    const comp: any[] = await (db.$queryRawUnsafe(`SELECT b."bundleId" AS s, COUNT(*)::int AS n, COUNT(*) FILTER (WHERE c."digitalFile" <> '')::int AS f FROM "BundleItem" b JOIN "Product" c ON c.id = b."productId" GROUP BY 1`) as Promise<any[]>).catch(() => [] as any[]);
     const compBy = new Map(comp.map((c) => [c.s, c]));
     const check = u.searchParams.get('head') === '1';
     const { exists } = await import('@/lib/storage');
