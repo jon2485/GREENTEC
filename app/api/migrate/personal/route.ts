@@ -27,6 +27,14 @@ export async function GET(req: Request) {
   const u = new URL(req.url);
   if (!tokenOk(tokenFrom(req, null))) return json(req, { error: 'unauthorized' }, 401);
   const what = u.searchParams.get('what') || 'summary';
+  if (what === 'mailtest') { // sends one test message, only to an address on the shop's own domain
+    const to = String(u.searchParams.get('to') || '').trim().toLowerCase();
+    if (!/^[^@\s]+@greentec\.co\.il$/.test(to)) return json(req, { error: 'only @greentec.co.il' }, 400);
+    const { mailReady, sendMailDetailed } = await import('@/lib/mail');
+    if (!mailReady()) return json(req, { ready: false });
+    const r = await sendMailDetailed(to, 'בדיקת מייל – גרינטק', '<div dir="rtl" style="font-family:Arial,sans-serif">זהו מייל בדיקה מהאתר החדש של גרינטק. אם קיבלת אותו – שליחת המיילים מהאתר עובדת.</div>', 'מייל בדיקה מהאתר החדש של גרינטק.');
+    return json(req, { ready: true, ...r });
+  }
   if (what === 'summary') {
     const [users, legacyUsers, aliases, orders, byPay, items, grants, credits, carts, paidLines, maxOrder, modes, deleted, testMoved] = await Promise.all([
       db.user.count(), db.user.count({ where: { legacyId: { not: null } } }), db.legacyUserAlias.count(), db.order.count({ where: { legacy: true } }),
