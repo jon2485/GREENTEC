@@ -1,5 +1,6 @@
 // Part C – copy every image the site still hot-links from the legacy server into the bucket (media/legacy/...),
-// then rewrite the DB to /media/legacy/... . Runs as a background job inside the web process (admin button),
+// then rewrite the DB to the same legacy path on our own host (/uploads/..., /uploads_thumbs/...), which
+// app/uploads* serves from the bucket – image addresses never change (Google Images). Runs as a background job inside the web process (admin button),
 // progress in Setting "image_migration". Re-runnable: URLs already rewritten are no longer collected,
 // and objects already in the bucket are not downloaded again.
 import { db } from './db';
@@ -46,7 +47,7 @@ async function save(s: ImgStatus) { await db.setting.upsert({ where: { key: KEY 
 export function legacyKey(u: string) {
   const url = new URL(u.replace(/&amp;/g, '&'), LEGACY);
   const path = decodeURIComponent(url.pathname).replace(/\/{2,}/g, '/').replace(/\.\.+/g, '.');
-  return { key: 'media/legacy' + path, pub: '/media/legacy' + path.split('/').map(encodeURIComponent).join('/'), fetchUrl: LEGACY + url.pathname };
+  return { key: 'media/legacy' + path, pub: path.split('/').map(encodeURIComponent).join('/'), fetchUrl: LEGACY + url.pathname };
 }
 const isLegacy = (u: string) => !!u && (HOST_RE.test(u) || /^\/(uploads|uploads_thumbs)\//.test(u)) && IMG_EXT.test(u.split('#')[0]);
 const isLegacySample = (u: string) => !!u && (HOST_RE.test(u) || /^\/uploads\//.test(u)) && SAMPLE_EXT.test(u.split('#')[0]);

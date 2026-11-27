@@ -8,6 +8,11 @@ export async function GET(req: Request) {
   const path = new URL(req.url).searchParams.get('path') || '/';
   if (!path.startsWith('/') || path.startsWith('//') || path.startsWith('/api/')) return json(req, { error: 'bad path' }, 400);
   const auth = 'Basic ' + Buffer.from(`${process.env.STAGING_USER || ''}:${process.env.STAGING_PASS || ''}`).toString('base64');
-  const r = await fetch(`http://127.0.0.1:${process.env.PORT || 3000}${encodeURI(path)}`, { headers: { authorization: auth }, cache: 'no-store' });
-  return json(req, { status: r.status, html: await r.text() });
+  const sp = new URL(req.url).searchParams;
+  // redirect=manual → the first answer only (status + Location), to check 301s exactly as Google sees them
+  const manual = sp.get('redirect') === 'manual';
+  const host = sp.get('host'); // e.g. greentec.co.il, to check the production host rules
+  const r = await fetch(`http://127.0.0.1:${process.env.PORT || 3000}${encodeURI(path)}`, { headers: { authorization: auth, ...(host ? { 'x-forwarded-host': host } : {}) }, cache: 'no-store', redirect: manual ? 'manual' : 'follow' });
+  const head = Object.fromEntries(['content-type', 'location', 'x-robots-tag', 'cache-control'].map((k) => [k, r.headers.get(k)]));
+  return json(req, { status: r.status, url: r.url.replace(/^http:\/\/127\.0\.0\.1:\d+/, ''), head, html: sp.get('head') === '1' ? '' : await r.text() });
 }
