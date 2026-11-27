@@ -11,7 +11,7 @@ export function middleware(req: NextRequest) {
   const sm = dec.match(/^\/(?:preview|greentec|גרינטק)\/([^/]+)\/?$/);
   const isLink = ST.length >= 24 && !!sm && sm[1] === ST;
   const showcase = isLink || (ST.length >= 24 && (req.method === 'GET' || req.method === 'HEAD') && (path.startsWith('/t/') || path.startsWith('/media/')));
-  if (u && p && !showcase && !path.startsWith('/api/health') && !path.startsWith('/api/migrate/')) {
+  if (u && p && !showcase && !path.startsWith('/api/health') && !path.startsWith('/api/migrate/') && path !== '/api/payplus/callback') {
     const h = req.headers.get('authorization') || '';
     const ok = h.startsWith('Basic ') && atob(h.slice(6)) === `${u}:${p}`;
     // background fetch/XHR calls get a plain 401 (no login popup over the showcase page)

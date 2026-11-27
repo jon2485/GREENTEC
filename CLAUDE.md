@@ -173,3 +173,13 @@ See **docs/MIGRATION.md** (owner request 2026-11-23): import everything from the
 5. Right after the switch: re-run the crawl comparison against the live domain, robots.txt (Allow), no X-Robots-Tag,
    non-www → www, http → https. 6. Search Console: submit /sitemap.xml, watch "Pages" and 404s for two weeks;
    any old URL that shows up as 404 → add a 301 in the admin (Redirect table).
+
+## 13. PayPlus and "המשך עם Google" (2026-11-27)
+
+- PayPlus (`lib/payplus.ts`, `app/api/payplus/{start,callback}`): Railway variables `PAYPLUS_API_KEY`, `PAYPLUS_SECRET_KEY`,
+  `PAYPLUS_PAGE_UID`, `PAYPLUS_ENV=staging|production` (staging = PayPlus test terminal). An order is paid only after a
+  signed callback (or the customer's return) AND PayPlus's own IPN answer approves it with the same amount;
+  `completeOrder` is atomic (no double stock/coupon). The callback is exempt from the staging password.
+  Real charges only with the owner's explicit approval; on staging use the test terminal.
+- Google sign-in (`lib/google.ts`, `app/api/auth/google`): `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`; redirect URI
+  `{SITE_URL}/api/auth/google/callback`. Logs in by verified e-mail – imported legacy customers get in without a password.

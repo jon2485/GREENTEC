@@ -330,6 +330,7 @@ model Order {
   ip              String   @default("")
   userAgent       String   @default("")
   trackingCode    String   @default("") // קישור מעקב הזמנה (shipping tracking code)
+  payRequestUid   String   @default("") // PayPlus page_request_uid of the payment page opened for this order
   isTest          Boolean  @default(false)
   legacy          Boolean  @default(false) // imported from the old system (id = legacy order id)
   orderNumber     String   @default("")
