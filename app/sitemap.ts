@@ -18,7 +18,7 @@ export default async function sitemap() {
   return [
     { url: site + '/', changeFrequency: 'daily' as const, priority: 1 },
     ...c.map((x) => ({ url: x.url ? u(x.url) : `${site}/products/category/${x.id}`, changeFrequency: 'weekly' as const, priority: 0.8 })),
-    { url: site + '/articles', priority: 0.5 }, { url: site + '/contact', priority: 0.3 },
+    { url: site + '/articles/', priority: 0.5 }, { url: site + '/contact', priority: 0.3 },
     ...p.map((x) => ({ url: site + enc(x.urlPath), lastModified: x.updatedAt, priority: 0.7, ...(x.mainImage ? { images: [abs(site, x.mainImage)] } : {}) })),
     ...s.map((x) => ({ url: x.url ? u(x.url) : `${site}/ProductSuppliers/id/${x.id}`, priority: 0.6 })),
     ...a.map((x) => ({ url: x.url ? u(x.url) : `${site}/articles/id/${x.id}`, lastModified: x.createdAt, priority: 0.5, ...(x.image ? { images: [abs(site, x.image)] } : {}) })),

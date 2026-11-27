@@ -157,6 +157,10 @@ proto.fadeSlides = function() {
   var indexes = this.getFadeIndexes();
   var fadeSlideA = this.slides[ indexes.a ];
   var fadeSlideB = this.slides[ indexes.b ];
+  // GREENTEC: a resize before the first layout gives indexes outside the slides (x is still NaN) – nothing to fade yet
+  if ( !fadeSlideA || !fadeSlideB ) {
+    return;
+  }
   var distance = this.wrapDifference( fadeSlideA.target, fadeSlideB.target );
   var progress = this.wrapDifference( fadeSlideA.target, -this.x );
   progress = progress / distance;

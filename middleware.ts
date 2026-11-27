@@ -21,6 +21,11 @@ export function middleware(req: NextRequest) {
   // legacy addresses of the same pages (they answered 200 on the old site): one permanent move to the real address
   const alias = LEGACY_ALIASES[path] ?? (path.startsWith('/Articles/') ? '/articles/' + path.slice(10) : undefined);
   if (alias !== undefined) { const u = req.nextUrl.clone(); u.pathname = alias; return NextResponse.redirect(u, 301); }
+  // one address per page, like the legacy site: a trailing slash goes (permanently); the legacy articles index keeps
+  // its canonical /articles/ (and /articles answers with that canonical, as the legacy site did)
+  if (path.length > 1 && path.endsWith('/') && path !== '/articles/' && !path.startsWith('/api/') && !path.startsWith('/_next/')) {
+    const u = new URL(req.url); u.pathname = path.replace(/\/+$/, '') || '/'; return NextResponse.redirect(u, 308);
+  }
   // production: one host only – greentec.co.il → https://www.greentec.co.il (same path), so Google sees one copy of each page
   if (process.env.STAGING !== '1') {
     const host = (req.headers.get('host') || '').toLowerCase();
