@@ -96,7 +96,8 @@ export const articleLD = (a: any, url: string) => ({
 export function listingSeo(basePath: string, q: Record<string, string | undefined>, pages: number) {
   const page = Math.max(1, Number(q.page) || 1);
   const base = SITE + (basePath.startsWith('/') ? basePath : '/' + basePath);
-  const canonical = page > 1 ? `${base}?page=${page}` : base;
+  // as on the legacy site (years of rankings): every page of a listing points its canonical at the first page
+  const canonical = base;
   const filtered = !!(q.min || q.max || q.sup);
   const link = (n: number) => (n > 1 ? `${base}?page=${n}` : base);
   return { canonical: filtered ? base : canonical, noindex: filtered || page > Math.max(1, pages), prev: page > 1 ? link(page - 1) : null, next: page < pages ? link(page + 1) : null, page };

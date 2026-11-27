@@ -56,7 +56,9 @@ export async function generateMetadata({ params, searchParams }: P): Promise<Met
   const isAttr = r.kind === 'product' && /shop_attributes/.test(x.content || '');
   // last resort for pages with no legacy description and no usable text (e.g. a product whose content is only a specs table)
   const fallback = r.kind === 'product' ? `${name} – ${x.digitalPrice != null || x.bothPrice != null ? 'לרכישה ולהורדה מיידית' : 'לרכישה'} באתר גרינטק, מוזיקה ותוכן יהודי.` : `${name} – גרינטק, מוזיקה ותוכן יהודי.`;
-  const description = x.metaDescription || metaFrom(r.kind === 'product' ? (isAttr ? x.shortContent : x.shortContent || x.content) : x.shortContent || x.content || '') || fallback;
+  const fromText = metaFrom(r.kind === 'product' ? (isAttr ? x.shortContent : x.shortContent || x.content) : x.shortContent || x.content || '');
+  // a stub such as "ddd3" in the short text is not a description
+  const description = x.metaDescription || (fromText.length >= 40 ? fromText : '') || fallback;
   const img = abs(x.ogImage || x.mainImage || x.image || '');
   const L = r.kind === 'category' ? listingSeo(r.path, sp, Infinity) : null;
   const canonical = L ? L.canonical : SITE + r.path;

@@ -160,6 +160,18 @@ test.describe('SEO טכני', () => {
     }
   });
 
+  test('כתובות ישנות של אותם עמודים: הפניה קבועה; עמודים 2+ עם canonical לעמוד הראשון', async ({ request, baseURL }) => {
+    for (const [from, to] of [['/index.php', '/'], ['/home', '/'], ['/home/index', '/'], ['/Articles', '/articles']]) {
+      const r = await request.get(from, { maxRedirects: 0 });
+      expect(r.status(), from).toBe(301);
+      expect(new URL(r.headers()['location'], baseURL).pathname, from).toBe(to);
+    }
+    const c = await db.category.findFirst({ where: { products: { some: {} } }, orderBy: { id: 'asc' } });
+    const h = await (await request.get(enc('/' + c!.url) + '?page=2')).text();
+    const canon = (h.match(/<link rel="canonical" href="([^"]+)"/) || [])[1];
+    expect(decodeURI(new URL(canon).pathname + new URL(canon).search)).toBe('/' + c!.url);
+  });
+
   test('דגימת 200 מוצרים: title, canonical, H1 אחד, description', async ({ request, baseURL }) => {
     const all = await db.product.findMany({ where: { status: 1 }, select: { id: true, urlPath: true, name: true }, orderBy: { id: 'asc' } });
     const step = Math.max(1, Math.floor(all.length / 200));
