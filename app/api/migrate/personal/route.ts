@@ -50,6 +50,23 @@ export async function GET(req: Request) {
       WHERE p."vendorLegacyId" IS NOT NULL AND o."paymentStatus" = 'completed' AND o.deleted = false GROUP BY 1`);
     return json(req, { rows });
   }
+  if (what === 'files') { // can every paying customer download what he bought? (counts and product ids only)
+    const rows: any[] = await db.$queryRawUnsafe(`SELECT p.id, p."digitalFile" AS f, p."isSet" AS s, COUNT(g.*)::int AS grants, COUNT(DISTINCT g."userId")::int AS users
+      FROM "DownloadGrant" g JOIN "Product" p ON p.id = g."productId" GROUP BY p.id`);
+    const comp: any[] = await db.$queryRawUnsafe(`SELECT b."bundleId" AS s, COUNT(*)::int AS n, COUNT(*) FILTER (WHERE c."digitalFile" <> '')::int AS f FROM "BundleItem" b JOIN "Product" c ON c.id = b."productId" GROUP BY 1`).catch(() => [] as any[]);
+    const compBy = new Map(comp.map((c) => [c.s, c]));
+    const check = u.searchParams.get('head') === '1';
+    const { exists } = await import('@/lib/storage');
+    const out = { products: rows.length, withFile: 0, bundleViaParts: 0, missing: [] as any[], missingInBucket: [] as number[], grantsMissing: 0, usersMissing: 0 };
+    for (const r of rows) {
+      const c = compBy.get(r.id);
+      if (r.f) { out.withFile++; if (check && !(await exists(r.f))) out.missingInBucket.push(r.id); continue; }
+      if (r.s && c && c.f === c.n && c.n > 0) { out.bundleViaParts++; continue; }
+      out.missing.push([r.id, r.grants, r.users]); out.grantsMissing += r.grants; out.usersMissing += r.users;
+    }
+    out.missing.sort((a, b) => b[1] - a[1]);
+    return json(req, out);
+  }
   if (what === 'unlinked') { // order lines without a product on the new site (product gone from the legacy catalog)
     const rows: any[] = await db.$queryRawUnsafe(`SELECT i.name, i.mode, COUNT(*)::int AS n, COUNT(*) FILTER (WHERE o."paymentStatus" = 'completed')::int AS paid
       FROM "OrderItem" i JOIN "Order" o ON o.id = i."orderId" WHERE o.legacy AND i."productId" IS NULL GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 300`);
