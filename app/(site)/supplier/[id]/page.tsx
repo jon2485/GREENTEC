@@ -16,7 +16,7 @@ export async function generateMetadata({ params, searchParams }: P) {
   const description = s.metaDescription || metaFrom(s.content) || `כל האלבומים, הסרטים וההפקות של ${s.name} בגרינטק – להורדה מיידית ולרכישה במשלוח עד הבית.`;
   const img = abs(s.ogImage || s.logo || '');
   return {
-    title, description, alternates: { canonical: L.canonical },
+    title, description, keywords: s.metaKeywords || undefined, alternates: { canonical: L.canonical },
     robots: L.noindex ? { index: false, follow: true } : s.robots && s.robots !== 'all' ? s.robots : undefined,
     openGraph: { title, description, url: L.canonical, type: 'website', siteName: 'גרינטק', locale: 'he_IL', images: img ? [img] : undefined },
   };
