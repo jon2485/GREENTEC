@@ -1,6 +1,6 @@
 import { I } from './tpl';
 import { esc, shopCard, bundleCard, thumb, href } from './render';
-import { buyText, enc, money, oldPrice, priceOptions, sellableOptions } from './format';
+import { buyText, catPath, enc, money, oldPrice, priceOptions, sellableOptions } from './format';
 import { parseVariants, optLabel } from './variants';
 import { decodeEntities } from './seo';
 
@@ -21,7 +21,7 @@ export function shopPage(o: { kicker: string; title: string; crumbs: Crumb[]; ca
 <div class="container shop-wrap"><aside class="shop-side" id="shopSide">
 ${L.makers && L.makers.length > 1 ? makersWidget(L.makers, L.sup || []) : ''}
 <div class="shop-widget"><h4 class="shop-wtitle">סינון לפי <span>מחיר</span></h4><div class="price-range"><input type="range" id="pMin" min="0" max="500" value="0" aria-label="מחיר מינימלי"><input type="range" id="pMax" min="0" max="500" value="500" aria-label="מחיר מקסימלי"></div><p class="price-out">מחיר: <strong id="pOut">₪0 – ₪500</strong></p><button type="button" class="btn btn-secondary-outline shop-filter-btn" id="pApply">סינון</button></div>
-${o.cats.length ? `<div class="shop-widget"><h4 class="shop-wtitle">קטגוריות <span>מוצרים</span></h4><ul class="shop-cats">${o.cats.map((c) => `<li><a href="/${enc(c.url)}">${esc(c.name)}</a></li>`).join('')}</ul></div>` : ''}
+${o.cats.length ? `<div class="shop-widget"><h4 class="shop-wtitle">קטגוריות <span>מוצרים</span></h4><ul class="shop-cats">${o.cats.map((c) => `<li><a href="${enc(catPath(c))}">${esc(c.name)}</a></li>`).join('')}</ul></div>` : ''}
 ${o.best.length ? `<div class="shop-widget"><h4 class="shop-wtitle">הנמכרים <span>ביותר</span></h4><ul class="shop-best">${o.best.map((p) => `<li><a href="${href(p)}"><img src="${esc(thumb(p.mainImage))}" alt="${esc(p.name)}" loading="lazy"><span>${esc(p.name)}</span></a></li>`).join('')}</ul></div>` : ''}
 <a href="/search?q=USB" class="shop-ad"><img src="/t/assets/images/n-img-3.webp" alt="אוספי מוזיקה ב־USB" loading="lazy"><span class="shop-ad-text">אוספי מוזיקה<br>ב־USB</span></a>
 </aside><div class="shop-main">

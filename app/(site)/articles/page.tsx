@@ -4,10 +4,10 @@ import { contentPage } from '@/lib/pages';
 import { SITE, ldScript, breadcrumbs } from '@/lib/seo';
 export const dynamic = 'force-dynamic';
 export const metadata = {
-  title: 'מאמרים | גרינטק',
+  title: 'מאמרים', // as on the legacy page
   description: 'מאמרים, כתבות וסיפורים מעולם המוזיקה היהודית והתוכן היהודי – באתר גרינטק.',
   alternates: { canonical: SITE + '/articles' },
-  openGraph: { title: 'מאמרים | גרינטק', url: SITE + '/articles', type: 'website', siteName: 'גרינטק', locale: 'he_IL' },
+  openGraph: { title: 'מאמרים', url: SITE + '/articles', type: 'website', siteName: 'גרינטק', locale: 'he_IL' },
 };
 export default async function Articles() {
   const a = await db.article.findMany({ where: { status: true }, orderBy: { id: 'desc' } });

@@ -3,6 +3,8 @@ export const money = (v: any) => {
   const n = Number(v); return '₪' + (Number.isInteger(n) ? n.toLocaleString('he-IL') : n.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 };
 export const enc = (path: string) => path.split('/').map((s) => encodeURIComponent(s)).join('/');
+// a category without its own address lives at the legacy /products/category/{id} (68 Judaica categories)
+export const catPath = (c: { id?: number | null; url?: string | null }) => (c.url ? '/' + c.url : `/products/category/${c.id}`);
 // Purchase options exactly as the legacy site offered them: one button per option, "label - price".
 // Legacy modes: product_digital_downloads=0 → download only (digital), =1 → album + download (both, shipped),
 // quantity form → physical item ("הוספה לסל"). Labels/order come from Product.buyLabels (copied from the legacy pages).

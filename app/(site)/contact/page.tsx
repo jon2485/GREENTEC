@@ -1,7 +1,8 @@
 import { getSettings } from '@/lib/settings';
 import { esc } from '@/lib/render';
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'צור קשר | גרינטק', alternates: { canonical: '/contact' } };
+// title / description / keywords exactly as the legacy /contact page
+export const metadata = { title: 'צור קשר', description: 'Greentec', keywords: 'Greentec', alternates: { canonical: '/contact' } };
 export default async function Contact({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
   const sp = await searchParams; const s = await getSettings();
   const f = (n: string, l: string, t = 'text', req = false) => `<div class="form-floating mb-3"><input type="${t}" name="${n}" class="form-control" id="c-${n}" placeholder="${l}"${req ? ' required' : ''}><label for="c-${n}">${l}${req ? ' *' : ''}</label></div>`;

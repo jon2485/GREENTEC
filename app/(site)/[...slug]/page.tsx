@@ -1,4 +1,5 @@
 import { notFound, permanentRedirect } from 'next/navigation';
+import { catPath } from '@/lib/format';
 import { locationOf } from '@/lib/redirects';
 import type { Metadata } from 'next';
 import { db } from '@/lib/db';
@@ -28,6 +29,12 @@ async function resolve(slug: string[]) {
     // legacy custom artist URLs, e.g. /ישי-ריבו
     const supplier = await db.supplier.findFirst({ where: { url: u } });
     if (supplier) return { kind: 'supplier' as const, path, supplier };
+  }
+  // legacy category address by id (categories without a name address): /products/category/{id}
+  if (parts.length === 3 && parts[0] === 'products' && parts[1] === 'category' && /^\d+$/.test(parts[2])) {
+    const category = await db.category.findUnique({ where: { id: +parts[2] } });
+    if (category && category.url) return { kind: 'redirect' as const, path, to: '/' + category.url };
+    if (category) return { kind: 'category' as const, path, category };
   }
   // legacy article URL /articles/id/{id}
   if (parts.length === 3 && parts[0] === 'articles' && parts[1] === 'id' && /^\d+$/.test(parts[2])) {
@@ -89,16 +96,16 @@ export default async function Page({ params, searchParams }: P) {
     const chain = await categoryChain(c.id);
     // the designed games store (same URL / SEO as the legacy category); ?view=all, sorting, filters or paging → the regular list
     if (c.url === GAMES_URL && !sp.view && !sp.page && !sp.sort && !sp.min && !sp.max && !sp.sup) {
-      const html = await gamesPage({ ...c, content: demoteH1(c.content) }, chain.map((x, i) => ({ name: x.name, url: i < chain.length - 1 ? '/' + x.url : undefined })));
-      return <div dangerouslySetInnerHTML={{ __html: ldScript(breadcrumbs(chain.map((x) => ({ name: x.name, url: '/' + x.url })))) + html }} />;
+      const html = await gamesPage({ ...c, content: demoteH1(c.content) }, chain.map((x, i) => ({ name: x.name, url: i < chain.length - 1 ? catPath(x) : undefined })));
+      return <div dangerouslySetInnerHTML={{ __html: ldScript(breadcrumbs(chain.map((x) => ({ name: x.name, url: catPath(x) })))) + html }} />;
     }
-    const kids = await db.category.findMany({ where: { parentId: c.id }, orderBy: { sort: 'asc' }, select: { name: true, url: true } });
-    const sibs = kids.length ? kids : c.parentId ? await db.category.findMany({ where: { parentId: c.parentId }, orderBy: { sort: 'asc' }, select: { name: true, url: true } }) : [];
+    const kids = await db.category.findMany({ where: { parentId: c.id }, orderBy: { sort: 'asc' }, select: { id: true, name: true, url: true } });
+    const sibs = kids.length ? kids : c.parentId ? await db.category.findMany({ where: { parentId: c.parentId }, orderBy: { sort: 'asc' }, select: { id: true, name: true, url: true } }) : [];
     const listing = await categoryListing(c.id, { sort: sp.sort, min: sp.min ? +sp.min : undefined, max: sp.max ? +sp.max : undefined, page: sp.page ? +sp.page : 1, per: sp.per ? +sp.per : 24, sup: parseSup(sp.sup) });
     const best = await db.product.findMany({ where: { status: 1, categories: { some: { categoryId: chain[0]?.id ?? c.id } }, NOT: { mainImage: '' } }, orderBy: [{ orderItems: { _count: 'desc' } }, { id: 'desc' }], take: 4, select: cardSelect });
-    const html = shopPage({ kicker: chain[0]?.id === c.id ? 'חנות גרינטק' : chain[0]?.name || '', title: c.header || c.name, crumbs: chain.map((x, i) => ({ name: x.name, url: i < chain.length - 1 ? '/' + x.url : undefined })), cats: sibs, best, listing, intro: listing.page === 1 ? demoteH1(c.content) : '', baseUrl: r.path, query: sp });
+    const html = shopPage({ kicker: chain[0]?.id === c.id ? 'חנות גרינטק' : chain[0]?.name || '', title: c.header || c.name, crumbs: chain.map((x, i) => ({ name: x.name, url: i < chain.length - 1 ? catPath(x) : undefined })), cats: sibs, best, listing, intro: listing.page === 1 ? demoteH1(c.content) : '', baseUrl: r.path, query: sp });
     const L = listingSeo(r.path, sp, listing.pages);
-    const seo = ldScript(breadcrumbs(chain.map((x) => ({ name: x.name, url: '/' + x.url }))), itemList(c.header || c.name, L.canonical, [...listing.bundles, ...listing.items], (L.page - 1) * listing.per));
+    const seo = ldScript(breadcrumbs(chain.map((x) => ({ name: x.name, url: catPath(x) }))), itemList(c.header || c.name, L.canonical, [...listing.bundles, ...listing.items], (L.page - 1) * listing.per));
     return (<>{L.prev ? <link rel="prev" href={L.prev} /> : null}{L.next ? <link rel="next" href={L.next} /> : null}<div dangerouslySetInnerHTML={{ __html: seo + html }} /></>);
   }
 
@@ -115,8 +122,8 @@ export default async function Page({ params, searchParams }: P) {
     const blocks = await db.block.findMany({ where: { id: { in: [5, 6] } } });
     const html = productPage({
       p, related, siteUrl: SITE,
-      kicker: chain[0]?.name || 'גרינטק', catName: deepest?.category.name || '', catUrl: deepest ? '/' + deepest.category.url : '/',
-      crumbs: [...chain.map((x) => ({ name: x.name, url: '/' + x.url })), { name: p.name }],
+      kicker: chain[0]?.name || 'גרינטק', catName: deepest?.category.name || '', catUrl: deepest ? catPath(deepest.category) : '/',
+      crumbs: [...chain.map((x) => ({ name: x.name, url: catPath(x) })), { name: p.name }],
       suppliers: p.suppliers.map((s) => ({ name: s.supplier.name, url: `/ProductSuppliers/id/${s.supplierId}`, count: counts.find((c) => c.supplierId === s.supplierId)?._count || 0 })),
       delivery: blocks.find((b) => b.id === 5)?.content || '', returns: blocks.find((b) => b.id === 6)?.content || '',
     });
@@ -126,7 +133,7 @@ export default async function Page({ params, searchParams }: P) {
     const sup = p.suppliers[0];
     const seo = ldScript(
       productLD(p, { url, category: deepest?.category.name, brand: sup?.supplier.name, brandUrl: sup ? (sup.supplier.url ? '/' + sup.supplier.url : `/ProductSuppliers/id/${sup.supplierId}`) : undefined, description: metaFrom(isAttr ? p.shortContent : p.shortContent || p.content, 4900) }),
-      breadcrumbs([...chain.map((x) => ({ name: x.name, url: '/' + x.url })), { name: p.name }]),
+      breadcrumbs([...chain.map((x) => ({ name: x.name, url: catPath(x) })), { name: p.name }]),
     );
     const opts = priceOptions(p); const low = opts.length ? Math.min(...opts.map((o) => o.price)) : null;
     return (<>
