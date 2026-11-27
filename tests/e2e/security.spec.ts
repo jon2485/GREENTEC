@@ -1,4 +1,4 @@
-import { test, expect, db, newCustomer } from './helpers';
+import { test, expect, db, newCustomer, enc } from './helpers';
 
 test.describe('אבטחה', () => {
   test('התחברות לא מפנה לאתר חיצוני (open redirect)', async ({ page }) => {
@@ -54,6 +54,24 @@ test.describe('אבטחה', () => {
     const page = await (await get(`/preview/${tok}`)).text();
     expect(page).toContain('noindex');
     expect((await get(`/preview/${tok}`)).headers()['x-robots-tag']).toContain('noindex');
+  });
+
+  test('בייצור: אין noindex בשום מקום (כותרת, meta, robots.txt), והכתובת בלי www מופנית ל־www', async ({ request }) => {
+    const prod = process.env.PROD_BASE_URL;
+    test.skip(!prod, 'set PROD_BASE_URL to an instance without STAGING');
+    const p = await db.product.findFirst({ where: { status: 1 }, orderBy: { id: 'asc' } });
+    const c = await db.category.findFirst({ where: { NOT: { url: '' } }, orderBy: { id: 'asc' } });
+    for (const path of ['/', enc(p!.urlPath), enc('/' + c!.url), '/articles', '/contact']) {
+      const r = await request.get(prod + path);
+      expect(r.status(), path).toBe(200);
+      expect(r.headers()['x-robots-tag'] || '', path).not.toContain('noindex');
+      expect(await r.text(), path).not.toMatch(/<meta name="robots" content="[^"]*noindex/);
+    }
+    const robots = await (await request.get(prod + '/robots.txt')).text();
+    expect(robots).not.toMatch(/Disallow: \/\s*$/m);
+    const nw = await request.get(prod + '/contact', { headers: { host: 'greentec.co.il' }, maxRedirects: 0 });
+    expect(nw.status()).toBe(301);
+    expect(nw.headers()['location']).toBe('https://www.greentec.co.il/contact');
   });
 
   test('בסביבת בדיקות שער התשלום המדומה פעיל, ובייצור הוא חסום', async ({ request }) => {
